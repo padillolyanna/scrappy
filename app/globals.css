@@ -1,7 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&family=Chango&family=Silkscreen&display=swap');
 @import "tailwindcss";
 
+/* ============================================================
+   CSS CUSTOM PROPERTIES — Theme System
+   ============================================================ */
 :root {
+  --c-primary: #FF4FA3;
+  --c-secondary: #C9A2FF;
+  --c-bg: #FFF0F7;
+  --c-panel: #FFFFFF;
+  --c-outline: #2B0A2E;
+  --c-accent: #6FE3FF;
+  --c-text: #2B0A2E;
+
+  /* legacy vars kept for backward compat */
   --baby-pink: #FFB6D9;
   --hot-pink: #FF4FA3;
   --lavender: #C9B6FF;
@@ -15,6 +27,30 @@
   --foreground: #3A0030;
 }
 
+[data-theme="cyber"] {
+  --c-primary: #00CFFF;
+  --c-secondary: #A020F0;
+  --c-bg: #0A0A1A;
+  --c-panel: #111133;
+  --c-outline: #00CFFF;
+  --c-accent: #FF00AA;
+  --c-text: #E0E0FF;
+  --background: #0A0A1A;
+  --foreground: #E0E0FF;
+}
+
+[data-theme="lilac"] {
+  --c-primary: #B87FFF;
+  --c-secondary: #FFB6D9;
+  --c-bg: #F5EEFF;
+  --c-panel: #FDFAFF;
+  --c-outline: #5A2090;
+  --c-accent: #FFD700;
+  --c-text: #3A0070;
+  --background: #F5EEFF;
+  --foreground: #3A0070;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -23,6 +59,8 @@
   --font-press: 'Press Start 2P', monospace;
   --font-caveat: 'Caveat', cursive;
   --font-nunito: 'Nunito', sans-serif;
+  --font-chango: 'Chango', 'Arial Black', sans-serif;
+  --font-silkscreen: 'Silkscreen', monospace;
 }
 
 * {
@@ -33,27 +71,135 @@ html {
   scroll-behavior: smooth;
 }
 
+/* ============================================================
+   BODY — Tiled background + diagonal drift animation
+   ============================================================ */
 body {
-  background: var(--background);
-  background-image:
-    radial-gradient(ellipse at 10% 10%, rgba(255,182,217,0.4) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 20%, rgba(201,182,255,0.4) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(168,223,255,0.3) 0%, transparent 50%);
+  background-color: #3A0030;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%233A0030'/%3E%3Ctext x='8' y='22' font-size='12' fill='%23FF4FA3' opacity='0.35'%3E%E2%9C%A6%3C/text%3E%3Ctext x='36' y='50' font-size='10' fill='%23C9A2FF' opacity='0.3'%3E%E2%99%A1%3C/text%3E%3Ctext x='2' y='52' font-size='9' fill='%23FF4FA3' opacity='0.2'%3E%E2%98%85%3C/text%3E%3Ctext x='44' y='16' font-size='8' fill='%23C9A2FF' opacity='0.25'%3E%E2%9C%BF%3C/text%3E%3C/svg%3E");
+  background-size: 60px 60px;
+  animation: drift 20s linear infinite;
   color: var(--foreground);
   font-family: 'Nunito', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='18'%3E✦%3C/text%3E%3C/svg%3E"), auto;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpolygon points='6,0 7.5,4.5 12,4.5 8.5,7 10,12 6,9 2,12 3.5,7 0,4.5 4.5,4.5' fill='%23FF4FA3' stroke='%232B0A2E' stroke-width='0.5'/%3E%3C/svg%3E") 6 6, auto;
 }
 
-/* Fonts */
+@keyframes drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    animation: none !important;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   FONTS
+   ============================================================ */
 .font-pacifico { font-family: 'Pacifico', cursive; }
 .font-pixel { font-family: 'VT323', monospace; }
 .font-press { font-family: 'Press Start 2P', monospace; }
 .font-caveat { font-family: 'Caveat', cursive; }
 .font-nunito { font-family: 'Nunito', sans-serif; }
+.font-chango { font-family: 'Chango', 'Arial Black', sans-serif; }
+.font-silkscreen { font-family: 'Silkscreen', monospace; }
 
-/* Chrome/metallic text effect */
+/* ============================================================
+   BEVEL BUTTON — Y2K glossy candy style
+   ============================================================ */
+.btn-bevel {
+  background: linear-gradient(180deg, #FF9ECF 0%, #FF4FA3 45%, #D4006A 100%);
+  border: 2px solid #2B0A2E;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 0 rgba(0,0,0,0.25), 2px 2px 0 #2B0A2E;
+  font-family: 'Chango', 'Arial Black', sans-serif;
+  font-size: 14px;
+  color: white;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.4);
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: inline-block;
+  text-decoration: none;
+  line-height: 1.3;
+}
+.btn-bevel:hover {
+  filter: brightness(1.1);
+  transform: rotate(1deg) scale(1.03);
+}
+.btn-bevel:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 1px 1px 0 #2B0A2E;
+}
+
+/* ============================================================
+   PANEL HEADER — glossy pink gradient bar
+   ============================================================ */
+.panel-header {
+  background: linear-gradient(180deg, #FF9ECF 0%, #FF4FA3 60%, #D4006A 100%);
+  border: 2px solid #2B0A2E;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-family: 'Chango', 'Arial Black', sans-serif;
+  color: white;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  font-size: 13px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* ============================================================
+   WIDGET BOX
+   ============================================================ */
+.widget-box {
+  background: white;
+  border: 2px solid #2B0A2E;
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 2px 2px 0 rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+.widget-box-full {
+  background: white;
+  border: 2px solid #2B0A2E;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 2px 2px 0 rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+
+/* ============================================================
+   STICKY NOTE
+   ============================================================ */
+.sticky-note {
+  position: relative;
+  box-shadow: 3px 3px 8px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05);
+  font-family: 'Caveat', cursive;
+}
+
+/* ============================================================
+   POLAROID
+   ============================================================ */
+.polaroid {
+  background: white;
+  padding: 8px 8px 28px;
+  box-shadow: 2px 3px 10px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.04);
+  position: relative;
+}
+
+/* ============================================================
+   TEXT EFFECTS
+   ============================================================ */
 .text-chrome {
   background: linear-gradient(180deg, #fff 0%, #C9CED8 30%, #8B9CB0 50%, #C9CED8 70%, #fff 100%);
   -webkit-background-clip: text;
@@ -78,12 +224,37 @@ body {
   background-clip: text;
 }
 
+/* Logo glint sweep */
+.logo-glint {
+  position: relative;
+  overflow: hidden;
+}
+.logo-glint::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.5) 50%, transparent 80%);
+  animation: glint 4s ease-in-out infinite;
+  animation-delay: 2s;
+  pointer-events: none;
+}
+
+@keyframes glint {
+  0% { left: -100%; }
+  40%, 100% { left: 200%; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes glitter {
   0% { background-position: 0% center; }
   100% { background-position: 200% center; }
 }
 
-/* Float animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   33% { transform: translateY(-12px) rotate(3deg); }
@@ -104,6 +275,16 @@ body {
   0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
   25% { opacity: 0.4; transform: scale(0.8) rotate(45deg); }
   75% { opacity: 0.8; transform: scale(1.2) rotate(90deg); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mascot-idle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
 }
 
 @keyframes pulse-glow {
@@ -148,26 +329,49 @@ body {
   50% { opacity: 0; }
 }
 
+@keyframes flash-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 @keyframes slide-up {
   from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Animation utility classes */
+@keyframes splash-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; pointer-events: none; }
+}
+
+@keyframes starburst-flash {
+  0%, 100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.6; transform: scale(1.1) rotate(10deg); }
+}
+
+/* ============================================================
+   ANIMATION UTILITY CLASSES
+   ============================================================ */
 .animate-float { animation: float 4s ease-in-out infinite; }
 .animate-float2 { animation: float2 5s ease-in-out infinite; }
 .animate-float3 { animation: float3 3s ease-in-out infinite; }
 .animate-sparkle { animation: sparkle 2s ease-in-out infinite; }
+.animate-twinkle { animation: twinkle 2s ease-in-out infinite; }
+.animate-mascot-idle { animation: mascot-idle 2s ease-in-out infinite; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-marquee { animation: marquee 20s linear infinite; }
 .animate-wiggle { animation: wiggle 1s ease-in-out infinite; }
 .animate-heart-pop { animation: heart-pop 0.6s ease-in-out; }
 .animate-blink { animation: blink 1s step-end infinite; }
+.animate-flash-blink { animation: flash-blink 0.8s step-end infinite; }
 .animate-shimmer { animation: shimmer 2s linear infinite; }
 .animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
 .animate-slide-up { animation: slide-up 0.5s ease forwards; }
+.animate-starburst { animation: starburst-flash 0.6s ease-in-out infinite; }
 
-/* Scrapbook card styles */
+/* ============================================================
+   SCRAPBOOK CARD
+   ============================================================ */
 .scrap-card {
   background: white;
   border-radius: 4px;
@@ -181,7 +385,9 @@ body {
   box-shadow: 5px 5px 0px rgba(0,0,0,0.2), 10px 10px 0px rgba(255,79,163,0.3);
 }
 
-/* Tape decoration */
+/* ============================================================
+   TAPE DECORATION
+   ============================================================ */
 .tape {
   display: inline-block;
   background: rgba(255,240,168,0.7);
@@ -199,7 +405,9 @@ body {
   pointer-events: none;
 }
 
-/* Y2K button */
+/* ============================================================
+   BUTTONS — Y2K legacy
+   ============================================================ */
 .btn-y2k {
   background: linear-gradient(135deg, #FF4FA3 0%, #FF79C0 50%, #FF4FA3 100%);
   background-size: 200% auto;
@@ -222,9 +430,7 @@ body {
   box-shadow: 0 8px 25px rgba(255,79,163,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
 }
 
-.btn-y2k:active {
-  transform: translateY(0);
-}
+.btn-y2k:active { transform: translateY(0); }
 
 .btn-outline-y2k {
   background: transparent;
@@ -246,7 +452,9 @@ body {
   box-shadow: 0 6px 20px rgba(255,79,163,0.4);
 }
 
-/* Sticker hover effect */
+/* ============================================================
+   STICKER HOVER
+   ============================================================ */
 .sticker {
   display: inline-block;
   transition: transform 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -254,21 +462,20 @@ body {
   user-select: none;
 }
 
-.sticker:hover {
-  transform: scale(1.3) rotate(10deg);
-}
+.sticker:hover { transform: scale(1.3) rotate(10deg); }
 
-/* Paper texture */
+/* ============================================================
+   PAPER TEXTURE / NOTEBOOK
+   ============================================================ */
 .paper-texture {
   background-color: #FFF8ED;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 27px,
-      rgba(168,223,255,0.3) 27px,
-      rgba(168,223,255,0.3) 28px
-    );
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 27px,
+    rgba(168,223,255,0.3) 27px,
+    rgba(168,223,255,0.3) 28px
+  );
   position: relative;
 }
 
@@ -282,25 +489,16 @@ body {
   background: rgba(255,182,217,0.5);
 }
 
-/* Notebook spiral */
 .notebook {
   background: #FFF8ED;
   border-left: 4px solid var(--lavender);
   position: relative;
 }
 
-/* Polaroid / photo frame */
-.polaroid {
-  background: white;
-  padding: 10px 10px 30px;
-  box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
-}
-
-/* Torn paper edge */
-.torn-bottom {
-  position: relative;
-}
-
+/* ============================================================
+   TORN PAPER EDGE
+   ============================================================ */
+.torn-bottom { position: relative; }
 .torn-bottom::after {
   content: '';
   display: block;
@@ -310,13 +508,14 @@ body {
   margin-top: -1px;
 }
 
-/* Glitter background */
+/* ============================================================
+   GLITTER BACKGROUND
+   ============================================================ */
 .glitter-bg {
   background: linear-gradient(135deg, #FFB6D9 0%, #C9B6FF 50%, #A8DFFF 100%);
   position: relative;
   overflow: hidden;
 }
-
 .glitter-bg::before {
   content: '';
   position: absolute;
@@ -331,7 +530,9 @@ body {
   animation: shimmer 3s linear infinite;
 }
 
-/* Scrollbar */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--cream); }
 ::-webkit-scrollbar-thumb {
@@ -339,26 +540,29 @@ body {
   border-radius: 4px;
 }
 
-/* Selection */
 ::selection {
   background: rgba(255,79,163,0.3);
   color: var(--deep-pink);
 }
 
-/* Visitor counter */
+/* ============================================================
+   VISITOR COUNTER
+   ============================================================ */
 .counter-digit {
-  font-family: 'VT323', monospace;
-  font-size: 1.5rem;
+  font-family: 'Silkscreen', 'VT323', monospace;
+  font-size: 1.3rem;
   color: #00ff41;
   background: #0a0a0a;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border: 1px solid #333;
   display: inline-block;
-  min-width: 20px;
+  min-width: 18px;
   text-align: center;
 }
 
-/* Window chrome */
+/* ============================================================
+   WINDOW CHROME (AppWindow inner chrome used by AuthModal too)
+   ============================================================ */
 .window-chrome {
   background: linear-gradient(to bottom, #d4d0c8, #bfbdb5);
   border: 2px solid;
@@ -390,7 +594,9 @@ body {
   cursor: pointer;
 }
 
-/* Input style */
+/* ============================================================
+   INPUT
+   ============================================================ */
 .input-y2k {
   background: white;
   border: 2px solid var(--lavender);
@@ -402,13 +608,14 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
   width: 100%;
 }
-
 .input-y2k:focus {
   border-color: var(--hot-pink);
   box-shadow: 0 0 0 3px rgba(255,79,163,0.15);
 }
 
-/* Badge */
+/* ============================================================
+   BADGE
+   ============================================================ */
 .badge-y2k {
   display: inline-flex;
   align-items: center;
@@ -420,19 +627,54 @@ body {
   letter-spacing: 0.05em;
 }
 
-/* Loading spinner */
-.spin-star {
-  display: inline-block;
-  animation: sparkle 1s linear infinite;
+/* ============================================================
+   BLINKIE BUTTONS (88x31)
+   ============================================================ */
+.blinkie {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 31px;
+  font-family: 'VT323', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  border: 2px solid;
+  cursor: pointer;
+  text-decoration: none;
+  animation: blinkie-anim 2s step-end infinite;
 }
 
-/* Neon glow text */
+@keyframes blinkie-anim {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+/* ============================================================
+   LCD MARQUEE STRIP
+   ============================================================ */
+.lcd-strip {
+  background: #111;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.05);
+  border-top: 1px solid #333;
+  border-bottom: 1px solid #333;
+  overflow: hidden;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+
+/* ============================================================
+   SPIN STAR / NEON / PHOTO STRIP
+   ============================================================ */
+.spin-star { display: inline-block; animation: sparkle 1s linear infinite; }
+
 .neon-text {
   color: #FF4FA3;
   text-shadow: 0 0 7px #FF4FA3, 0 0 10px #FF4FA3, 0 0 21px #FF4FA3;
 }
 
-/* Photo booth strip */
 .photo-strip {
   background: white;
   padding: 6px;
@@ -441,7 +683,6 @@ body {
   gap: 3px;
   box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
 }
-
 .photo-strip-item {
   background: #e8e8e8;
   aspect-ratio: 1;

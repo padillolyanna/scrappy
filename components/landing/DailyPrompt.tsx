@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
@@ -9,24 +8,21 @@ const SAMPLE_ANSWERS = [
     user: 'stargazer',
     answer: 'The songs my family played during long car rides. They always bring back memories.',
     likes: 42,
-    avatar: 'from-pink-400 to-purple-400',
   },
   {
     user: 'nostalgiaxo',
     answer: 'Definitely the songs I listened to during my childhood. I still remember every word.',
     likes: 87,
-    avatar: 'from-blue-400 to-teal-400',
   },
   {
     user: 'melodydream',
     answer: 'Classic Coldplay and Avril Lavigne. I used to listen to them all the time!',
     likes: 56,
-    avatar: 'from-yellow-400 to-orange-400',
   },
 ]
 
 function Countdown() {
-  const [timeLeft, setTimeLeft] = useState({ h: 0, m: 0, s: 0 })
+  const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
 
   useEffect(() => {
     function calc() {
@@ -40,18 +36,28 @@ function Countdown() {
         s: Math.floor((diff % 60000) / 1000),
       }
     }
-    setTimeLeft(calc())
-    const id = setInterval(() => setTimeLeft(calc()), 1000)
+    setTime(calc())
+    const id = setInterval(() => setTime(calc()), 1000)
     return () => clearInterval(id)
   }, [])
 
+  const pad = (n: number) => String(n).padStart(2, '0')
+
   return (
-    <div className="inline-flex items-center gap-2 font-pixel text-[#FFB6D9]/60 mt-4" style={{ fontSize: '15px' }}>
-      <span>NEXT PROMPT IN:</span>
-      <span className="bg-white/10 border border-[#FFB6D9]/30 text-[#FFB6D9] px-3 py-1 rounded-full">
-        {String(timeLeft.h).padStart(2, '0')}:{String(timeLeft.m).padStart(2, '0')}:{String(timeLeft.s).padStart(2, '0')}
-      </span>
-    </div>
+    <span
+      style={{
+        fontFamily: "'Silkscreen', monospace",
+        fontSize: 15,
+        background: '#0a0a0a',
+        color: '#00ff41',
+        padding: '2px 8px',
+        border: '1px solid #333',
+        borderRadius: 3,
+        letterSpacing: '0.08em',
+      }}
+    >
+      {pad(time.h)}:{pad(time.m)}:{pad(time.s)}
+    </span>
   )
 }
 
@@ -59,31 +65,72 @@ export default function DailyPrompt() {
   const [answer, setAnswer] = useState('')
 
   return (
-    <section
-      className="py-16 lg:py-20 relative overflow-hidden"
-      style={{ background: 'linear-gradient(135deg, #2A0028 0%, #100030 100%)' }}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
-        <div className="grid lg:grid-cols-[55%_45%] gap-10 items-start">
-          {/* LEFT COLUMN */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="font-pixel text-[#FFB6D9]/60 tracking-widest mb-2" style={{ fontSize: '15px' }}>
-              TODAY'S QUESTION
-            </div>
-            <h2 className="font-pacifico text-4xl text-white" style={{ fontFamily: 'Pacifico, cursive' }}>
-              Daily Scrapbook Prompt
-            </h2>
+    <section style={{ padding: '0 20px 20px' }}>
+      <div className="panel-header">
+        today&apos;s prompt ✎
+      </div>
+      <div className="widget-box" style={{ padding: 0 }}>
+        <div className="grid md:grid-cols-[55%_45%]">
 
-            {/* Featured question card */}
-            <div className="bg-white/10 border border-[#FFB6D9]/20 rounded-2xl p-6 my-6">
-              <p className="font-caveat text-2xl text-[#FFB6D9]" style={{ fontFamily: 'Caveat, cursive' }}>
+          {/* LEFT: Notebook card */}
+          <div
+            style={{
+              background: '#FFF8ED',
+              backgroundImage: `
+                repeating-linear-gradient(
+                  0deg,
+                  transparent,
+                  transparent 27px,
+                  rgba(100,160,220,0.25) 27px,
+                  rgba(100,160,220,0.25) 28px
+                )
+              `,
+              borderRight: '1px solid rgba(201,182,255,0.3)',
+              padding: '16px 16px 16px 52px',
+              position: 'relative',
+            }}
+          >
+            {/* Red margin line */}
+            <div style={{
+              position: 'absolute',
+              left: 36,
+              top: 0, bottom: 0,
+              width: 2,
+              background: 'rgba(255,100,100,0.5)',
+            }} />
+
+            {/* Spiral binding dots */}
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: 10,
+                  top: `${i * 36 + 18}px`,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  background: '#C9A2FF',
+                  border: '1.5px solid #2B0A2E',
+                }}
+              />
+            ))}
+
+            {/* Question with highlight */}
+            <div
+              style={{
+                fontFamily: "'Caveat', cursive",
+                fontSize: 20,
+                color: '#3A0030',
+                lineHeight: 1.5,
+                marginBottom: 14,
+                display: 'inline',
+              }}
+            >
+              <span style={{ background: 'rgba(255,200,0,0.4)', padding: '0 2px' }}>
                 "What song instantly takes you back to your childhood?"
-              </p>
+              </span>
             </div>
 
             {/* Answer textarea */}
@@ -92,77 +139,88 @@ export default function DailyPrompt() {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="write your answer here..."
               rows={3}
-              className="w-full rounded-xl px-4 py-3 resize-none font-caveat text-base mb-4 focus:outline-none focus:ring-2 focus:ring-[#FFB6D9]/40"
               style={{
-                fontFamily: 'Caveat, cursive',
-                fontSize: '17px',
-                background: 'rgba(255,255,255,0.08)',
-                border: '1.5px solid rgba(255,182,217,0.3)',
-                color: 'white',
+                width: '100%',
+                borderRadius: 4,
+                padding: '8px 10px',
+                resize: 'none',
+                fontFamily: "'Caveat', cursive",
+                fontSize: 16,
+                background: 'white',
+                border: '2px solid #C9A2FF',
+                outline: 'none',
+                boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.1)',
+                color: '#3A0030',
+                display: 'block',
+                marginBottom: 10,
               }}
             />
 
-            {/* Buttons */}
-            <div className="flex gap-3 flex-wrap">
-              <button className="btn-y2k">
-                Submit Answer
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+              <button className="btn-bevel" style={{ fontSize: 12, padding: '6px 14px' }}>
+                submit ✎
               </button>
               <button
-                className="border-2 rounded-full px-5 py-2 font-nunito font-bold text-sm transition-all hover:bg-white/10"
-                style={{ borderColor: 'rgba(255,182,217,0.4)', color: '#FFB6D9' }}
+                style={{
+                  fontFamily: "'Chango', 'Arial Black', sans-serif",
+                  fontSize: 11,
+                  color: '#FF4FA3',
+                  background: '#FFF0F7',
+                  border: '2px solid #FFB6D9',
+                  borderRadius: 20,
+                  padding: '5px 12px',
+                  cursor: 'pointer',
+                }}
               >
-                + ADD TO SCRAPBOOK
+                + add to scrapbook
               </button>
             </div>
 
-            {/* Countdown */}
-            <Countdown />
-          </motion.div>
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: 13, color: '#aaa', display: 'flex', alignItems: 'center', gap: 8 }}>
+              NEXT PROMPT IN: <Countdown />
+            </div>
+          </div>
 
-          {/* RIGHT COLUMN */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-          >
-            <div className="font-pixel text-[#FFB6D9]/60 tracking-widest mb-4" style={{ fontSize: '15px' }}>
+          {/* RIGHT: Recent answers */}
+          <div style={{ padding: '14px', background: 'white' }}>
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: 13, color: '#888', marginBottom: 8 }}>
               2,184 ANSWERS TODAY
             </div>
 
-            <div className="space-y-3">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {SAMPLE_ANSWERS.map((a, i) => (
                 <div
                   key={i}
-                  className="bg-white/10 border border-[#FFB6D9]/20 rounded-xl p-4"
+                  className="sticky-note"
+                  style={{
+                    background: ['#FFF0A8', '#FFD6EC', '#D6EDFF'][i],
+                    padding: '8px 10px',
+                    borderRadius: 2,
+                    transform: `rotate(${[-1, 1, -0.5][i]}deg)`,
+                  }}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${a.avatar} shrink-0`} />
-                    <span className="text-[#FFB6D9] font-bold font-nunito text-sm">@{a.user}</span>
+                  <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 11, fontWeight: 'bold', color: '#FF4FA3', marginBottom: 3 }}>
+                    @{a.user}
                   </div>
-                  <p
-                    className="font-caveat text-lg text-white/80 line-clamp-3"
-                    style={{ fontFamily: 'Caveat, cursive' }}
-                  >
+                  <p style={{ fontFamily: "'Caveat', cursive", fontSize: 14, color: '#3A0030', lineHeight: 1.4 }}>
                     {a.answer}
                   </p>
-                  <div className="mt-2 font-nunito text-xs text-[#FFB6D9]/50">
+                  <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#aaa', marginTop: 4 }}>
                     ♡ {a.likes}
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4">
+            <div style={{ marginTop: 10 }}>
               <Link
                 href="/prompts"
-                className="font-pixel text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors"
-                style={{ fontSize: '15px' }}
+                style={{ fontFamily: "'VT323', monospace", fontSize: 14, color: '#FF4FA3', textDecoration: 'underline' }}
               >
                 READ ALL 2,184 ANSWERS →
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
