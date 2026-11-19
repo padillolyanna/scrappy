@@ -1,44 +1,83 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState } from 'react'
 import Link from 'next/link'
+import AuthModal from '@/components/ui/AuthModal'
+import { useAuth } from '@/lib/useAuth'
+
+type Category = 'ALL' | 'LOVE' | 'FRIENDSHIP' | 'LIFE' | 'RANDOM' | 'SECRETS'
+
+const CATEGORIES: Category[] = ['ALL', 'LOVE', 'FRIENDSHIP', 'LIFE', 'RANDOM', 'SECRETS']
 
 const CONFESSIONS = [
-  { text: 'I still listen to my middle school playlist when I need to feel better about life.', category: 'Music', reactions: 234, color: 'bg-[#FFF0A8]', rotate: '-2deg' },
-  { text: "I pretend I'm confident but I still check if anyone is looking before I do something embarrassing.", category: 'Life', reactions: 189, color: 'bg-[#FFD6EC]', rotate: '1.5deg' },
-  { text: "I still have the first ever text message my best friend sent me saved on my old phone.", category: 'Friendship', reactions: 312, color: 'bg-[#D6EDFF]', rotate: '-1deg' },
-  { text: 'Sometimes I cry in the car just to get it out before I walk back inside.', category: 'Feelings', reactions: 445, color: 'bg-[#E8D6FF]', rotate: '2.5deg' },
-  { text: "I still write letters I never send. I have a whole box of them under my bed.", category: 'Love', reactions: 278, color: 'bg-[#FFF0A8]', rotate: '-1.5deg' },
-  { text: "I cry at strangers' graduations, weddings, and homecomings at the airport.", category: 'Random', reactions: 156, color: 'bg-[#FFD6EC]', rotate: '1deg' },
+  { category: 'LOVE', text: 'I still look for him in every crowded place even though I know we\'re never going to meet again.', reactions: 234, color: 'bg-[#FFF0A8]', rotate: '-2deg' },
+  { category: 'LIFE', text: 'Sometimes I wonder if I\'m doing enough or if I\'m just pretending that everything is okay.', reactions: 189, color: 'bg-[#FFD6EC]', rotate: '1.5deg' },
+  { category: 'FRIENDSHIP', text: 'I miss the people I used to talk to every single day. I wonder if they ever think about me too.', reactions: 312, color: 'bg-[#D6EDFF]', rotate: '-1deg' },
+  { category: 'RANDOM', text: 'Sometimes the smallest things remind me of memories I didn\'t even know I still had.', reactions: 156, color: 'bg-[#E8D6FF]', rotate: '2deg' },
+  { category: 'SECRETS', text: 'I wish I could tell someone everything without worrying about being misunderstood.', reactions: 278, color: 'bg-[#FFF0A8]', rotate: '-1.5deg' },
+  { category: 'LOVE', text: 'I don\'t think I ever really stopped caring. I just learned how to stay quiet about it.', reactions: 445, color: 'bg-[#FFD6EC]', rotate: '1deg' },
+  { category: 'FRIENDSHIP', text: 'I hope my old friends are doing well, even if we don\'t talk anymore.', reactions: 388, color: 'bg-[#D6EDFF]', rotate: '-2deg' },
+  { category: 'LIFE', text: 'I just want to experience a version of life where I don\'t have to worry about everything.', reactions: 521, color: 'bg-[#E8D6FF]', rotate: '1.5deg' },
 ]
 
 export default function ConfessionPreview() {
+  const [activeCategory, setActiveCategory] = useState<Category>('ALL')
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const { user } = useAuth()
+
+  const filtered = activeCategory === 'ALL'
+    ? CONFESSIONS
+    : CONFESSIONS.filter((c) => c.category === activeCategory)
+
+  const handleSubmitClick = () => {
+    if (user) {
+      window.location.href = '/confessions'
+    } else {
+      setShowAuthModal(true)
+    }
+  }
+
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="font-pixel text-xs text-[#C9B6FF] mb-2 tracking-widest" style={{ fontSize: '11px' }}>
-              ✦ ANONYMOUS CONFESSIONS ✦
+    <section className="py-16 lg:py-20 bg-[#FFF8ED]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        {/* Section header */}
+        <div className="flex justify-between items-end mb-6">
+          <div>
+            <div className="font-pixel text-[#C9B6FF] tracking-widest mb-1" style={{ fontSize: '16px' }}>
+              ANONYMOUS THOUGHTS
             </div>
-            <h2
-              className="font-pacifico text-5xl text-[#3A0030]"
-              style={{ fontFamily: 'Pacifico, cursive', fontSize: 'clamp(28px, 5vw, 48px)' }}
-            >
-              the confession wall
+            <h2 className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
+              The Confession Wall
             </h2>
-            <div className="mt-2 font-caveat text-lg text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
-              say the thing you've never said out loud
-            </div>
-          </motion.div>
+          </div>
+          <Link href="/confessions" className="font-pixel text-[#FF4FA3] hover:underline" style={{ fontSize: '16px' }}>
+            READ ALL →
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CONFESSIONS.map((c, i) => (
+        {/* Category filters */}
+        <div className="flex gap-2 flex-wrap mb-8">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className="font-pixel px-3 py-1.5 rounded-full border-2 transition-colors"
+              style={{
+                fontSize: '14px',
+                ...(activeCategory === cat
+                  ? { background: '#3A0030', borderColor: '#3A0030', color: 'white' }
+                  : { background: 'white', borderColor: '#FFB6D9', color: '#3A0030' }),
+              }}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Confession notes grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {filtered.map((c, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
@@ -46,40 +85,57 @@ export default function ConfessionPreview() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
               whileHover={{ scale: 1.03, rotate: 0, zIndex: 10 }}
-              className={`${c.color} p-5 shadow-md relative cursor-pointer`}
-              style={{ transform: `rotate(${c.rotate})`, borderRadius: '2px', boxShadow: '3px 3px 8px rgba(0,0,0,0.12)' }}
+              className={`${c.color} p-5 relative cursor-pointer`}
+              style={{
+                transform: `rotate(${c.rotate})`,
+                borderRadius: '2px',
+                boxShadow: '3px 3px 8px rgba(0,0,0,0.12)',
+              }}
             >
+              {/* Pushpin */}
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FF4FA3] shadow-md" />
 
-              <div
-                className="font-caveat text-lg text-[#3A0030] leading-snug mb-3 mt-2"
-                style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}
-              >
-                "{c.text}"
+              {/* Category badge */}
+              <div className="absolute top-3 right-3 bg-white/50 font-pixel px-2 py-0.5 rounded-full" style={{ fontSize: '12px', color: '#888' }}>
+                {c.category}
               </div>
 
+              {/* Text */}
+              <p
+                className="font-caveat text-lg text-[#3A0030] leading-snug mt-4 mb-3"
+                style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}
+              >
+                {c.text}
+              </p>
+
+              {/* Footer */}
               <div className="flex items-center justify-between">
-                <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '9px' }}>
+                <span className="font-pixel text-[#888]" style={{ fontSize: '13px' }}>
                   {c.category}
                 </span>
-                <div className="flex items-center gap-1 font-nunito text-xs text-[#888]">
-                  <button className="hover:scale-125 transition-transform text-sm">♡</button>
-                  <span>{c.reactions}</span>
-                </div>
+                <span className="font-nunito text-xs text-[#888]">♡ {c.reactions}</span>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
-          <Link href="/confessions" className="btn-y2k">
-            share your confession
-          </Link>
-          <Link href="/confessions" className="btn-outline-y2k">
-            read all confessions
-          </Link>
+        {/* CTA */}
+        <div className="flex justify-center mt-10">
+          {user ? (
+            <Link href="/confessions" className="btn-y2k">
+              + SUBMIT AN ANONYMOUS CONFESSION
+            </Link>
+          ) : (
+            <button onClick={handleSubmitClick} className="btn-y2k">
+              + SUBMIT AN ANONYMOUS CONFESSION
+            </button>
+          )}
         </div>
       </div>
+
+      {showAuthModal && (
+        <AuthModal reason="confession" onClose={() => setShowAuthModal(false)} />
+      )}
     </section>
   )
 }
