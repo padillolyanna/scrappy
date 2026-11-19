@@ -34,6 +34,9 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
+        <Link href="/" className="flex items-center gap-2 text-[#888] hover:text-[#FF4FA3] transition-colors mb-4 font-nunito text-sm">
+          <span>←</span> back to home
+        </Link>
         <div className="window-chrome overflow-hidden rounded-lg">
           <div className="window-title-bar">
             <span>scrappy.exe — login</span>
