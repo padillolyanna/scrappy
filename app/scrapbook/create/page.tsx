@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/layout/Navbar'
@@ -8,8 +8,11 @@ import Footer from '@/components/layout/Footer'
 import CoverSelector from '@/components/scrapbook/CoverSelector'
 import TemplateSelector from '@/components/scrapbook/TemplateSelector'
 import ScrapbookEditor from '@/components/scrapbook/ScrapbookEditor'
+import AuthModal from '@/components/ui/AuthModal'
 import { TEMPLATES, SCRAPBOOK_COVERS } from '@/lib/types'
 import { generateId, slugify } from '@/lib/utils'
+import { useAuth } from '@/lib/useAuth'
+import { createClient } from '@/lib/supabase-client'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -19,6 +22,8 @@ const STEPS = [
   { num: 3, label: 'Customize' },
   { num: 4, label: 'Publish' },
 ]
+
+const DRAFT_KEY = 'scrappy_draft'
 
 export default function CreateScrapbookPage() {
   const [step, setStep] = useState<Step>(1)
@@ -30,7 +35,35 @@ export default function CreateScrapbookPage() {
   const [stickers, setStickers] = useState<{ id: string; emoji: string; x: number; y: number }[]>([])
   const [visibility, setVisibility] = useState<'public' | 'private' | 'link'>('public')
   const [saving, setSaving] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [draftRestored, setDraftRestored] = useState(false)
+  const [draftBanner, setDraftBanner] = useState(false)
+  const { user } = useAuth()
   const router = useRouter()
+
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return
+    try {
+      const d = JSON.parse(raw)
+      if (d.coverId) setCoverId(d.coverId)
+      if (d.templateId) setTemplateId(d.templateId)
+      if (d.title) setTitle(d.title)
+      if (d.answers) setAnswers(d.answers)
+      if (d.stickers) setStickers(d.stickers)
+      if (d.visibility) setVisibility(d.visibility)
+      if (d.step) setStep(d.step)
+      setDraftRestored(true)
+      if (user) setDraftBanner(true)
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Save draft to localStorage on changes
+  useEffect(() => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ coverId, templateId, title, answers, stickers, visibility, step }))
+  }, [coverId, templateId, title, answers, stickers, visibility, step])
 
   function handleAnswerChange(questionId: string, text: string) {
     setAnswers((prev) => {
@@ -50,10 +83,65 @@ export default function CreateScrapbookPage() {
   }
 
   async function handlePublish() {
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 1200))
+    const supabase = createClient()
     const slug = slugify(title || 'my-scrapbook') + '-' + Date.now().toString(36)
-    router.push(`/scrapbook/${slug}?preview=true`)
+
+    const { data: scrapbook, error: sbError } = await supabase
+      .from('scrapbooks')
+      .insert({
+        user_id: user.id,
+        title: title || 'my scrapbook',
+        slug,
+        cover_id: coverId,
+        is_public: visibility !== 'private',
+      })
+      .select('id')
+      .single()
+
+    if (sbError || !scrapbook) {
+      setSaving(false)
+      return
+    }
+
+    const { data: page } = await supabase
+      .from('scrapbook_pages')
+      .insert({ scrapbook_id: scrapbook.id })
+      .select('id')
+      .single()
+
+    if (page && stickers.length > 0) {
+      await supabase.from('scrapbook_elements').insert(
+        stickers.map((s) => ({
+          page_id: page.id,
+          type: 'sticker',
+          content: s.emoji,
+          x: s.x,
+          y: s.y,
+        }))
+      )
+    }
+
+    const validAnswers = answers.filter((a) => a.answer_text.trim())
+    if (validAnswers.length > 0) {
+      await supabase.from('answers').insert(
+        validAnswers.map((a) => ({
+          user_id: user.id,
+          question_id: a.question_id,
+          question_text: a.question_text,
+          scrapbook_id: scrapbook.id,
+          answer_text: a.answer_text,
+          is_public: visibility !== 'private',
+        }))
+      )
+    }
+
+    localStorage.removeItem(DRAFT_KEY)
+    router.push(`/scrapbook/${scrapbook.id}`)
   }
 
   function goNext() { if (step < 4) setStep((s) => (s + 1) as Step) }
@@ -64,6 +152,32 @@ export default function CreateScrapbookPage() {
       <Navbar />
       <main className="flex-1 py-8 px-4">
         <div className="max-w-5xl mx-auto">
+
+          {/* Draft restored banner */}
+          {draftBanner && (
+            <div className="bg-[#FFF0A8] border-2 border-[#FFD700] rounded-xl px-4 py-3 mb-6 flex items-center justify-between">
+              <div className="font-caveat text-base text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive' }}>
+                ✦ your draft was restored! pick up right where you left off.
+              </div>
+              <button
+                onClick={() => setDraftBanner(false)}
+                className="font-pixel text-xs text-[#888] hover:text-[#3A0030] ml-4"
+                style={{ fontSize: '9px' }}
+              >
+                dismiss
+              </button>
+            </div>
+          )}
+
+          {/* Guest notice */}
+          {!user && draftRestored && (
+            <div className="bg-[#FFB6D9]/20 border-2 border-[#FFB6D9] rounded-xl px-4 py-3 mb-6 flex items-center justify-between flex-wrap gap-2">
+              <div className="font-caveat text-base text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive' }}>
+                your draft is saved locally ✦ create an account to publish it
+              </div>
+            </div>
+          )}
+
           {/* Stepper */}
           <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
             {STEPS.map((s, i) => (
@@ -126,6 +240,7 @@ export default function CreateScrapbookPage() {
                   coverId={coverId}
                   saving={saving}
                   onPublish={handlePublish}
+                  isGuest={!user}
                 />
               )}
             </motion.div>
@@ -146,6 +261,10 @@ export default function CreateScrapbookPage() {
         </div>
       </main>
       <Footer />
+
+      {showAuthModal && (
+        <AuthModal reason="publish" onClose={() => setShowAuthModal(false)} />
+      )}
     </div>
   )
 }
@@ -157,6 +276,7 @@ function PublishStep({
   coverId,
   saving,
   onPublish,
+  isGuest,
 }: {
   visibility: string
   onVisibilityChange: (v: 'public' | 'private' | 'link') => void
@@ -164,6 +284,7 @@ function PublishStep({
   coverId: string
   saving: boolean
   onPublish: () => void
+  isGuest: boolean
 }) {
   const cover = SCRAPBOOK_COVERS.find((c) => c.id === coverId)
 
@@ -180,7 +301,7 @@ function PublishStep({
           almost there!
         </h2>
         <p className="font-caveat text-xl text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
-          choose how you want to share your scrapbook ✦
+          {isGuest ? 'create a free account to save and publish ✦' : 'choose how you want to share your scrapbook ✦'}
         </p>
       </div>
 
@@ -198,26 +319,28 @@ function PublishStep({
         </div>
       </div>
 
-      <div className="max-w-md mx-auto space-y-3">
-        {OPTIONS.map((opt) => (
-          <button
-            key={opt.id}
-            onClick={() => onVisibilityChange(opt.id)}
-            className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
-              visibility === opt.id
-                ? 'border-[#FF4FA3] bg-[#FF4FA3]/5 shadow'
-                : 'border-[#FFB6D9]/50 bg-white hover:border-[#FF4FA3]'
-            }`}
-          >
-            <span className="text-2xl font-pixel text-[#FF4FA3]/60">{opt.symbol}</span>
-            <div>
-              <div className="font-nunito font-black text-[#3A0030] text-sm">{opt.label}</div>
-              <div className="font-nunito text-xs text-[#888]">{opt.desc}</div>
-            </div>
-            {visibility === opt.id && <span className="ml-auto text-[#FF4FA3] font-bold">✓</span>}
-          </button>
-        ))}
-      </div>
+      {!isGuest && (
+        <div className="max-w-md mx-auto space-y-3">
+          {OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => onVisibilityChange(opt.id)}
+              className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                visibility === opt.id
+                  ? 'border-[#FF4FA3] bg-[#FF4FA3]/5 shadow'
+                  : 'border-[#FFB6D9]/50 bg-white hover:border-[#FF4FA3]'
+              }`}
+            >
+              <span className="text-2xl font-pixel text-[#FF4FA3]/60">{opt.symbol}</span>
+              <div>
+                <div className="font-nunito font-black text-[#3A0030] text-sm">{opt.label}</div>
+                <div className="font-nunito text-xs text-[#888]">{opt.desc}</div>
+              </div>
+              {visibility === opt.id && <span className="ml-auto text-[#FF4FA3] font-bold">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

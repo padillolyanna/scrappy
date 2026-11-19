@@ -3,8 +3,11 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import FloatingElements from '@/components/ui/FloatingElements'
+import AuthModal from '@/components/ui/AuthModal'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
+import { useAuth } from '@/lib/useAuth'
+import { createClient } from '@/lib/supabase-client'
 
 const SAMPLE = [
   { text: 'I still listen to my middle school playlist when I need to feel better about life.', category: 'Music', reactions: 234, color: 'bg-[#FFF0A8]' },
@@ -21,8 +24,33 @@ const CATEGORIES = ['All', 'Love', 'Friendship', 'Life', 'Feelings', 'Random', '
 
 export default function ConfessionsPage() {
   const [confession, setConfession] = useState('')
-  const [category, setCategory] = useState('All')
+  const [category, setCategory] = useState('Random')
+  const [filterCategory, setFilterCategory] = useState('All')
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const { user } = useAuth()
+
+  async function handleSubmit() {
+    if (!confession.trim()) return
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+    setSubmitting(true)
+    const supabase = createClient()
+    await supabase.from('confessions').insert({
+      content: confession.trim(),
+      category,
+      is_anonymous: true,
+      user_id: user.id,
+      is_approved: false,
+    })
+    setSubmitting(false)
+    setSubmitted(true)
+  }
+
+  const filtered = filterCategory === 'All' ? SAMPLE : SAMPLE.filter((c) => c.category === filterCategory)
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -38,7 +66,7 @@ export default function ConfessionsPage() {
               the confession wall
             </h1>
             <p className="font-caveat text-xl text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
-              say the thing you've never said out loud
+              say the thing you&apos;ve never said out loud
             </p>
           </div>
 
@@ -50,27 +78,32 @@ export default function ConfessionsPage() {
             >
               <div className="text-4xl font-pixel text-[#FF4FA3] mb-2">✦</div>
               <div className="font-pacifico text-2xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>pinned to the wall!</div>
-              <div className="font-caveat text-lg text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>your confession has been shared anonymously ✦</div>
+              <div className="font-caveat text-lg text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>your confession has been submitted for review ✦</div>
               <button onClick={() => { setSubmitted(false); setConfession('') }} className="btn-y2k mt-4">share another</button>
             </motion.div>
           ) : (
             <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-6 mb-10 shadow-lg">
-              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>SHARE YOUR CONFESSION (anonymously)</div>
+              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>
+                SHARE YOUR CONFESSION (anonymously)
+                {!user && <span className="text-[#888] ml-2">— members only</span>}
+              </div>
               <textarea
                 value={confession}
                 onChange={(e) => setConfession(e.target.value)}
-                placeholder="write what's on your mind... no judgment here"
+                placeholder={user ? "write what's on your mind... no judgment here" : "join scrappy to post anonymously ✦"}
                 className="input-y2k resize-none font-caveat w-full mb-3"
                 rows={3}
                 style={{ fontFamily: 'Caveat, cursive', fontSize: '18px' }}
+                readOnly={!user}
+                onClick={() => !user && setShowAuthModal(true)}
               />
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex gap-2 flex-wrap">
                   {['Love', 'Friendship', 'Life', 'Random'].map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => setCategory(cat)}
-                      className={`font-pixel text-xs px-3 py-1 rounded-full border transition-all ${category === cat ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white' : 'border-[#FFB6D9] text-[#3A0030]'}`}
+                      onClick={() => user ? setCategory(cat) : setShowAuthModal(true)}
+                      className={`font-pixel text-xs px-3 py-1 rounded-full border transition-all ${category === cat && user ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white' : 'border-[#FFB6D9] text-[#3A0030]'}`}
                       style={{ fontSize: '9px' }}
                     >
                       {cat}
@@ -78,11 +111,11 @@ export default function ConfessionsPage() {
                   ))}
                 </div>
                 <button
-                  onClick={() => confession.trim() && setSubmitted(true)}
-                  disabled={!confession.trim()}
+                  onClick={handleSubmit}
+                  disabled={submitting || (!user && false)}
                   className="btn-y2k"
                 >
-                  pin it
+                  {submitting ? '...' : 'pin it'}
                 </button>
               </div>
             </div>
@@ -92,8 +125,8 @@ export default function ConfessionsPage() {
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setCategory(cat)}
-                className={`font-pixel text-xs px-3 py-1.5 rounded-full border-2 transition-all ${category === cat ? 'bg-[#3A0030] border-[#3A0030] text-white' : 'border-[#FFB6D9] text-[#3A0030] bg-white'}`}
+                onClick={() => setFilterCategory(cat)}
+                className={`font-pixel text-xs px-3 py-1.5 rounded-full border-2 transition-all ${filterCategory === cat ? 'bg-[#3A0030] border-[#3A0030] text-white' : 'border-[#FFB6D9] text-[#3A0030] bg-white'}`}
                 style={{ fontSize: '9px' }}
               >
                 {cat}
@@ -102,7 +135,7 @@ export default function ConfessionsPage() {
           </div>
 
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
-            {SAMPLE.map((c, i) => (
+            {filtered.map((c, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -113,12 +146,17 @@ export default function ConfessionsPage() {
               >
                 <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FF4FA3] shadow-md" />
                 <div className="font-caveat text-lg text-[#3A0030] leading-snug mb-3 mt-2" style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}>
-                  "{c.text}"
+                  &ldquo;{c.text}&rdquo;
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '9px' }}>{c.category}</span>
                   <div className="flex items-center gap-1 font-nunito text-xs text-[#888]">
-                    <button className="hover:scale-125 transition-transform">♡</button>
+                    <button
+                      onClick={() => !user && setShowAuthModal(true)}
+                      className="hover:scale-125 transition-transform"
+                    >
+                      ♡
+                    </button>
                     <span>{c.reactions}</span>
                   </div>
                 </div>
@@ -128,6 +166,10 @@ export default function ConfessionsPage() {
         </div>
       </main>
       <Footer />
+
+      {showAuthModal && (
+        <AuthModal reason="confession" onClose={() => setShowAuthModal(false)} />
+      )}
     </div>
   )
 }

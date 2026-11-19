@@ -1,41 +1,67 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useAuth } from '@/lib/useAuth'
+import { createClient } from '@/lib/supabase-client'
+import { useRouter } from 'next/navigation'
 
-const NAV_LINKS = [
+const GUEST_LINKS = [
   { href: '/', label: 'HOME' },
-  { href: '/scrapbook/create', label: 'MY SCRAPBOOK' },
   { href: '/explore', label: 'EXPLORE' },
   { href: '/highlights', label: 'HIGHLIGHTS' },
   { href: '/confessions', label: 'CONFESSIONS' },
   { href: '/prompts', label: 'DAILY PROMPT' },
 ]
 
+const AUTH_LINKS = [
+  { href: '/', label: 'HOME' },
+  { href: '/explore', label: 'EXPLORE' },
+  { href: '/my-space', label: 'MY SPACE' },
+  { href: '/confessions', label: 'CONFESSIONS' },
+  { href: '/prompts', label: 'DAILY PROMPT' },
+]
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const navLinks = user ? AUTH_LINKS : GUEST_LINKS
+  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'you'
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
 
   return (
     <>
-      <div className="bg-[#3A0030] text-[#FFB6D9] font-pixel text-xs py-1 px-4 flex items-center justify-between" style={{ fontSize: '11px' }}>
-        <span>✦ SCRAPPY v2.0 — loading your nostalgia... ✦</span>
-        <span className="hidden sm:block">made with love</span>
-      </div>
-
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b-2 border-[#FFB6D9] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <span
-              className="font-pacifico text-3xl text-glitter"
-              style={{ fontFamily: 'Pacifico, cursive', fontSize: '28px' }}
-            >
+            <span className="font-pacifico text-3xl text-glitter" style={{ fontFamily: 'Pacifico, cursive', fontSize: '28px' }}>
               SCRAPPY
             </span>
             <span className="text-lg animate-sparkle text-[#FF4FA3]">✦</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-1">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -48,20 +74,65 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-2">
-            <Link
-              href="/auth/login"
-              className="btn-outline-y2k text-xs py-1.5 px-4"
-              style={{ fontSize: '12px', padding: '6px 16px' }}
-            >
-              LOG IN
-            </Link>
-            <Link
-              href="/auth/signup"
-              className="btn-y2k text-xs py-1.5 px-4"
-              style={{ fontSize: '12px', padding: '6px 16px' }}
-            >
-              SIGN UP ✦
-            </Link>
+            {!loading && (
+              user ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 font-pixel text-xs text-[#3A0030] px-3 py-1.5 rounded-full border-2 border-[#FFB6D9] hover:border-[#FF4FA3] transition-all"
+                    style={{ fontSize: '10px' }}
+                  >
+                    <span className="text-[#FF4FA3]">✦</span>
+                    <span>@{username}</span>
+                    <span className="text-[#888]">▾</span>
+                  </button>
+                  {userMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white border-2 border-[#FFB6D9] rounded-xl shadow-lg overflow-hidden z-50">
+                      <Link
+                        href="/my-space"
+                        className="block px-4 py-3 font-pixel text-xs text-[#3A0030] hover:bg-[#FFB6D9]/20 transition-colors border-b border-[#FFB6D9]/30"
+                        style={{ fontSize: '10px' }}
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        MY SPACE
+                      </Link>
+                      <Link
+                        href="/scrapbook/create"
+                        className="block px-4 py-3 font-pixel text-xs text-[#3A0030] hover:bg-[#FFB6D9]/20 transition-colors border-b border-[#FFB6D9]/30"
+                        style={{ fontSize: '10px' }}
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        NEW SCRAPBOOK
+                      </Link>
+                      <button
+                        onClick={() => { setUserMenuOpen(false); handleLogout() }}
+                        className="block w-full text-left px-4 py-3 font-pixel text-xs text-[#888] hover:bg-[#FFB6D9]/20 transition-colors"
+                        style={{ fontSize: '10px' }}
+                      >
+                        LOG OUT
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className="btn-outline-y2k text-xs py-1.5 px-4"
+                    style={{ fontSize: '12px', padding: '6px 16px' }}
+                  >
+                    LOG IN
+                  </Link>
+                  <Link
+                    href="/auth/signup"
+                    className="btn-y2k text-xs py-1.5 px-4"
+                    style={{ fontSize: '12px', padding: '6px 16px' }}
+                  >
+                    JOIN SCRAPPY ✦
+                  </Link>
+                </>
+              )
+            )}
           </div>
 
           <button
@@ -74,7 +145,7 @@ export default function Navbar() {
 
         {menuOpen && (
           <div className="lg:hidden bg-white border-t border-[#FFB6D9] px-4 py-3 flex flex-col gap-2">
-            {NAV_LINKS.map((link) => (
+            {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -86,8 +157,30 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="flex gap-2 pt-2">
-              <Link href="/auth/login" className="btn-outline-y2k text-xs flex-1 text-center" style={{ fontSize: '11px' }}>LOG IN</Link>
-              <Link href="/auth/signup" className="btn-y2k text-xs flex-1 text-center" style={{ fontSize: '11px' }}>SIGN UP</Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/my-space"
+                    className="btn-y2k text-xs flex-1 text-center"
+                    style={{ fontSize: '11px' }}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    MY SPACE
+                  </Link>
+                  <button
+                    onClick={() => { setMenuOpen(false); handleLogout() }}
+                    className="btn-outline-y2k text-xs flex-1 text-center"
+                    style={{ fontSize: '11px' }}
+                  >
+                    LOG OUT
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="btn-outline-y2k text-xs flex-1 text-center" style={{ fontSize: '11px' }}>LOG IN</Link>
+                  <Link href="/auth/signup" className="btn-y2k text-xs flex-1 text-center" style={{ fontSize: '11px' }}>JOIN SCRAPPY</Link>
+                </>
+              )}
             </div>
           </div>
         )}
