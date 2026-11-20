@@ -5,15 +5,17 @@ import Marquee from '@/components/ui/Marquee'
 import Hero from '@/components/landing/Hero'
 import FeaturedScrapbooks from '@/components/landing/FeaturedScrapbooks'
 import DailyPrompt from '@/components/landing/DailyPrompt'
+import ScrappyHighlights from '@/components/landing/ScrappyHighlights'
 import ConfessionPreview from '@/components/landing/ConfessionPreview'
-import HowItWorks from '@/components/landing/HowItWorks'
+import ScrapbookExchange from '@/components/landing/ScrapbookExchange'
+import FinalCTA from '@/components/landing/FinalCTA'
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen relative">
+    <div className="flex flex-col min-h-screen relative overflow-x-hidden">
       <FloatingElements count={12} />
       <Navbar />
-      <Marquee />
+      <Marquee text="SCRAPPY — YOUR LITTLE CORNER OF THE INTERNET ✦ MAKE MEMORIES ✦ DECORATE YOUR PAGES ✦ COLLECT ANSWERS ✦ SHARE YOUR STORY ✦ VISITORS: 48,291 ✦ " />
       <main className="flex-1">
         <Hero />
         <Marquee
@@ -22,8 +24,10 @@ export default function Home() {
         />
         <FeaturedScrapbooks />
         <DailyPrompt />
-        <HowItWorks />
+        <ScrappyHighlights />
         <ConfessionPreview />
+        <ScrapbookExchange />
+        <FinalCTA />
       </main>
       <Footer />
     </div>

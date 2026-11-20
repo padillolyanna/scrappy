@@ -4,12 +4,25 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const TODAY_PROMPT = "What's one memory you wish you could relive?"
-
 const SAMPLE_ANSWERS = [
-  { author: 'stargirl404', text: 'The last summer before high school. Everything felt possible and nothing felt permanent yet.', likes: 42 },
-  { author: 'melodydreamer', text: "My grandma teaching me to bake her secret cookie recipe. She's gone now but I still make them every Christmas.", likes: 87 },
-  { author: 'nostalgiaxo', text: 'Road trip with my best friends at 3am singing every word to every song. Pure freedom.', likes: 56 },
+  {
+    user: 'stargazer',
+    answer: 'The songs my family played during long car rides. They always bring back memories.',
+    likes: 42,
+    avatar: 'from-pink-400 to-purple-400',
+  },
+  {
+    user: 'nostalgiaxo',
+    answer: 'Definitely the songs I listened to during my childhood. I still remember every word.',
+    likes: 87,
+    avatar: 'from-blue-400 to-teal-400',
+  },
+  {
+    user: 'melodydream',
+    answer: 'Classic Coldplay and Avril Lavigne. I used to listen to them all the time!',
+    likes: 56,
+    avatar: 'from-yellow-400 to-orange-400',
+  },
 ]
 
 function Countdown() {
@@ -33,9 +46,9 @@ function Countdown() {
   }, [])
 
   return (
-    <div className="flex items-center gap-2 font-pixel text-xs text-[#888]" style={{ fontSize: '11px' }}>
-      <span>next prompt in:</span>
-      <span className="bg-[#3A0030] text-[#FFB6D9] px-2 py-0.5 rounded">
+    <div className="inline-flex items-center gap-2 font-pixel text-[#FFB6D9]/60 mt-4" style={{ fontSize: '10px' }}>
+      <span>NEXT PROMPT IN:</span>
+      <span className="bg-white/10 border border-[#FFB6D9]/30 text-[#FFB6D9] px-3 py-1 rounded-full">
         {String(timeLeft.h).padStart(2, '0')}:{String(timeLeft.m).padStart(2, '0')}:{String(timeLeft.s).padStart(2, '0')}
       </span>
     </div>
@@ -46,89 +59,111 @@ export default function DailyPrompt() {
   const [answer, setAnswer] = useState('')
 
   return (
-    <section className="py-16 px-4">
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative"
-        >
-          <div className="paper-texture rounded-2xl p-8 relative border-2 border-[#A8DFFF]/50 shadow-lg">
-            <div className="absolute left-0 top-6 bottom-6 w-10 flex flex-col justify-around items-center">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="w-5 h-5 rounded-full bg-[#C9B6FF]/60 border-2 border-[#A8DFFF]" />
+    <section
+      className="py-16 lg:py-20 relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #2A0028 0%, #100030 100%)' }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="grid lg:grid-cols-[55%_45%] gap-10 items-start">
+          {/* LEFT COLUMN */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="font-pixel text-[#FFB6D9]/60 tracking-widest mb-2" style={{ fontSize: '10px' }}>
+              TODAY'S QUESTION
+            </div>
+            <h2 className="font-pacifico text-4xl text-white" style={{ fontFamily: 'Pacifico, cursive' }}>
+              Daily Scrapbook Prompt
+            </h2>
+
+            {/* Featured question card */}
+            <div className="bg-white/10 border border-[#FFB6D9]/20 rounded-2xl p-6 my-6">
+              <p className="font-caveat text-2xl text-[#FFB6D9]" style={{ fontFamily: 'Caveat, cursive' }}>
+                "What song instantly takes you back to your childhood?"
+              </p>
+            </div>
+
+            {/* Answer textarea */}
+            <textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="write your answer here..."
+              rows={3}
+              className="w-full rounded-xl px-4 py-3 resize-none font-caveat text-base mb-4 focus:outline-none focus:ring-2 focus:ring-[#FFB6D9]/40"
+              style={{
+                fontFamily: 'Caveat, cursive',
+                fontSize: '17px',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1.5px solid rgba(255,182,217,0.3)',
+                color: 'white',
+              }}
+            />
+
+            {/* Buttons */}
+            <div className="flex gap-3 flex-wrap">
+              <button className="btn-y2k">
+                Submit Answer
+              </button>
+              <button
+                className="border-2 rounded-full px-5 py-2 font-nunito font-bold text-sm transition-all hover:bg-white/10"
+                style={{ borderColor: 'rgba(255,182,217,0.4)', color: '#FFB6D9' }}
+              >
+                + ADD TO SCRAPBOOK
+              </button>
+            </div>
+
+            {/* Countdown */}
+            <Countdown />
+          </motion.div>
+
+          {/* RIGHT COLUMN */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            <div className="font-pixel text-[#FFB6D9]/60 tracking-widest mb-4" style={{ fontSize: '10px' }}>
+              2,184 ANSWERS TODAY
+            </div>
+
+            <div className="space-y-3">
+              {SAMPLE_ANSWERS.map((a, i) => (
+                <div
+                  key={i}
+                  className="bg-white/10 border border-[#FFB6D9]/20 rounded-xl p-4"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${a.avatar} shrink-0`} />
+                    <span className="text-[#FFB6D9] font-bold font-nunito text-sm">@{a.user}</span>
+                  </div>
+                  <p
+                    className="font-caveat text-lg text-white/80 line-clamp-3"
+                    style={{ fontFamily: 'Caveat, cursive' }}
+                  >
+                    {a.answer}
+                  </p>
+                  <div className="mt-2 font-nunito text-xs text-[#FFB6D9]/50">
+                    ♡ {a.likes}
+                  </div>
+                </div>
               ))}
             </div>
 
-            <div className="ml-8">
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                <div>
-                  <div className="font-pixel text-xs text-[#FF4FA3] mb-1 tracking-widest" style={{ fontSize: '11px' }}>
-                    ✦ TODAY'S QUESTION ✦
-                  </div>
-                  <Countdown />
-                </div>
-                <div className="text-4xl animate-sparkle text-[#C9B6FF]">✦</div>
-              </div>
-
-              <h3
-                className="font-caveat text-3xl text-[#3A0030] mb-6 leading-tight"
-                style={{ fontFamily: 'Caveat, cursive', fontSize: '32px' }}
+            <div className="mt-4">
+              <Link
+                href="/prompts"
+                className="font-pixel text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors"
+                style={{ fontSize: '10px' }}
               >
-                "{TODAY_PROMPT}"
-              </h3>
-
-              <div className="flex gap-2 mb-6">
-                <textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="share your answer..."
-                  className="input-y2k resize-none font-caveat flex-1"
-                  rows={2}
-                  style={{ fontFamily: 'Caveat, cursive', fontSize: '16px' }}
-                />
-                <button className="btn-y2k px-4 self-stretch" disabled={!answer.trim()}>
-                  send ✦
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '10px' }}>
-                  — COMMUNITY ANSWERS (87) —
-                </div>
-                {SAMPLE_ANSWERS.map((a, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="bg-white/60 rounded-xl p-3 border border-[#FFB6D9]/40"
-                  >
-                    <div className="font-nunito text-xs text-[#FF4FA3] font-bold mb-1">@{a.author}</div>
-                    <div
-                      className="font-caveat text-lg text-[#3A0030]"
-                      style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}
-                    >
-                      {a.text}
-                    </div>
-                    <div className="mt-1 flex items-center gap-1 font-nunito text-xs text-[#888]">
-                      <button className="hover:scale-125 transition-transform">♡</button>
-                      <span>{a.likes}</span>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="mt-4 text-center">
-                <Link href="/prompts" className="font-pixel text-xs text-[#FF4FA3] hover:underline" style={{ fontSize: '11px' }}>
-                  see all answers + past prompts
-                </Link>
-              </div>
+                READ ALL 2,184 ANSWERS →
+              </Link>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </section>
   )
