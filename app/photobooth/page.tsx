@@ -5,18 +5,25 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 import Footer from '@/components/layout/Footer'
+import {
+  BACKGROUNDS, DEFAULT_MAG_LINES, FRAMES, ensureFonts, renderStrip,
+  type LayoutId,
+} from '@/lib/photoboothArt'
+import { EMOJI_STICKERS, GEM_COLORS, GEM_STICKERS, STICKERS, Sticker, StickerDefs, stickerTintable } from '@/components/notebook/Stickers'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Step = 'landing' | 'layout' | 'camera' | 'customize' | 'preview'
-type LayoutId = 'classic' | 'mini' | 'double' | 'friendship' | 'grid' | 'collage'
+
+type BoothTab = 'frames' | 'covers' | 'backgrounds' | 'gems' | 'stickers' | 'emoji' | 'text' | 'filters'
 
 interface StickerEl {
   id: string
-  symbol: string
+  content: string // 'svg:<id>' or 'txt:<emoji>'
+  color?: string
   x: number // % of strip width
   y: number // % of strip height
-  size: number
+  size: number // px in the on-screen preview
   rotation: number
 }
 
@@ -40,6 +47,7 @@ const LAYOUTS: { id: LayoutId; label: string; count: number; desc: string }[] = 
   { id: 'friendship', label: 'FRIENDSHIP STRIP', count: 4, desc: '4 photos · with title' },
   { id: 'grid', label: 'PHOTO GRID', count: 4, desc: '4 photos · 2×2 grid' },
   { id: 'collage', label: 'COLLAGE', count: 6, desc: '6 photos · creative' },
+  { id: 'cover', label: 'MAGAZINE COVER', count: 1, desc: '1 photo · be the cover star' },
 ]
 
 const FILTERS: { id: string; label: string; css: string }[] = [
@@ -52,34 +60,6 @@ const FILTERS: { id: string; label: string; css: string }[] = [
   { id: 'soft_glow', label: 'Soft Glow', css: 'brightness(1.2) contrast(0.88) saturate(1.15)' },
   { id: 'y2k_digital', label: 'Y2K Digital', css: 'saturate(1.6) contrast(1.1) brightness(1.07) hue-rotate(-5deg)' },
   { id: 'bw', label: 'B&W', css: 'grayscale(1) contrast(1.1) brightness(1.05)' },
-]
-
-const FRAMES: { id: string; label: string; color: string; width: number }[] = [
-  { id: 'none', label: 'None', color: 'transparent', width: 0 },
-  { id: 'pink-glitter', label: 'Pink Glitter', color: '#FF4FA3', width: 8 },
-  { id: 'chrome', label: 'Chrome Y2K', color: '#C0C0C0', width: 8 },
-  { id: 'baby-blue', label: 'Baby Blue', color: '#89CFF0', width: 8 },
-  { id: 'purple', label: 'Purple Dream', color: '#9B59B6', width: 8 },
-  { id: 'classic-white', label: 'Classic White', color: '#FFFFFF', width: 12 },
-  { id: 'hot-pink', label: 'Hot Pink', color: '#FF1493', width: 8 },
-  { id: 'vintage', label: 'Vintage Film', color: '#8B7355', width: 8 },
-]
-
-const BG_COLORS = [
-  { hex: '#FFB6D9', label: 'Pink' },
-  { hex: '#E6D0FF', label: 'Lavender' },
-  { hex: '#B9E0FF', label: 'Baby Blue' },
-  { hex: '#FFF8ED', label: 'Cream' },
-  { hex: '#FFFFFF', label: 'White' },
-  { hex: '#1A0020', label: 'Dark' },
-  { hex: '#FFD6EC', label: 'Blush' },
-  { hex: '#D6FFE8', label: 'Mint' },
-]
-
-const STICKER_LIBRARY = [
-  '♡', '✦', '★', '✿', '◆', '🌸', '🦋', '🍒',
-  '🎀', '💫', '⭐', '🌙', '📷', '💕', '🌈', '✨',
-  '🎀', '💎', '🌺', '🫧', '🫶', '💌', '🎞️', '🪄',
 ]
 
 const FONTS = ['Caveat', 'Pacifico', 'VT323', 'Nunito', 'Space Grotesk']
@@ -97,10 +77,31 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
+function newSticker(content: string, color?: string): StickerEl {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    content, color,
+    x: 30 + Math.random() * 40, y: 20 + Math.random() * 60,
+    size: content.startsWith('txt:') ? 34 : 46,
+    rotation: Math.round((Math.random() - 0.5) * 24),
+  }
+}
+
 // ─── Layout Preview SVG ───────────────────────────────────────────────────────
 
 function LayoutPreview({ id }: { id: LayoutId }) {
   const base = 'fill-[#FFB6D9]/40 stroke-[#FF4FA3]/60 stroke-[0.5]'
+  if (id === 'cover') {
+    return (
+      <svg viewBox="0 0 44 60" className="w-full h-full">
+        <rect x={1} y={1} width={42} height={58} rx="1" className={base} />
+        <rect x={6} y={4} width={32} height={8} rx="1" className="fill-[#FF4FA3]/70" />
+        <rect x={28} y={22} width={12} height={2} className="fill-[#FF4FA3]/60" />
+        <rect x={30} y={26} width={10} height={2} className="fill-[#3A0030]/40" />
+        <rect x={28} y={30} width={12} height={2} className="fill-[#FF4FA3]/60" />
+      </svg>
+    )
+  }
   if (id === 'grid' || id === 'collage') {
     const slots = id === 'grid' ? [[0,0],[1,0],[0,1],[1,1]] : [[0,0],[1,0],[0,1],[1,1],[0,2],[1,2]]
     return (
@@ -151,9 +152,21 @@ export default function PhotoboothPage() {
 
   // ── Customize ──
   const [selectedFilter, setSelectedFilter] = useState('none')
-  const [selectedFrame, setSelectedFrame] = useState('pink-glitter')
-  const [bgColor, setBgColor] = useState('#FFB6D9')
+  const [selectedFrame, setSelectedFrame] = useState('rhinestone')
+  const [bgId, setBgId] = useState('glitter-pink')
+  const [magTitle, setMagTitle] = useState('sparkle')
+  const [stripTitle, setStripTitle] = useState('best friends 4ever ♡')
+  const [magLines, setMagLines] = useState<string[]>(DEFAULT_MAG_LINES)
+  const [loadedImgs, setLoadedImgs] = useState<HTMLImageElement[]>([])
+  const [fontsReady, setFontsReady] = useState(false)
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const [stickers, setStickers] = useState<StickerEl[]>([])
+  const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null)
+  const [gemColor, setGemColor] = useState(GEM_COLORS[0].hex)
+  const [boothTab, setBoothTab] = useState<BoothTab>('frames')
+  const [trayPage, setTrayPage] = useState(0)
+  const [boothStart, setBoothStart] = useState(0)
+  const [boothNow, setBoothNow] = useState(0)
   const [textElements, setTextElements] = useState<TextEl[]>([])
   const stripPreviewRef = useRef<HTMLDivElement>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -280,6 +293,7 @@ export default function PhotoboothPage() {
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
     const el = [...stickers, ...textElements].find(x => x.id === id)
     if (!el) return
+    setSelectedStickerId(stickers.some(x => x.id === id) ? id : null)
     setDraggingId(id)
     setDragOffset({
       x: clientX - rect.left - (el.x / 100) * rect.width,
@@ -301,12 +315,15 @@ export default function PhotoboothPage() {
 
   function handleDragEnd() { setDraggingId(null) }
 
-  function addSticker(symbol: string) {
-    setStickers(prev => [...prev, {
-      id: Date.now().toString(),
-      symbol, x: 50, y: 50,
-      size: 28, rotation: 0,
-    }])
+  function addSticker(content: string, color?: string) {
+    const el = newSticker(content, color)
+    const id = el.id
+    setStickers(prev => [...prev, el])
+    setSelectedStickerId(id)
+  }
+
+  function updateSticker(id: string, patch: Partial<StickerEl>) {
+    setStickers(prev => prev.map(s => (s.id === id ? { ...s, ...patch } : s)))
   }
 
   function addTextEl() {
@@ -325,116 +342,62 @@ export default function PhotoboothPage() {
   }
 
   // ── Export ──
+  const isWide = selectedLayout === 'grid' || selectedLayout === 'collage' || selectedLayout === 'cover'
+  const previewWidth = isWide ? 300 : 220
+  const artOpts = {
+    layout: selectedLayout,
+    count: Math.max(1, capturedPhotos.length),
+    filterCss: FILTERS.find(f => f.id === selectedFilter)?.css ?? 'none',
+    bgId,
+    frameId: selectedFrame,
+    magTitle,
+    magLines,
+    stripTitle,
+  }
+
   async function generateExport(): Promise<string> {
-    const scale = 2
-    const W = 400 * scale
-    const PAD = 10 * scale
-
-    const filter = FILTERS.find(f => f.id === selectedFilter)!
-    const frame = FRAMES.find(f => f.id === selectedFrame)!
-
+    await ensureFonts()
     const imgs = await Promise.all(capturedPhotos.map(loadImage))
     if (!imgs.length) throw new Error('No photos')
-
-    const imgAspect = imgs[0].height / imgs[0].width
-    const photoW = W - PAD * 2
-    const photoH = Math.round(photoW * Math.min(imgAspect, 1.1))
-
-    let canvasH = 0
-    const positions: { x: number; y: number; w: number; h: number }[] = []
-
-    if (selectedLayout === 'grid') {
-      const cw = (W - PAD * 3) / 2
-      const ch = Math.round(cw * Math.min(imgAspect, 1.0))
-      canvasH = PAD * 3 + ch * 2
-      imgs.slice(0, 4).forEach((_, i) => {
-        positions.push({ x: PAD + (i % 2) * (cw + PAD), y: PAD + Math.floor(i / 2) * (ch + PAD), w: cw, h: ch })
-      })
-    } else if (selectedLayout === 'collage') {
-      const cw = (W - PAD * 3) / 2
-      const ch = Math.round(cw * Math.min(imgAspect, 1.0))
-      const rows = Math.ceil(imgs.length / 2)
-      canvasH = PAD + rows * (ch + PAD)
-      imgs.forEach((_, i) => {
-        positions.push({ x: PAD + (i % 2) * (cw + PAD), y: PAD + Math.floor(i / 2) * (ch + PAD), w: cw, h: ch })
-      })
-    } else if (selectedLayout === 'friendship') {
-      const hdrH = 56 * scale
-      canvasH = PAD + hdrH + PAD + imgs.length * (photoH + PAD)
-      imgs.forEach((_, i) => {
-        positions.push({ x: PAD, y: PAD + hdrH + PAD + i * (photoH + PAD), w: photoW, h: photoH })
-      })
-    } else {
-      canvasH = PAD + imgs.length * (photoH + PAD)
-      imgs.forEach((_, i) => {
-        positions.push({ x: PAD, y: PAD + i * (photoH + PAD), w: photoW, h: photoH })
-      })
-    }
-
-    const footerH = 28 * scale
-    canvasH += footerH
-
     const canvas = document.createElement('canvas')
-    canvas.width = W
-    canvas.height = canvasH
+    const { W, H } = renderStrip(canvas, { ...artOpts, imgs, scale: 2 })
     const ctx = canvas.getContext('2d')!
+    // stickers/text are sized in preview pixels — scale them to the export
+    const k = W / previewWidth
 
-    // Background
-    ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, W, canvasH)
-
-    // Friendship header
-    if (selectedLayout === 'friendship') {
-      const hdrH = 56 * scale
-      ctx.fillStyle = frame.id !== 'none' ? frame.color : '#FF4FA3'
-      ctx.font = `bold ${18 * scale}px Pacifico, cursive`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillStyle = '#FFFFFF'
-      ctx.fillRect(0, PAD, W, hdrH)
-      ctx.fillStyle = '#3A0030'
-      ctx.fillText('friendship strip ♡', W / 2, PAD + hdrH / 2)
+    // stickers are SVG art: serialise the preview's self-contained SVG and draw it
+    const serializer = new XMLSerializer()
+    for (const s of stickers) {
+      const svg = stripPreviewRef.current?.querySelector(`[data-sticker-id="${s.id}"] svg`)
+      if (!svg) continue
+      const url = URL.createObjectURL(new Blob([serializer.serializeToString(svg)], { type: 'image/svg+xml' }))
+      try {
+        const img = await loadImage(url)
+        // the SVG viewBox has a 6/112 margin around the 100-unit art
+        const box = s.size * k * (112 / 100)
+        ctx.save()
+        ctx.translate((s.x / 100) * W, (s.y / 100) * H)
+        ctx.rotate((s.rotation * Math.PI) / 180)
+        ctx.shadowColor = 'rgba(43,10,46,.3)'
+        ctx.shadowBlur = 3 * k
+        ctx.shadowOffsetY = 2 * k
+        ctx.drawImage(img, -box / 2, -box / 2, box, box)
+        ctx.restore()
+      } catch {
+        // skip a sticker that fails to rasterise rather than failing the strip
+      } finally {
+        URL.revokeObjectURL(url)
+      }
     }
 
-    // Photos with filter
-    if (filter.css !== 'none') ctx.filter = filter.css
-    imgs.forEach((img, i) => {
-      if (!positions[i]) return
-      const { x, y, w, h } = positions[i]
-      const ia = img.width / img.height
-      const sa = w / h
-      let sx = 0, sy = 0, sw = img.width, sh = img.height
-      if (ia > sa) { sw = img.height * sa; sx = (img.width - sw) / 2 }
-      else { sh = img.width / sa; sy = (img.height - sh) / 2 }
-      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
-    })
-    ctx.filter = 'none'
-
-    // Frame border
-    if (frame.id !== 'none') {
-      ctx.strokeStyle = frame.color
-      ctx.lineWidth = frame.width * scale
-      ctx.strokeRect(frame.width * scale / 2, frame.width * scale / 2, W - frame.width * scale, canvasH - frame.width * scale)
-    }
-
-    // Stickers
-    stickers.forEach(s => {
-      ctx.save()
-      ctx.translate((s.x / 100) * W, (s.y / 100) * canvasH)
-      ctx.rotate((s.rotation * Math.PI) / 180)
-      ctx.font = `${s.size * scale}px serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(s.symbol, 0, 0)
-      ctx.restore()
-    })
-
-    // Text elements
     textElements.forEach(t => {
       ctx.save()
-      ctx.translate((t.x / 100) * W, (t.y / 100) * canvasH)
+      ctx.translate((t.x / 100) * W, (t.y / 100) * H)
       ctx.rotate((t.rotation * Math.PI) / 180)
-      ctx.font = `${t.fontSize * scale}px ${t.fontFamily}, cursive`
+      ctx.font = `${t.fontSize * k}px ${t.fontFamily}, cursive`
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'
+      ctx.shadowBlur = 3 * k
+      ctx.shadowOffsetY = 1 * k
       ctx.fillStyle = t.color
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -442,14 +405,44 @@ export default function PhotoboothPage() {
       ctx.restore()
     })
 
-    // Watermark
-    ctx.fillStyle = 'rgba(0,0,0,0.22)'
-    ctx.font = `${8 * scale}px monospace`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'bottom'
-    ctx.fillText('✦ made with SCRAPPY ✦', W / 2, canvasH - 5 * scale)
-
     return canvas.toDataURL('image/png', 0.95)
+  }
+
+  // Load captured photos + fonts once for the live canvas preview
+  useEffect(() => {
+    let cancelled = false
+    Promise.all(capturedPhotos.map(loadImage)).then(imgs => { if (!cancelled) setLoadedImgs(imgs) }).catch(() => {})
+    ensureFonts().then(() => { if (!cancelled) setFontsReady(true) })
+    return () => { cancelled = true }
+  }, [capturedPhotos])
+
+  // Redraw the live preview whenever a choice changes
+  useEffect(() => {
+    if (step !== 'customize' || !previewCanvasRef.current) return
+    renderStrip(previewCanvasRef.current, { ...artOpts, imgs: loadedImgs, scale: 1.5 })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, loadedImgs, fontsReady, selectedLayout, selectedFilter, bgId, selectedFrame, magTitle, magLines, stripTitle, capturedPhotos.length])
+
+  // purikura-style decorating clock (just for fun — it never locks you out)
+  useEffect(() => {
+    if (step !== 'customize') return
+    const t0 = Date.now()
+    const id = setInterval(() => {
+      setBoothStart(prev => (prev === 0 ? t0 : prev))
+      setBoothNow(Date.now())
+    }, 1000)
+    return () => {
+      clearInterval(id)
+      setBoothStart(0)
+    }
+  }, [step])
+
+  function autoSelect() {
+    const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)]
+    setBgId(pick(BACKGROUNDS.filter(b => !b.id.startsWith('solid'))).id)
+    if (selectedLayout !== 'cover') setSelectedFrame(pick(FRAMES.filter(f => f.group === 'frame' && f.id !== 'none')).id)
+    const gems = GEM_STICKERS.filter(g => g.tint)
+    for (let i = 0; i < 3; i++) addSticker(`svg:${pick(gems).id}`, pick(GEM_COLORS).hex)
   }
 
   async function goToPreview() {
@@ -493,7 +486,7 @@ export default function PhotoboothPage() {
         layout_id: selectedLayout,
         filter_id: selectedFilter,
         frame_id: selectedFrame,
-        bg_color: bgColor,
+        bg_color: bgId,
         photo_count: capturedPhotos.length,
         strip_url: publicUrl,
         status: 'completed',
@@ -512,10 +505,12 @@ export default function PhotoboothPage() {
     setCapturedPhotos([])
     setCaptureIndex(0)
     setStickers([])
+    setSelectedStickerId(null)
     setTextElements([])
     setSelectedFilter('none')
-    setSelectedFrame('pink-glitter')
-    setBgColor('#FFB6D9')
+    setSelectedFrame('rhinestone')
+    setBgId('glitter-pink')
+    setStripTitle('best friends 4ever ♡')
     setExportedUrl(null)
     setSaved(false)
     setSaveError('')
@@ -523,8 +518,6 @@ export default function PhotoboothPage() {
   }
 
   // ─── Filter CSS helper ───
-  const filterCss = FILTERS.find(f => f.id === selectedFilter)?.css ?? 'none'
-  const frameStyle = FRAMES.find(f => f.id === selectedFrame)!
 
   // ─────────────────────────────────────────────────────────────────────────────
   // STEP: LANDING
@@ -882,220 +875,264 @@ export default function PhotoboothPage() {
   // STEP: CUSTOMIZE
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'customize') {
-    const isGrid = selectedLayout === 'grid' || selectedLayout === 'collage'
+    const TABS: { id: BoothTab; label: string; color: string }[] = [
+      { id: 'frames', label: 'Frames', color: '#FF2E93' },
+      { id: 'covers', label: 'Cover', color: '#F59E0B' },
+      { id: 'backgrounds', label: 'Pattern', color: '#1D9BF0' },
+      { id: 'gems', label: 'Bling', color: '#A855F7' },
+      { id: 'stickers', label: 'Stamps', color: '#14B8A6' },
+      { id: 'emoji', label: 'Emoji', color: '#F43F5E' },
+      { id: 'text', label: 'Writing', color: '#7C4DDB' },
+      { id: 'filters', label: 'Colour', color: '#22C55E' },
+    ]
+    const items: { key: string; label: string; active: boolean; onClick: () => void; node: React.ReactNode }[] =
+      boothTab === 'frames' ? FRAMES.filter(f => f.group === 'frame').map(f => ({
+        key: f.id, label: f.label, active: selectedFrame === f.id, onClick: () => setSelectedFrame(f.id),
+        node: <ArtThumb kind="frame" id={f.id} bgId={bgId} layout={selectedLayout} imgs={loadedImgs} magTitle={magTitle} magLines={magLines} />,
+      }))
+      : boothTab === 'covers' ? FRAMES.filter(f => f.group === 'magazine').map(f => ({
+        key: f.id, label: f.label.replace('cover: ', ''), active: selectedFrame === f.id, onClick: () => setSelectedFrame(f.id),
+        node: <ArtThumb kind="frame" id={f.id} bgId={bgId} layout="cover" imgs={loadedImgs.slice(0, 1)} magTitle={magTitle} magLines={magLines} />,
+      }))
+      : boothTab === 'backgrounds' ? BACKGROUNDS.map(b => ({
+        key: b.id, label: b.label, active: bgId === b.id, onClick: () => setBgId(b.id), node: <ArtThumb kind="bg" id={b.id} />,
+      }))
+      : boothTab === 'gems' ? GEM_STICKERS.map(g => ({
+        key: g.id, label: g.label, active: false, onClick: () => addSticker(`svg:${g.id}`, g.tint ? gemColor : undefined),
+        node: <div className="w-full h-full p-2"><Sticker content={`svg:${g.id}`} color={g.tint ? gemColor : undefined} /></div>,
+      }))
+      : boothTab === 'stickers' ? STICKERS.map(g => ({
+        key: g.id, label: g.label, active: false, onClick: () => addSticker(`svg:${g.id}`),
+        node: <div className="w-full h-full p-2"><Sticker content={`svg:${g.id}`} /></div>,
+      }))
+      : boothTab === 'emoji' ? EMOJI_STICKERS.map(e => ({
+        key: e, label: e, active: false, onClick: () => addSticker(`txt:${e}`),
+        node: <div className="w-full h-full p-3"><Sticker content={`txt:${e}`} /></div>,
+      }))
+      : boothTab === 'filters' ? FILTERS.map(f => ({
+        key: f.id, label: f.label, active: selectedFilter === f.id, onClick: () => setSelectedFilter(f.id),
+        // eslint-disable-next-line @next/next/no-img-element
+        node: <img src={capturedPhotos[0]} alt="" className="w-full h-full object-cover" style={{ filter: f.css }} />,
+      }))
+      : []
+    const PAGE = 8
+    const pageCount = Math.max(1, Math.ceil(items.length / PAGE))
+    const page = Math.min(trayPage, pageCount - 1)
+    const tab = TABS.find(t => t.id === boothTab)!
+    const secsLeft = Math.max(0, 300 - Math.floor((boothNow - boothStart) / 1000))
 
     return (
       <div className="flex flex-col min-h-screen">
-        <main className="flex-1 py-6 px-4">
-          <div className="max-w-5xl mx-auto">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
+        <main className="flex-1 py-5 px-3">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
               <button onClick={() => setStep('camera')} className="text-[#888] hover:text-[#FF4FA3] font-nunito text-sm flex items-center gap-1">
                 ← retake photos
               </button>
-              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '11px' }}>
-                ✦ STEP 03 — DECORATE ✦
-              </div>
-              <button
-                onClick={goToPreview}
-                disabled={generating}
-                className="btn-y2k py-2 px-5 text-sm"
-                style={{ fontSize: '12px' }}
-              >
-                {generating ? 'generating...' : 'PREVIEW ✦'}
+              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '11px' }}>✦ STEP 03 — DECORATE ✦</div>
+              <button onClick={goToPreview} disabled={generating} className="btn-y2k py-2 px-5 text-sm" style={{ fontSize: '12px' }}>
+                {generating ? 'generating...' : 'FINISH ✦'}
               </button>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Strip preview */}
-              <div className="flex-shrink-0 flex flex-col items-center">
-                <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '9px' }}>
-                  DRAG STICKERS &amp; TEXT TO REPOSITION
+            {/* ── the machine ── */}
+            <div className="booth-machine">
+              {/* LCD timer */}
+              <div className="flex justify-center -mt-1 mb-3">
+                <div className="booth-lcd" role="timer" aria-label="decorating time">
+                  <span className="opacity-80">Time:</span>
+                  <span className={secsLeft === 0 ? 'animate-blink' : ''}>{secsLeft === 0 ? 'BONUS!' : String(secsLeft).padStart(3, ' ')}</span>
                 </div>
-                <div
-                  ref={stripPreviewRef}
-                  className="relative select-none"
-                  style={{
-                    background: bgColor,
-                    border: frameStyle.id !== 'none' ? `${frameStyle.width}px solid ${frameStyle.color}` : 'none',
-                    width: isGrid ? '260px' : '180px',
-                    cursor: draggingId ? 'grabbing' : 'default',
-                  }}
-                  onMouseMove={handleDragMove}
-                  onMouseUp={handleDragEnd}
-                  onMouseLeave={handleDragEnd}
-                  onTouchMove={handleDragMove}
-                  onTouchEnd={handleDragEnd}
-                >
-                  {/* Friendship header */}
-                  {selectedLayout === 'friendship' && (
-                    <div className="text-center py-2 font-caveat text-[#3A0030] border-b border-black/10" style={{ fontFamily: 'Caveat, cursive', fontSize: '14px' }}>
-                      friendship strip ♡
-                    </div>
-                  )}
+              </div>
 
-                  {/* Photos */}
-                  {isGrid ? (
-                    <div className="grid grid-cols-2 gap-1 p-1">
-                      {capturedPhotos.map((p, i) => (
-                        <img key={i} src={p} alt="" className="w-full object-cover" style={{ filter: filterCss, aspectRatio: '1 / 1' }} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1 p-1">
-                      {capturedPhotos.map((p, i) => (
-                        <img key={i} src={p} alt="" className="w-full object-cover" style={{ filter: filterCss, aspectRatio: '4 / 3' }} />
-                      ))}
-                    </div>
-                  )}
+              <div className="grid gap-3 lg:grid-cols-[190px_minmax(0,1fr)_180px]">
+                {/* left: categories */}
+                <div className="booth-pillar order-2 lg:order-1">
+                  <div className="booth-pillar-title" style={{ background: 'linear-gradient(180deg,#ffffff88,#FF2E93 55%,#D4006E)' }}>Category</div>
+                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-2 p-2">
+                    {TABS.map(t => (
+                      <button
+                        key={t.id}
+                        onClick={() => { setBoothTab(t.id); setTrayPage(0) }}
+                        className={`booth-tile ${boothTab === t.id ? 'booth-tile-on' : ''}`}
+                        style={{ ['--tile' as string]: t.color }}
+                        aria-pressed={boothTab === t.id}
+                      >
+                        <span className="booth-tile-art">
+                          {t.id === 'frames' && <ArtThumb kind="frame" id={selectedFrame.startsWith('mag-') ? 'rhinestone' : selectedFrame} bgId={bgId} layout={selectedLayout} imgs={loadedImgs} magTitle={magTitle} magLines={magLines} />}
+                          {t.id === 'covers' && <ArtThumb kind="frame" id="mag-bubble" bgId={bgId} layout="cover" imgs={loadedImgs.slice(0, 1)} magTitle={magTitle} magLines={magLines} />}
+                          {t.id === 'backgrounds' && <ArtThumb kind="bg" id={bgId} />}
+                          {t.id === 'gems' && <div className="w-full h-full p-1.5"><Sticker content="svg:gem-heart" color={gemColor} /></div>}
+                          {t.id === 'stickers' && <div className="w-full h-full p-1.5"><Sticker content="svg:butterfly" /></div>}
+                          {t.id === 'emoji' && <div className="w-full h-full p-2"><Sticker content="txt:💖" /></div>}
+                          {t.id === 'text' && <span className="font-pacifico text-2xl text-[#7C4DDB]" style={{ textShadow: '1px 1px 0 #fff' }}>Aa</span>}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          {t.id === 'filters' && <img src={capturedPhotos[0]} alt="" className="w-full h-full object-cover" style={{ filter: 'saturate(1.6) hue-rotate(-20deg)' }} />}
+                        </span>
+                        <span className="booth-tile-label">{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                  {/* Stickers */}
-                  {stickers.map(s => (
-                    <div
-                      key={s.id}
-                      onMouseDown={e => handleDragStart(e, s.id)}
-                      onTouchStart={e => handleDragStart(e, s.id)}
-                      className="absolute cursor-grab active:cursor-grabbing"
-                      style={{
-                        left: `${s.x}%`,
-                        top: `${s.y}%`,
-                        fontSize: s.size,
-                        transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
-                        zIndex: 10,
-                        userSelect: 'none',
-                      }}
-                    >
-                      {s.symbol}
-                    </div>
-                  ))}
+                {/* centre: the strip */}
+                <div className="booth-screen order-1 lg:order-2">
+                  <div className="font-pixel text-white/80 text-center mb-2" style={{ fontSize: '9px' }}>DRAG STICKERS &amp; TEXT · TAP A STICKER TO EDIT IT</div>
+                  <div className="flex justify-center">
+                  <div
+                    ref={stripPreviewRef}
+                    className="relative select-none"
+                    style={{
+                      width: `${previewWidth}px`,
+                      cursor: draggingId ? 'grabbing' : 'default',
+                      boxShadow: '0 6px 18px rgba(43,10,46,.35)',
+                    }}
+                    onMouseMove={handleDragMove}
+                    onMouseUp={handleDragEnd}
+                    onMouseLeave={handleDragEnd}
+                    onTouchMove={handleDragMove}
+                    onTouchEnd={handleDragEnd}
+                  >
+                    <canvas ref={previewCanvasRef} className="block w-full h-auto" aria-label="photo strip preview" />
 
-                  {/* Text elements */}
-                  {textElements.map(t => (
-                    <div
-                      key={t.id}
-                      onMouseDown={e => handleDragStart(e, t.id)}
-                      onTouchStart={e => handleDragStart(e, t.id)}
-                      className="absolute cursor-grab active:cursor-grabbing whitespace-nowrap"
-                      style={{
-                        left: `${t.x}%`,
-                        top: `${t.y}%`,
-                        fontSize: t.fontSize,
-                        color: t.color,
-                        fontFamily: `${t.fontFamily}, cursive`,
-                        transform: `translate(-50%, -50%) rotate(${t.rotation}deg)`,
-                        zIndex: 10,
-                        userSelect: 'none',
-                        textShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                      }}
-                    >
-                      {t.text}
-                    </div>
-                  ))}
+                    {/* Stickers */}
+                    {stickers.map(s => (
+                      <div
+                        key={s.id}
+                        data-sticker-id={s.id}
+                        onMouseDown={e => handleDragStart(e, s.id)}
+                        onTouchStart={e => handleDragStart(e, s.id)}
+                        className="absolute cursor-grab active:cursor-grabbing"
+                        style={{
+                          left: `${s.x}%`,
+                          top: `${s.y}%`,
+                          width: s.size * (112 / 100),
+                          height: s.size * (112 / 100),
+                          transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
+                          zIndex: 10,
+                          userSelect: 'none',
+                          filter: 'drop-shadow(0 2px 2px rgba(43,10,46,.3))',
+                          outline: selectedStickerId === s.id ? '2px dashed #FF4FA3' : 'none',
+                          outlineOffset: 2,
+                        }}
+                      >
+                        <div style={{ width: '100%', height: '100%' }} className="[&>svg]:w-full [&>svg]:h-full">
+                          <Sticker content={s.content} color={s.color} standalone />
+                        </div>
+                      </div>
+                    ))}
 
-                  {/* Watermark */}
-                  <div className="text-center py-1 font-pixel text-black/20" style={{ fontSize: '7px' }}>
-                    ✦ made with SCRAPPY ✦
+                    {/* Text elements */}
+                    {textElements.map(t => (
+                      <div
+                        key={t.id}
+                        onMouseDown={e => handleDragStart(e, t.id)}
+                        onTouchStart={e => handleDragStart(e, t.id)}
+                        className="absolute cursor-grab active:cursor-grabbing whitespace-nowrap"
+                        style={{
+                          left: `${t.x}%`,
+                          top: `${t.y}%`,
+                          fontSize: t.fontSize,
+                          color: t.color,
+                          fontFamily: `${t.fontFamily}, cursive`,
+                          transform: `translate(-50%, -50%) rotate(${t.rotation}deg)`,
+                          zIndex: 10,
+                          userSelect: 'none',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                        }}
+                      >
+                        {t.text}
+                      </div>
+                    ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* right: shots + functions */}
+                <div className="booth-pillar order-3">
+                  <div className="booth-pillar-title" style={{ background: 'linear-gradient(180deg,#ffffff88,#1D9BF0 55%,#0B5FD0)' }}>Your shots</div>
+                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 p-2">
+                    {capturedPhotos.map((src, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={i} src={src} alt={`shot ${i + 1}`} className="w-full aspect-[4/3] object-cover rounded border-2 border-white shadow" style={{ filter: FILTERS.find(f => f.id === selectedFilter)?.css }} />
+                    ))}
+                  </div>
+                  <div className="booth-pillar-title" style={{ background: 'linear-gradient(180deg,#ffffff88,#22C55E 55%,#15803D)' }}>Function</div>
+                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 p-2">
+                    <button className="booth-fn" onClick={autoSelect}>Auto ✦</button>
+                    <button className="booth-fn" onClick={() => setBgId('solid-white')}>Del BG</button>
+                    <button className="booth-fn" onClick={() => { setStickers([]); setTextElements([]); setSelectedStickerId(null) }}>Del FG</button>
+                    <button className="booth-fn" onClick={() => setSelectedFrame('none')}>No frame</button>
                   </div>
                 </div>
               </div>
 
-              {/* Controls panel */}
-              <div className="flex-1 space-y-4 overflow-y-auto max-h-[80vh] lg:max-h-none">
+              {/* selected sticker controls */}
+              <div className="mt-3">
+                  {stickers.find(x => x.id === selectedStickerId) && (() => {
+                    const cur = stickers.find(x => x.id === selectedStickerId)!
+                    return (
+                      <div className="mt-3 p-3 rounded-xl bg-[#FFF0F7] border-2 border-[#FFB6D9] space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 shrink-0"><Sticker content={cur.content} color={cur.color} /></div>
+                          <span className="font-pixel text-[#3A0030] flex-1" style={{ fontSize: '9px' }}>SELECTED STICKER — drag it on the strip</span>
+                          <button onClick={() => { setStickers(prev => [...prev.filter(x => x.id !== cur.id), cur]) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">to front</button>
+                          <button onClick={() => addSticker(cur.content, cur.color)} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">copy</button>
+                          <button onClick={() => { setStickers(prev => prev.filter(x => x.id !== cur.id)); setSelectedStickerId(null) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-red-200 bg-white text-red-500">delete</button>
+                        </div>
+                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
+                          <span className="w-12">size</span>
+                          <input type="range" min={16} max={150} value={cur.size} onChange={e => updateSticker(cur.id, { size: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
+                        </label>
+                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
+                          <span className="w-12">rotate</span>
+                          <input type="range" min={-180} max={180} value={cur.rotation} onChange={e => updateSticker(cur.id, { rotation: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
+                        </label>
+                        {stickerTintable(cur.content) && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-nunito text-xs text-[#3A0030] w-12">colour</span>
+                            {GEM_COLORS.map(c => (
+                              <button key={c.id} onClick={() => updateSticker(cur.id, { color: c.hex })} title={c.label} aria-label={c.label} className={`w-6 h-6 rounded-full border-2 ${cur.color === c.hex ? 'border-[#3A0030]' : 'border-white shadow'}`} style={{ background: c.hex }} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+              </div>
 
-                {/* Filters */}
-                <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
-                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>FILTERS</div>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {FILTERS.map(f => (
-                      <button
-                        key={f.id}
-                        onClick={() => setSelectedFilter(f.id)}
-                        className={`flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
-                          selectedFilter === f.id ? 'border-[#FF4FA3] scale-105' : 'border-[#FFB6D9]/40 hover:border-[#FF4FA3]'
-                        }`}
-                      >
-                        <img
-                          src={capturedPhotos[0]}
-                          alt={f.label}
-                          className="w-14 h-14 object-cover"
-                          style={{ filter: f.css }}
-                        />
-                        <div className="text-center py-1 font-nunito text-[#888]" style={{ fontSize: '7px' }}>{f.label}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Frame + Background */}
-                <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
-                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>FRAME</div>
-                  <div className="flex gap-2 flex-wrap mb-4">
-                    {FRAMES.map(f => (
-                      <button
-                        key={f.id}
-                        onClick={() => setSelectedFrame(f.id)}
-                        title={f.label}
-                        className={`w-9 h-9 rounded-lg border-2 transition-all ${
-                          selectedFrame === f.id ? 'scale-110 shadow-md' : 'hover:scale-105'
-                        }`}
-                        style={{
-                          background: f.id === 'none' ? '#f0f0f0' : f.color,
-                          borderColor: selectedFrame === f.id ? '#FF4FA3' : '#FFB6D9',
-                          outline: f.id === 'none' ? '1px dashed #ccc' : 'none',
-                        }}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="font-pixel text-xs text-[#3A0030] mb-2" style={{ fontSize: '10px' }}>BACKGROUND</div>
-                  <div className="flex gap-2 flex-wrap">
-                    {BG_COLORS.map(c => (
-                      <button
-                        key={c.hex}
-                        onClick={() => setBgColor(c.hex)}
-                        title={c.label}
-                        className={`w-9 h-9 rounded-full border-2 transition-all ${
-                          bgColor === c.hex ? 'scale-110 shadow-md border-[#FF4FA3]' : 'border-[#FFB6D9]/50 hover:scale-105'
-                        }`}
-                        style={{ background: c.hex }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Stickers */}
-                <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
-                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>STICKERS</div>
-                  <div className="grid grid-cols-8 gap-1">
-                    {STICKER_LIBRARY.map((symbol, i) => (
-                      <button
-                        key={i}
-                        onClick={() => addSticker(symbol)}
-                        className="text-xl p-1.5 rounded-lg hover:bg-[#FFB6D9]/20 transition-colors"
-                      >
-                        {symbol}
-                      </button>
-                    ))}
-                  </div>
-                  {stickers.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {stickers.map(s => (
+              {/* bottom tray */}
+              <div className="booth-tray mt-3">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="booth-tray-title" style={{ background: tab.color }}>{tab.label}</span>
+                  {boothTab === 'gems' && (
+                    <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="gem colour">
+                      {GEM_COLORS.map(c => (
                         <button
-                          key={s.id}
-                          onClick={() => setStickers(prev => prev.filter(x => x.id !== s.id))}
-                          className="font-nunito text-xs bg-red-50 text-red-400 border border-red-200 rounded-full px-2 py-0.5 hover:bg-red-100"
-                          style={{ fontSize: '10px' }}
-                        >
-                          {s.symbol} ×
-                        </button>
+                          key={c.id}
+                          onClick={() => setGemColor(c.hex)}
+                          title={c.label}
+                          aria-label={c.label}
+                          aria-checked={gemColor === c.hex}
+                          role="radio"
+                          className={`w-6 h-6 rounded-full border-2 ${gemColor === c.hex ? 'border-white scale-110' : 'border-white/50'}`}
+                          style={{ background: `radial-gradient(circle at 35% 30%, #fff 0 12%, ${c.hex} 45%, #2B0A2E 130%)` }}
+                        />
                       ))}
                     </div>
                   )}
+                  <div className="flex-1" />
+                  {pageCount > 1 && (
+                    <>
+                      <button className="booth-page" onClick={() => setTrayPage(Math.max(0, page - 1))} disabled={page === 0}>PrevPage</button>
+                      <span className="font-silkscreen text-[10px] text-white">{page + 1}/{pageCount}</span>
+                      <button className="booth-page" onClick={() => setTrayPage(Math.min(pageCount - 1, page + 1))} disabled={page >= pageCount - 1}>NextPage</button>
+                    </>
+                  )}
                 </div>
 
-                {/* Text */}
-                <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
-                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>TEXT</div>
+                {boothTab === 'text' ? (
+                  <div className="bg-white/95 rounded-xl p-3">
                   {addingText ? (
                     <div className="space-y-2">
                       <input
@@ -1143,16 +1180,53 @@ export default function PhotoboothPage() {
                       )}
                     </div>
                   )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                    {items.slice(page * PAGE, page * PAGE + PAGE).map(it => (
+                      <button key={it.key} onClick={it.onClick} title={it.label} className={`booth-item ${it.active ? 'booth-item-on' : ''}`} aria-pressed={it.active}>
+                        <span className="booth-item-art">{it.node}</span>
+                        <span className="booth-item-label">{it.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {boothTab === 'covers' && (
+                  <div className="bg-white/95 rounded-xl p-3 mt-2">
+                  {(selectedFrame.startsWith('mag-') || selectedLayout === 'friendship') && (
+                    <div className="mt-3 space-y-2">
+                      {selectedLayout === 'friendship' && (
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                          STRIP TITLE
+                          <input value={stripTitle} onChange={e => setStripTitle(e.target.value.slice(0, 28))} className="input-y2k text-sm mt-1" maxLength={28} />
+                        </label>
+                      )}
+                      {selectedFrame.startsWith('mag-') && (
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                          MAGAZINE NAME
+                          <input value={magTitle} onChange={e => setMagTitle(e.target.value.slice(0, 14))} className="input-y2k text-sm mt-1" placeholder="sparkle" maxLength={14} />
+                        </label>
+                      )}
+                      {selectedFrame.startsWith('mag-') && (
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                          COVER LINES (one per line · the last one goes big at the bottom)
+                          <textarea
+                            value={magLines.join('\n')}
+                            onChange={e => setMagLines(e.target.value.split('\n').slice(0, 6).map(l => l.slice(0, 32)))}
+                            className="input-y2k text-sm mt-1 resize-none"
+                            rows={6}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+                  </div>
+                )}
               </div>
             </div>
 
-            <button
-              onClick={goToPreview}
-              disabled={generating}
-              className="btn-y2k w-full py-3 mt-6 text-base"
-            >
-              {generating ? 'generating preview...' : 'PREVIEW MY STRIP ✦'}
+            <button onClick={goToPreview} disabled={generating} className="btn-y2k w-full py-3 mt-6 text-base">
+              {generating ? 'generating preview...' : 'FINISH & PREVIEW MY STRIP ✦'}
             </button>
           </div>
         </main>
@@ -1240,4 +1314,48 @@ export default function PhotoboothPage() {
       <Footer />
     </div>
   )
+}
+
+// ─── Art pickers ─────────────────────────────────────────────────────────────
+
+function ArtChoice({ label, active, onClick, children }: { label: string; active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={label}
+      className={`rounded-lg overflow-hidden border-2 bg-[#f7eaf1] transition-all text-left ${
+        active ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]/50 scale-[1.04]' : 'border-[#FFB6D9]/60 hover:border-[#FF4FA3]'
+      }`}
+    >
+      <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">{children}</div>
+      <div className="font-nunito font-bold text-[#3A0030] text-center truncate px-1 py-0.5 bg-white" style={{ fontSize: '9px' }}>{label}</div>
+    </button>
+  )
+}
+
+function ArtThumb(props:
+  | { kind: 'bg'; id: string }
+  | { kind: 'frame'; id: string; bgId: string; layout: LayoutId; imgs: HTMLImageElement[]; magTitle: string; magLines: string[] }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const deps = props.kind === 'bg' ? [props.id] : [props.id, props.bgId, props.layout, props.imgs, props.magTitle, props.magLines]
+  useEffect(() => {
+    const c = ref.current
+    if (!c) return
+    if (props.kind === 'bg') {
+      c.width = 90
+      c.height = 120
+      const ctx = c.getContext('2d')!
+      ;(BACKGROUNDS.find(b => b.id === props.id) ?? BACKGROUNDS[0]).draw(ctx, 90, 120, 0.45)
+    } else {
+      const count = props.layout === 'cover' ? 1 : Math.max(1, Math.min(props.imgs.length || 3, 6))
+      renderStrip(c, {
+        layout: props.layout, count, filterCss: 'none', bgId: props.bgId, frameId: props.id,
+        magTitle: props.magTitle, magLines: props.magLines, imgs: props.imgs, scale: 0.3,
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+  return <canvas ref={ref} className="max-w-full max-h-full" style={{ display: 'block' }} />
 }

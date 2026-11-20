@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { PAGE_H, PAGE_W, SPREAD_W, paperStyle, type NbElement, type NbPage } from '@/lib/notebook'
+import { PAGE_H, PAGE_W, SPREAD_W, pageBackground, type NbElement, type NbPage } from '@/lib/notebook'
 import ElementView from './ElementView'
 import { StickerDefs } from './Stickers'
 
@@ -39,7 +39,7 @@ export function SpreadFrame({
           onPointerDown={onPageBgPointerDown ? (e) => onPageBgPointerDown(e, i as 0 | 1) : undefined}
           style={{
             position: 'absolute', top: 0, left: i * PAGE_W, width: PAGE_W, height: PAGE_H,
-            ...(pg ? paperStyle(pg.paper, pg.color) : { background: '#f4eef2' }),
+            ...(pg ? pageBackground(pg) : { background: '#f4eef2' }),
             borderRadius: i === 0 ? '12px 0 0 12px' : '0 12px 12px 0',
             border: '2px solid #2B0A2E',
             borderLeftWidth: i === 1 ? 0 : 2,
@@ -84,6 +84,7 @@ export function placed(el: NbElement, pageIndex: number): React.CSSProperties {
     height: el.h,
     transform: `rotate(${el.rotation}deg)${el.props.flipX ? ' scaleX(-1)' : ''}`,
     opacity: el.props.opacity ?? 1,
+    filter: el.props.shadow ? 'drop-shadow(4px 7px 6px rgba(43,10,46,.4))' : undefined,
   }
 }
 
