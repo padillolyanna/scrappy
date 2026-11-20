@@ -7,26 +7,43 @@ import { TEMPLATES } from '@/lib/types'
 import {
   FONTS, PAGE_H, PAGE_W, PAPERS, PAPER_COLORS, SPREAD_W, SWATCHES, TAPES, TAPE_COLORS,
   addTo, blankPage, compressImage, makeImage, makeQuestion, makeShape, makeSticker, makeTape, makeText,
-  paperStyle,
+  paperStyle, pageBackground,
   type ElementProps, type NbElement, type NbPage, type PaperId,
 } from '@/lib/notebook'
+import { BACKGROUNDS as ART_BACKGROUNDS } from '@/lib/photoboothArt'
+import {
+  FRAME_ASSETS, FRAME_CATEGORIES, STICKER_ASSETS, STICKER_CATEGORIES, assetThumb,
+  type FrameCategory, type StickerCategory,
+} from '@/lib/assetLibrary'
+import NotebookViewer from './NotebookViewer'
 import ElementView, { QuestionView, textBoxStyle } from './ElementView'
 import StaticSpread, { SpreadFrame, placed, sortedSpreadElements } from './Spread'
 import { EMOJI_STICKERS, GEM_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
 
-type Panel = 'text' | 'photos' | 'stickers' | 'tape' | 'shapes' | 'questions' | 'paper'
+type Panel = 'library' | 'frames' | 'photos' | 'text' | 'stickers' | 'tape' | 'shapes' | 'backgrounds' | 'questions'
 type Sel = { page: number; id: string } | null
 
 const IcoCam = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
 
-const PANELS: { id: Panel; icon: React.ReactNode; label: string }[] = [
-  { id: 'text', icon: 'Aa', label: 'text' },
-  { id: 'photos', icon: <IcoCam />, label: 'photos' },
-  { id: 'stickers', icon: '★', label: 'stickers' },
-  { id: 'tape', icon: '▤', label: 'tape' },
-  { id: 'shapes', icon: '◆', label: 'shapes' },
-  { id: 'questions', icon: '?', label: 'Q&A' },
-  { id: 'paper', icon: '▦', label: 'paper' },
+const PANELS: { id: Panel; icon: React.ReactNode; label: string; color: string }[] = [
+  { id: 'library', icon: '♦', label: 'objects', color: '#FF2E93' },
+  { id: 'frames', icon: '▣', label: 'frames', color: '#1D9BF0' },
+  { id: 'photos', icon: <IcoCam />, label: 'photos', color: '#14B8A6' },
+  { id: 'text', icon: 'Aa', label: 'text', color: '#7C4DDB' },
+  { id: 'stickers', icon: '★', label: 'doodles', color: '#F59E0B' },
+  { id: 'tape', icon: '▤', label: 'tape', color: '#EC4899' },
+  { id: 'shapes', icon: '◆', label: 'shapes', color: '#22C55E' },
+  { id: 'backgrounds', icon: '▦', label: 'bg', color: '#0EA5E9' },
+  { id: 'questions', icon: '?', label: 'Q&A', color: '#A855F7' },
+]
+
+const TEXT_FX: { id: NonNullable<ElementProps['textFx']>; label: string; color: string; gradTo?: string; font: string }[] = [
+  { id: 'glitter', label: 'glitter', color: '#FF2E93', gradTo: '#FFD1E8', font: 'chango' },
+  { id: 'chrome', label: 'chrome', color: '#C7CCD6', gradTo: '#FF4FA3', font: 'chango' },
+  { id: 'outline', label: 'bubble', color: '#6FE3FF', font: 'chango' },
+  { id: 'sticker', label: 'sticker', color: '#7C4DDB', font: 'cherry' },
+  { id: 'gradient', label: 'gradient', color: '#FF4FA3', gradTo: '#7C4DDB', font: 'fredoka' },
+  { id: 'shadow', label: 'pop shadow', color: '#FFFFFF', gradTo: '#FF2E93', font: 'chango' },
 ]
 
 interface Props {
@@ -108,6 +125,14 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [editing, setEditing] = useState<string | null>(null)
   const [panel, setPanel] = useState<Panel | null>('stickers')
   const [fullscreen, setFullscreen] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const [previewing, setPreviewing] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const exportRef = useRef<HTMLDivElement>(null)
+  const bgFileRef = useRef<HTMLInputElement>(null)
+  const [libCat, setLibCat] = useState<StickerCategory | 'all'>('all')
+  const [frameCat, setFrameCat] = useState<FrameCategory | 'all'>('all')
+  const [bgTarget, setBgTarget] = useState<'left' | 'right' | 'both'>('both')
   const [guides, setGuides] = useState<{ v?: number; h?: number }>({})
   const [uploads, setUploads] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
@@ -137,9 +162,47 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
     ro.observe(el)
     return () => ro.disconnect()
   }, [fullscreen])
-  const scale = stage.w
+  const fitScale = stage.w
     ? Math.min(1.25, (stage.w - 48) / (SPREAD_W + 24), fullscreen ? (stage.h - 40) / (PAGE_H + 30) : 9)
     : 0
+  const scale = fitScale * zoom
+
+  // ── export / background helpers ─────────────────────────────────────
+  async function downloadSpread() {
+    setExporting(true)
+    try {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const node = exportRef.current
+      if (!node) throw new Error('no export node')
+      const { toPng } = await import('html-to-image')
+      const url = await toPng(node, { pixelRatio: 2, cacheBust: true, backgroundColor: '#f7eaf1' })
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${(title || 'scrappy-page').replace(/[^a-z0-9-_ ]/gi, '').trim() || 'scrappy-page'}-${spread * 2 + 1}-${spread * 2 + 2}.png`
+      a.click()
+    } catch {
+      setNotice("couldn't make the image — try again ✦")
+    }
+    setExporting(false)
+  }
+
+  const bgIdxs = bgTarget === 'left' ? [leftIdx] : bgTarget === 'right' ? [rightIdx] : [leftIdx, rightIdx]
+
+  async function handleBgFile(files: FileList | null) {
+    const f = files?.[0]
+    if (!f || !f.type.startsWith('image/')) return
+    setBusy(true)
+    try {
+      let url = await compressImage(f, 1600, 0.85)
+      if (uploadImage) {
+        try { url = await uploadImage(url) } catch { setNotice('background saved locally — it uploads when you save ✦') }
+      }
+      setPaper(bgIdxs, { bgImage: url, bgScale: 1 })
+    } catch {
+      setNotice("couldn't read that image")
+    }
+    setBusy(false)
+  }
 
   // ── element helpers ──────────────────────────────────────────────────
   const mapEl = useCallback(
@@ -476,13 +539,14 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
     setActivePage(Math.max(0, Math.min(spreads - 1, n)) * 2)
   }
 
-  function setPaper(pageIdxs: number[], patch: Partial<Pick<NbPage, 'paper' | 'color'>>) {
+  function setPaper(pageIdxs: number[], patch: Partial<Pick<NbPage, 'paper' | 'color' | 'bgImage' | 'bgScale'>>) {
     const list = pageIdxs.reduce((l, i) => ensurePage(i, l), pagesRef.current)
     commit(list.map((p, i) => (pageIdxs.includes(i) ? { ...p, ...patch } : p)))
   }
 
   // ── render ───────────────────────────────────────────────────────────
   const template = TEMPLATES.find((t) => t.id === templateId)
+  const meta = PANELS.find((p) => p.id === panel)
   const usedQuestions = new Set(pages.flatMap((p) => p.elements.filter((e) => e.type === 'question').map((e) => e.props.question)))
 
   const body = (
@@ -492,27 +556,44 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
     >
       <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }} />
 
-      {/* ── top bar ── */}
-      <div className="flex flex-wrap items-center gap-2 px-2 py-2 bg-white border-2 border-[#2B0A2E] rounded-t-xl" style={{ boxShadow: 'inset 0 -3px 0 #FFE4F0' }}>
+      {/* ── app title bar ── */}
+      <div
+        className="flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-2 border-[#0B1B4A] rounded-t-xl text-white"
+        style={{ background: 'linear-gradient(180deg,#7FD4FF 0%,#2F8CFF 45%,#1560E0 55%,#2A7BFF 100%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.7), inset 0 -2px 0 rgba(0,0,0,.2)' }}
+      >
+        <span className="hidden sm:flex gap-1 mr-1" aria-hidden>
+          <span className="w-3 h-3 rounded-full bg-[#FF5F57] border border-black/30" />
+          <span className="w-3 h-3 rounded-full bg-[#FEBC2E] border border-black/30" />
+          <span className="w-3 h-3 rounded-full bg-[#28C840] border border-black/30" />
+        </span>
+        <span className="hidden md:inline font-silkscreen text-[11px] tracking-wide drop-shadow">SCRAPPY STUDIO</span>
         <input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="name your scrapbook…"
           aria-label="scrapbook title"
-          className="font-chango text-sm text-[#FF4FA3] bg-[#FFF0F7] border-2 border-[#2B0A2E] rounded-lg px-3 py-1 min-w-0 flex-1 max-w-[260px] outline-none focus:bg-white"
+          className="font-chango text-sm text-[#FF2E93] bg-white border-2 border-[#0B1B4A] rounded-lg px-3 py-1 min-w-0 flex-1 max-w-[240px] outline-none"
+          style={{ boxShadow: 'inset 1px 2px 0 rgba(0,0,0,.12)' }}
         />
-        <ToolBtn onClick={undo} disabled={!hist.past} title="undo (ctrl+z)">↶</ToolBtn>
-        <ToolBtn onClick={redo} disabled={!hist.future} title="redo (ctrl+shift+z)">↷</ToolBtn>
+        <ToolBtn onClick={undo} disabled={!hist.past} title="undo (ctrl+z)" tone="chrome">↶</ToolBtn>
+        <ToolBtn onClick={redo} disabled={!hist.future} title="redo (ctrl+shift+z)" tone="chrome">↷</ToolBtn>
+        <div className="flex items-center gap-0.5 bg-black/20 rounded-lg px-1 py-0.5">
+          <ToolBtn onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))} title="zoom out" tone="chrome">−</ToolBtn>
+          <button onClick={() => setZoom(1)} className="font-silkscreen text-[10px] w-11 text-center" title="fit to screen">{Math.round(zoom * 100)}%</button>
+          <ToolBtn onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.25) * 100) / 100))} title="zoom in" tone="chrome">＋</ToolBtn>
+        </div>
         <div className="flex-1" />
-        {busy && <span className="font-pixel text-lg text-[#D4006E] animate-blink">uploading…</span>}
-        <ToolBtn onClick={() => setFullscreen((f) => !f)} title={fullscreen ? 'exit full screen (esc)' : 'full screen'}>
+        {busy && <span className="font-pixel text-lg text-[#FFF0A8] animate-blink">uploading…</span>}
+        <ToolBtn onClick={() => setPreviewing(true)} title="preview the finished scrapbook" tone="yellow">▶ preview</ToolBtn>
+        <ToolBtn onClick={downloadSpread} disabled={exporting} title="download this spread as a PNG" tone="lime">{exporting ? 'saving…' : '↓ png'}</ToolBtn>
+        <ToolBtn onClick={() => setFullscreen((f) => !f)} title={fullscreen ? 'exit full screen (esc)' : 'full screen'} tone="chrome">
           {fullscreen ? '⤡' : '⤢'}
         </ToolBtn>
         {actions}
       </div>
 
       {/* ── selection bar ── */}
-      <div className="min-h-[46px] flex flex-wrap items-center gap-1.5 px-2 py-1.5 bg-[#FFE4F0] border-x-2 border-b-2 border-[#2B0A2E] text-[#2B0A2E]">
+      <div className="min-h-[46px] flex flex-wrap items-center gap-1.5 px-2 py-1.5 border-x-2 border-b-2 border-[#0B1B4A] text-[#2B0A2E]" style={{ background: 'linear-gradient(180deg,#FFF6B8,#FFE066)' }}>
         {selected && sel ? (
           <SelectionBar
             el={selected}
@@ -525,35 +606,117 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
             onEdit={() => setEditing(selected.id)}
           />
         ) : (
-          <span className="hidden sm:inline font-pixel text-lg text-[#7C4DDB] px-1">
-            ✦ click to select · double-click to type · ⟳ to rotate · drag across the spiral to switch pages
+          <span className="hidden sm:inline font-pixel text-lg text-[#7C2D12] px-1">
+            ✦ pick something from the shelf on the left · click to select · double-click to type · ⟳ to rotate · drag across the spiral to switch pages
           </span>
         )}
       </div>
 
-      <div className={`flex ${fullscreen ? 'flex-1 min-h-0' : ''} flex-col md:flex-row border-x-2 border-b-2 border-[#2B0A2E] rounded-b-xl overflow-hidden bg-white`}>
+      <div className={`flex ${fullscreen ? 'flex-1 min-h-0' : ''} flex-col md:flex-row border-x-2 border-b-2 border-[#0B1B4A] rounded-b-xl overflow-hidden bg-white`}>
         {/* ── rail ── */}
-        <nav className="flex md:flex-col gap-1 p-1.5 bg-[#2B0A2E] overflow-x-auto md:overflow-visible" aria-label="editor tools">
-          {PANELS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setPanel((cur) => (cur === p.id ? null : p.id))}
-              className={`flex flex-col items-center justify-center w-14 h-14 shrink-0 rounded-lg border-2 transition-all ${
-                panel === p.id ? 'bg-[#FF4FA3] border-white text-white' : 'bg-[#3d1640] border-transparent text-[#FFB6D9] hover:bg-[#55205a]'
-              }`}
-              aria-pressed={panel === p.id}
-            >
-              <span className="text-lg leading-none font-chango">{p.icon}</span>
-              <span className="font-pixel text-sm leading-none mt-1">{p.label}</span>
-            </button>
-          ))}
+        <nav
+          className="flex md:flex-col gap-1 p-1.5 overflow-x-auto md:overflow-y-auto"
+          style={{ background: 'linear-gradient(180deg,#2B0A6E,#12052E)' }}
+          aria-label="editor tools"
+        >
+          {PANELS.map((p) => {
+            const on = panel === p.id
+            return (
+              <button
+                key={p.id}
+                onClick={() => setPanel((cur) => (cur === p.id ? null : p.id))}
+                className="flex flex-col items-center justify-center w-14 h-14 shrink-0 rounded-xl border-2 transition-all text-white"
+                style={{
+                  background: on ? `linear-gradient(180deg, #ffffff66, ${p.color} 45%, ${p.color})` : `linear-gradient(180deg, ${p.color}55, ${p.color}22)`,
+                  borderColor: on ? '#ffffff' : `${p.color}88`,
+                  boxShadow: on ? `0 0 12px ${p.color}, inset 0 1px 0 rgba(255,255,255,.7)` : 'inset 0 1px 0 rgba(255,255,255,.25)',
+                }}
+                aria-pressed={on}
+              >
+                <span className="text-lg leading-none font-chango drop-shadow">{p.icon}</span>
+                <span className="font-pixel text-sm leading-none mt-1">{p.label}</span>
+              </button>
+            )
+          })}
         </nav>
 
         {/* ── panel ── */}
-        {panel && (
-          <aside className={`md:w-[232px] shrink-0 bg-[#FFF8FB] border-b-2 md:border-b-0 md:border-r-2 border-[#2B0A2E] overflow-y-auto ${fullscreen ? '' : 'max-h-[260px] md:max-h-[640px]'}`}>
-            <div className="panel-header !rounded-none !border-x-0 !border-t-0 sticky top-0 z-10">{PANELS.find((p) => p.id === panel)?.label}</div>
+        {panel && meta && (
+          <aside className={`${fullscreen ? 'md:w-[260px]' : 'md:w-[210px]'} shrink-0 bg-[#FFFDF7] border-b-2 md:border-b-0 md:border-r-2 border-[#0B1B4A] overflow-y-auto ${fullscreen ? '' : 'max-h-[300px] md:max-h-[680px]'}`}>
+            <div
+              className="sticky top-0 z-10 px-3 py-1.5 font-silkscreen text-[11px] text-white border-b-2 border-[#0B1B4A]"
+              style={{ background: `linear-gradient(180deg, #ffffff55, ${meta.color} 50%, ${meta.color})`, textShadow: '0 1px 0 rgba(0,0,0,.35)' }}
+            >
+              {meta.label === 'bg' ? 'BACKGROUNDS' : meta.label === 'objects' ? 'OBJECT SHELF' : meta.label.toUpperCase()}
+            </div>
             <div className="p-3">
+              {panel === 'library' && (
+                <div className="space-y-2">
+                  <CatChips value={libCat} onChange={(v) => setLibCat(v as StickerCategory | 'all')} cats={STICKER_CATEGORIES} />
+                  {STICKER_ASSETS.length === 0 ? (
+                    <EmptyShelf />
+                  ) : (
+                    <div className="grid grid-cols-5 md:grid-cols-3 gap-2">
+                      {STICKER_ASSETS.filter((a) => libCat === 'all' || a.category === libCat).map((a) => (
+                        <button
+                          key={a.id}
+                          onClick={() => add({ ...makeSticker(`img:${a.id}`), w: Math.round(110 * Math.min(1, a.aspect)), h: Math.round(110 / Math.max(1, a.aspect)), props: { shadow: true } })}
+                          title={a.label}
+                          className="aspect-square rounded-xl p-1 transition-transform hover:scale-110 hover:-rotate-3"
+                          style={{ background: 'radial-gradient(circle at 50% 40%, #ffffff, #f1e9ff)', boxShadow: 'inset 0 0 0 1.5px #e5d5ff' }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={assetThumb(a.id)} alt={a.label} loading="lazy" decoding="async" className="w-full h-full object-contain drop-shadow" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {panel === 'frames' && (
+                <div className="space-y-3">
+                  <CatChips value={frameCat} onChange={(v) => setFrameCat(v as FrameCategory | 'all')} cats={FRAME_CATEGORIES} />
+                  <p className="font-pixel text-base text-[#555] leading-tight">click a frame to add it — if a photo is selected, it goes around that photo ✦</p>
+                  {FRAME_ASSETS.length > 0 && (
+                    <div className="grid grid-cols-4 md:grid-cols-2 gap-2">
+                      {FRAME_ASSETS.filter((f) => frameCat === 'all' || f.category === frameCat).map((f) => (
+                        <button
+                          key={f.id}
+                          onClick={() => {
+                            if (selected?.type === 'image' && sel) setProps({ assetFrame: f.id, frame: 'none' })
+                            else add({ ...makeImage('', 'none'), w: 240, h: Math.round(240 / f.aspect), rotation: 0, props: { frame: 'none', assetFrame: f.id, filter: 'none', shadow: true } })
+                          }}
+                          title={f.label}
+                          className="rounded-lg p-1 border-2 border-[#0B1B4A]/20 hover:border-[#1D9BF0] bg-[repeating-conic-gradient(#f3f3f8_0_25%,#fff_0_50%)] bg-[length:12px_12px]"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={assetThumb(f.id)} alt={f.label} loading="lazy" className="w-full object-contain" style={{ aspectRatio: String(f.aspect) }} />
+                          <div className="font-pixel text-sm leading-none mt-1 truncate">{f.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="font-silkscreen text-[10px] text-[#1D9BF0]">CLASSIC FRAMES</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'] as const).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => {
+                          if (selected?.type === 'image' && sel) setProps({ frame: f, assetFrame: undefined })
+                          else add(makeImage('', f))
+                        }}
+                        className="aspect-square rounded-lg border-2 border-[#0B1B4A]/30 bg-white hover:bg-[#E6F4FF] p-1.5 flex flex-col items-center justify-center"
+                        title={`${f} frame`}
+                      >
+                        <div style={{ width: 40, height: f === 'film' ? 30 : 40 }}><FramePreview frame={f} /></div>
+                        <span className="font-pixel text-sm leading-none mt-0.5">{f}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {panel === 'text' && (
                 <div className="space-y-2">
                   <PanelBtn onClick={() => add(makeText('heading'))}><span className="font-chango text-xl text-[#FF4FA3]">add a heading</span></PanelBtn>
@@ -565,6 +728,20 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                   <PanelBtn onClick={() => add({ ...makeText('note'), w: 220, content: 'omg hiii!! ♡', props: { font: 'gochi', size: 22, color: '#2B0A2E', align: 'center', textBg: 'bubble', bgColor: '#FFFFFF' } })}>
                     <span className="font-caveat text-lg bg-white border-2 border-[#2B0A2E] rounded-2xl px-3">speech bubble</span>
                   </PanelBtn>
+                  <div className="font-silkscreen text-[10px] text-[#7C4DDB] pt-2">FANCY LETTERING</div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {TEXT_FX.map((fx) => (
+                      <button
+                        key={fx.id}
+                        onClick={() => add({ ...makeText('heading'), w: 280, content: 'so cute!!', props: { font: fx.font, size: 40, color: fx.color, gradTo: fx.gradTo, align: 'center', textFx: fx.id } })}
+                        className="h-14 rounded-lg border-2 border-[#2B0A2E] bg-[#2B0A2E] flex items-center justify-center overflow-hidden hover:scale-105 transition-transform"
+                        style={{ backgroundImage: 'linear-gradient(135deg,#3d1640,#1b0b2a)' }}
+                        title={`${fx.label} text`}
+                      >
+                        <span style={{ ...textBoxStyle({ id: 'fx', type: 'text', x: 0, y: 0, w: 1, h: 1, z: 0, rotation: 0, content: '', props: { font: fx.font, size: 20, color: fx.color, gradTo: fx.gradTo, textFx: fx.id, align: 'center' } }), minHeight: undefined, width: 'auto' }}>{fx.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -671,32 +848,58 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                 />
               )}
 
-              {panel === 'paper' && (
-                <div className="space-y-4">
-                  {([['left page', [leftIdx]], ['right page', [rightIdx]], ['both pages', [leftIdx, rightIdx]]] as const).map(([label, idxs]) => {
-                    const pg = pages[idxs[0]]
-                    return (
-                      <div key={label}>
-                        <div className="font-silkscreen text-[10px] text-[#D4006E] mb-1.5">{label.toUpperCase()}</div>
-                        <div className="grid grid-cols-4 gap-1.5 mb-2">
-                          {PAPERS.map((p) => (
-                            <button
-                              key={p.id}
-                              onClick={() => setPaper([...idxs], { paper: p.id as PaperId })}
-                              className={`h-10 rounded border-2 ${pg?.paper === p.id && idxs.length === 1 ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]' : 'border-[#2B0A2E]'}`}
-                              style={{ ...paperStyle(p.id, pg?.color ?? '#FFF8ED'), backgroundSize: undefined }}
-                              title={p.label}
-                            />
-                          ))}
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {PAPER_COLORS.map((c) => (
-                            <button key={c} onClick={() => setPaper([...idxs], { color: c })} className="w-6 h-6 rounded-full border-2 border-[#2B0A2E]" style={{ background: c }} aria-label={`paper colour ${c}`} />
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })}
+              {panel === 'backgrounds' && (
+                <div className="space-y-3">
+                  <div className="flex rounded-lg border-2 border-[#0B1B4A] overflow-hidden">
+                    {(['left', 'right', 'both'] as const).map((t) => (
+                      <button key={t} onClick={() => setBgTarget(t)} className={`flex-1 font-pixel text-base py-0.5 ${bgTarget === t ? 'bg-[#0EA5E9] text-white' : 'bg-white'}`}>
+                        {t === 'both' ? 'both pages' : `${t} page`}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[10px] text-[#0EA5E9]">TEXTURES</div>
+                  <div className="grid grid-cols-4 md:grid-cols-3 gap-1.5">
+                    {ART_BACKGROUNDS.map((b) => (
+                      <button
+                        key={b.id}
+                        onClick={() => setPaper(bgIdxs, { paper: `art:${b.id}` })}
+                        className={`rounded-md overflow-hidden border-2 ${pages[bgIdxs[0]]?.paper === `art:${b.id}` ? 'border-[#FF2E93] ring-2 ring-[#FF2E93]' : 'border-[#0B1B4A]/30'}`}
+                        title={b.label}
+                      >
+                        <div className="h-12" style={pageBackground({ paper: `art:${b.id}`, color: '#fff' })} />
+                        <div className="font-pixel text-sm leading-none bg-white py-0.5 truncate">{b.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[10px] text-[#0EA5E9]">PAPER</div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {PAPERS.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => setPaper(bgIdxs, { paper: p.id as PaperId })}
+                        className={`h-10 rounded border-2 ${pages[bgIdxs[0]]?.paper === p.id ? 'border-[#FF2E93] ring-2 ring-[#FF2E93]' : 'border-[#0B1B4A]/40'}`}
+                        style={{ ...paperStyle(p.id, pages[bgIdxs[0]]?.color ?? '#FFF8ED'), backgroundSize: undefined }}
+                        title={p.label}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {PAPER_COLORS.map((c) => (
+                      <button key={c} onClick={() => setPaper(bgIdxs, { color: c })} className="w-6 h-6 rounded-full border-2 border-[#0B1B4A]" style={{ background: c }} aria-label={`paper colour ${c}`} />
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[10px] text-[#0EA5E9]">YOUR OWN PHOTO</div>
+                  <input ref={bgFileRef} type="file" accept="image/*" hidden onChange={(e) => { handleBgFile(e.target.files); e.target.value = '' }} />
+                  <button onClick={() => bgFileRef.current?.click()} className="btn-bevel w-full text-sm" disabled={busy}>↑ upload a background</button>
+                  {pages[bgIdxs[0]]?.bgImage && (
+                    <div className="space-y-1">
+                      <label className="flex items-center gap-2 font-pixel text-base">
+                        size
+                        <input type="range" min={0.5} max={3} step={0.05} value={pages[bgIdxs[0]]?.bgScale ?? 1} onChange={(e) => setPaper(bgIdxs, { bgScale: Number(e.target.value) })} className="flex-1 accent-[#0EA5E9]" />
+                      </label>
+                      <button onClick={() => setPaper(bgIdxs, { bgImage: undefined, bgScale: undefined })} className="font-pixel text-base underline">remove photo background</button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -704,18 +907,21 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
         )}
 
         {/* ── stage ── */}
-        <div className="flex-1 min-w-0 flex flex-col bg-[#f7eaf1]" style={{ backgroundImage: 'radial-gradient(rgba(43,10,46,.08) 1px, transparent 1.2px)', backgroundSize: '14px 14px' }}>
+        <div
+          className="flex-1 min-w-0 flex flex-col"
+          style={{ background: 'conic-gradient(#E9DDFF 0 25%, #F6F0FF 0 50%) 0 0 / 28px 28px' }}
+        >
           <div
             ref={stageRef}
-            className={`relative flex-1 flex items-center justify-center overflow-hidden ${fullscreen ? 'min-h-0' : ''}`}
-            style={{ minHeight: fullscreen ? undefined : scale ? (PAGE_H + 40) * scale + 24 : 360, touchAction: 'none' }}
+            className={`relative flex-1 flex ${zoom > 1 ? 'items-start justify-start overflow-auto' : 'items-center justify-center overflow-hidden'} ${fullscreen ? 'min-h-0' : ''}`}
+            style={{ minHeight: fullscreen ? undefined : fitScale ? (PAGE_H + 40) * fitScale + 24 : 360, maxHeight: fullscreen ? undefined : '78vh', touchAction: zoom > 1 ? 'pan-x pan-y' : 'none', padding: zoom > 1 ? 24 : 0 }}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerUp}
             onPointerDown={() => { setSel(null); setEditing(null) }}
           >
             {scale > 0 && (
-              <div style={{ width: SPREAD_W * scale, height: PAGE_H * scale, position: 'relative' }}>
+              <div style={{ width: SPREAD_W * scale, height: PAGE_H * scale, position: 'relative', flexShrink: 0 }}>
                 <div style={{ width: SPREAD_W, height: PAGE_H, transform: `scale(${scale})`, transformOrigin: '0 0' }}>
                   <SpreadFrame
                     left={left ?? blankPage()}
@@ -782,7 +988,51 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
             <ToolBtn onClick={deleteSpread} disabled={spreads <= 1} title="delete this spread">✕ spread</ToolBtn>
           </div>
         </div>
+
+        {/* ── properties ── */}
+        <aside className={`${fullscreen ? 'hidden lg:block' : 'hidden'} w-[210px] shrink-0 border-l-2 border-[#0B1B4A] bg-[#F4F7FF] overflow-y-auto`}>
+          <div className="px-3 py-1.5 font-silkscreen text-[11px] text-white border-b-2 border-[#0B1B4A]" style={{ background: 'linear-gradient(180deg,#9FB4FF,#5B6CFF 50%,#4453E8)' }}>
+            PROPERTIES
+          </div>
+          {selected && sel ? (
+            <PropertiesPanel
+              el={selected}
+              setEl={setEl}
+              setProps={setProps}
+              onLayer={layer}
+              onDuplicate={() => duplicateSelected()}
+              onDelete={removeSelected}
+            />
+          ) : (
+            <div className="p-3 font-pixel text-base text-[#4453E8] leading-tight">
+              nothing selected ✦<br />click anything on the page to see its position, size, rotation, shadow and layer.
+            </div>
+          )}
+        </aside>
       </div>
+
+      {/* offscreen render used for PNG download */}
+      {exporting && (
+        <div style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none' }} aria-hidden>
+          <div ref={exportRef} style={{ padding: 24, background: '#f7eaf1', display: 'inline-block' }}>
+            <StaticSpread left={left} right={right} />
+          </div>
+        </div>
+      )}
+
+      {previewing && (
+        <div className="fixed inset-0 z-[450] flex flex-col bg-[#12052E]/85 backdrop-blur-sm" onClick={() => setPreviewing(false)}>
+          <div className="flex items-center justify-between px-4 py-2 text-white">
+            <span className="font-silkscreen text-xs">PREVIEW — this is how visitors will see your scrapbook</span>
+            <button onClick={() => setPreviewing(false)} className="font-chango text-sm bg-white/15 hover:bg-white/25 rounded-lg px-3 py-1">close ✕</button>
+          </div>
+          <div className="flex-1 overflow-auto px-4 pb-6" onClick={(e) => e.stopPropagation()}>
+            <div className="max-w-5xl mx-auto bg-[#FFF8FB] rounded-2xl p-4">
+              <NotebookViewer pages={pages} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {notice && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] bg-[#FFF0A8] border-2 border-[#2B0A2E] rounded-lg px-4 py-2 font-pixel text-lg shadow-lg" role="status" onClick={() => setNotice(null)}>
@@ -1047,6 +1297,22 @@ function SelectionBar({
                 <option value="bubble">bubble</option>
               </select>
               {p.textBg && p.textBg !== 'none' && <ColorPick value={p.bgColor ?? '#FFF0A8'} onChange={(c) => setProps({ bgColor: c }, `bg-${el.id}`)} label="background colour" />}
+              <select value={p.textFx ?? 'none'} onChange={(e) => setProps({ textFx: e.target.value === 'none' ? undefined : (e.target.value as ElementProps['textFx']) })} className="input-mini" aria-label="text effect">
+                <option value="none">no effect</option>
+                <option value="glitter">glitter</option>
+                <option value="chrome">chrome</option>
+                <option value="outline">bubble outline</option>
+                <option value="sticker">sticker</option>
+                <option value="gradient">gradient</option>
+                <option value="shadow">pop shadow</option>
+              </select>
+              {(p.textFx === 'gradient' || p.textFx === 'glitter' || p.textFx === 'chrome' || p.textFx === 'shadow') && (
+                <ColorPick value={p.gradTo ?? '#6FE3FF'} onChange={(c) => setProps({ gradTo: c }, `grad-${el.id}`)} label="second colour" letter="2" />
+              )}
+              <label className="flex items-center gap-1 font-pixel text-base" title="letter spacing">
+                A↔A
+                <input type="range" min={-2} max={16} step={0.5} value={p.letterSpacing ?? 0} onChange={(e) => setProps({ letterSpacing: Number(e.target.value) }, `ls-${el.id}`)} className="w-14 accent-[#FF4FA3]" aria-label="letter spacing" />
+              </label>
             </>
           )}
           {el.type === 'question' && (
@@ -1117,9 +1383,87 @@ function SelectionBar({
   )
 }
 
+// ─── Properties panel ─────────────────────────────────────────────────────
+
+function PropertiesPanel({
+  el, setEl, setProps, onLayer, onDuplicate, onDelete,
+}: {
+  el: NbElement
+  setEl: (p: Partial<NbElement>, key?: string) => void
+  setProps: (p: Partial<ElementProps>, key?: string) => void
+  onLayer: (d: 'up' | 'down' | 'top' | 'bottom') => void
+  onDuplicate: () => void
+  onDelete: () => void
+}) {
+  const num = (label: string, value: number, key: 'x' | 'y' | 'w' | 'h' | 'rotation', min = -2000, max = 4000) => (
+    <label className="flex flex-col font-pixel text-base text-[#0B1B4A]">
+      {label}
+      <input
+        type="number"
+        value={Math.round(value)}
+        min={min}
+        max={max}
+        onChange={(e) => {
+          const v = Number(e.target.value)
+          if (!Number.isFinite(v)) return
+          setEl({ [key]: key === 'w' || key === 'h' ? Math.max(10, v) : v } as Partial<NbElement>, `prop-${key}-${el.id}`)
+        }}
+        className="input-mini w-full !h-7 text-center"
+        disabled={el.props.locked}
+      />
+    </label>
+  )
+  const kind = el.type === 'sticker' && el.content.startsWith('img:') ? 'object' : el.type
+  return (
+    <div className="p-3 space-y-3">
+      <div className="font-chango text-xs text-[#4453E8]">{kind}</div>
+      <div className="grid grid-cols-2 gap-1.5">
+        {num('x', el.x, 'x')}
+        {num('y', el.y, 'y')}
+        {num('width', el.w, 'w', 10)}
+        {num('height', el.h, 'h', 10)}
+      </div>
+      <div className="grid grid-cols-[1fr_auto] gap-1.5 items-end">
+        {num('rotation°', el.rotation, 'rotation', -180, 180)}
+        <ToolBtn onClick={() => setEl({ rotation: 0 })} title="straighten">0°</ToolBtn>
+      </div>
+      <label className="block font-pixel text-base text-[#0B1B4A]">
+        opacity {Math.round((el.props.opacity ?? 1) * 100)}%
+        <input type="range" min={0.15} max={1} step={0.05} value={el.props.opacity ?? 1} onChange={(e) => setProps({ opacity: Number(e.target.value) }, `op-${el.id}`)} className="w-full accent-[#4453E8]" />
+      </label>
+      <label className="flex items-center gap-2 font-pixel text-base text-[#0B1B4A]">
+        <input type="checkbox" checked={!!el.props.shadow} onChange={(e) => setProps({ shadow: e.target.checked })} className="w-4 h-4 accent-[#4453E8]" />
+        drop shadow
+      </label>
+      <div>
+        <div className="font-pixel text-base text-[#0B1B4A] mb-1">layer</div>
+        <div className="grid grid-cols-4 gap-1">
+          <ToolBtn onClick={() => onLayer('top')} title="bring to front">⤒</ToolBtn>
+          <ToolBtn onClick={() => onLayer('up')} title="bring forward">↑</ToolBtn>
+          <ToolBtn onClick={() => onLayer('down')} title="send backward">↓</ToolBtn>
+          <ToolBtn onClick={() => onLayer('bottom')} title="send to back">⤓</ToolBtn>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        <ToolBtn onClick={onDuplicate} title="duplicate (ctrl+d)">⧉</ToolBtn>
+        <ToolBtn onClick={() => setProps({ locked: !el.props.locked })} active={el.props.locked} title={el.props.locked ? 'unlock' : 'lock'}>{el.props.locked ? 'unlock' : 'lock'}</ToolBtn>
+        <ToolBtn onClick={onDelete} title="delete (del)" danger>✕</ToolBtn>
+      </div>
+    </div>
+  )
+}
+
 // ─── small UI bits ────────────────────────────────────────────────────────
 
-function ToolBtn({ children, onClick, disabled, title, active, danger }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; active?: boolean; danger?: boolean }) {
+const TONES: Record<string, { bg: string; fg: string; border: string }> = {
+  plain: { bg: 'linear-gradient(180deg,#ffffff,#f1eef6)', fg: '#2B0A2E', border: '#2B0A2E' },
+  chrome: { bg: 'linear-gradient(180deg,#ffffff 0%,#dfe4ee 45%,#b9c1d1 55%,#eef1f7 100%)', fg: '#0B1B4A', border: '#0B1B4A' },
+  yellow: { bg: 'linear-gradient(180deg,#FFF7B0,#FFD23F 55%,#F5B700)', fg: '#4A2A00', border: '#4A2A00' },
+  lime: { bg: 'linear-gradient(180deg,#E8FFB0,#9BE33A 55%,#5DBB12)', fg: '#173B00', border: '#173B00' },
+}
+
+function ToolBtn({ children, onClick, disabled, title, active, danger, tone = 'plain' }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; active?: boolean; danger?: boolean; tone?: keyof typeof TONES }) {
+  const t = TONES[tone]
   return (
     <button
       type="button"
@@ -1127,13 +1471,42 @@ function ToolBtn({ children, onClick, disabled, title, active, danger }: { child
       disabled={disabled}
       title={title}
       aria-label={title}
-      className={`h-8 min-w-8 px-2 rounded-md border-2 border-[#2B0A2E] font-nunito font-extrabold text-sm leading-none transition-all disabled:opacity-35 disabled:cursor-not-allowed active:translate-y-px ${
-        active ? 'bg-[#FF4FA3] text-white' : danger ? 'bg-white text-[#D4006E] hover:bg-[#FFE4F0]' : 'bg-white text-[#2B0A2E] hover:bg-[#FFF0F7]'
-      }`}
-      style={{ boxShadow: 'inset 0 -2px 0 rgba(43,10,46,.15), 1px 1px 0 #2B0A2E' }}
+      className="h-8 min-w-8 px-2 rounded-lg border-2 font-nunito font-extrabold text-sm leading-none transition-all disabled:opacity-35 disabled:cursor-not-allowed active:translate-y-px hover:brightness-105"
+      style={{
+        background: active ? 'linear-gradient(180deg,#FF9ECF,#FF2E93)' : t.bg,
+        color: active ? '#fff' : danger ? '#D4006E' : t.fg,
+        borderColor: t.border,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,.9), 0 2px 0 rgba(0,0,0,.25)',
+      }}
     >
       {children}
     </button>
+  )
+}
+
+function CatChips({ value, onChange, cats }: { value: string; onChange: (v: string) => void; cats: { id: string; label: string; color: string }[] }) {
+  return (
+    <div className="flex flex-wrap gap-1">
+      {[{ id: 'all', label: 'all', color: '#2B0A2E' }, ...cats].map((c) => (
+        <button
+          key={c.id}
+          onClick={() => onChange(c.id)}
+          className="font-nunito font-bold text-[11px] px-2 py-0.5 rounded-full border-2 transition-colors"
+          style={value === c.id ? { background: c.color, color: '#fff', borderColor: c.color } : { background: '#fff', color: c.color, borderColor: `${c.color}66` }}
+        >
+          {c.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function EmptyShelf() {
+  return (
+    <div className="rounded-xl border-2 border-dashed border-[#FF2E93]/50 bg-[#FFF0F7] p-3 text-center">
+      <div className="font-chango text-[#FF2E93] text-sm">shelf restocking ✦</div>
+      <p className="font-pixel text-base text-[#555] leading-tight mt-1">new realistic gems, charms and gadgets are on their way. use the doodles tab meanwhile!</p>
+    </div>
   )
 }
 

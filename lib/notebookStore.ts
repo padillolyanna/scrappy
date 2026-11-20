@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { dataUrlToBlob, elementToRow, questionAnswers, rowToElement, type NbPage, type PaperId } from '@/lib/notebook'
+import { dataUrlToBlob, decodePaper, elementToRow, encodePaper, questionAnswers, rowToElement, type NbPage } from '@/lib/notebook'
 import { TEMPLATES } from '@/lib/types'
 
 const BUCKET = 'scrapbook-media'
@@ -33,7 +33,13 @@ export async function uploadPendingImages(supabase: SupabaseClient, userId: stri
         elements.push({ ...el, content: url })
       } else elements.push(el)
     }
-    out.push({ ...p, elements })
+    let bgImage = p.bgImage
+    if (bgImage?.startsWith('data:')) {
+      try {
+        bgImage = await uploadDataUrl(supabase, userId, bgImage)
+      } catch {}
+    }
+    out.push({ ...p, bgImage, elements })
   }
   return out
 }
@@ -47,7 +53,7 @@ export async function savePages(supabase: SupabaseClient, scrapbookId: string, u
 
   const { data: inserted, error: pageErr } = await supabase
     .from('scrapbook_pages')
-    .insert(ready.map((p, i) => ({ scrapbook_id: scrapbookId, page_number: i + 1, bg_color: p.color, bg_texture: p.paper })))
+    .insert(ready.map((p, i) => ({ scrapbook_id: scrapbookId, page_number: i + 1, bg_color: p.color, bg_texture: encodePaper(p) })))
     .select('id, page_number')
   if (pageErr || !inserted) throw pageErr ?? new Error('could not save pages')
 
@@ -89,7 +95,7 @@ export async function loadPages(supabase: SupabaseClient, scrapbookId: string): 
       .filter((e): e is NonNullable<typeof e> => !!e)
       .sort((a, b) => a.z - b.z)
     if (elements.length) any = true
-    return { id: p.id, paper: (p.bg_texture as PaperId) || 'plain', color: p.bg_color || '#FFF8ED', elements }
+    return { id: p.id, ...decodePaper(p.bg_texture), color: p.bg_color || '#FFF8ED', elements }
   })
   return any ? pages : []
 }

@@ -3,6 +3,7 @@
 import type React from 'react'
 import { fontCss, IMAGE_FILTERS, TAPES, type NbElement } from '@/lib/notebook'
 import { Sticker } from './Stickers'
+import { assetFull, findFrameAsset } from '@/lib/assetLibrary'
 
 const OUT = '#2B0A2E'
 
@@ -65,8 +66,38 @@ export function textBoxStyle(el: NbElement): React.CSSProperties {
     width: '100%',
     minHeight: '100%',
   }
-  if (p.font === 'chango') {
+  if (p.font === 'chango' && !p.textFx) {
     Object.assign(base, { WebkitTextStroke: '1px #2B0A2E', textShadow: '2px 2px 0 #fff, 3px 3px 0 rgba(43,10,46,.35)' })
+  }
+  if (p.letterSpacing) base.letterSpacing = `${p.letterSpacing}px`
+  const c = p.color ?? OUT
+  switch (p.textFx) {
+    case 'outline':
+      Object.assign(base, { WebkitTextStroke: `${Math.max(1, (p.size ?? 24) / 18)}px #2B0A2E`, paintOrder: 'stroke fill', textShadow: '2px 2px 0 #fff' })
+      break
+    case 'shadow':
+      Object.assign(base, { textShadow: `3px 3px 0 #2B0A2E, 5px 5px 0 ${p.gradTo ?? '#FFD84F'}` })
+      break
+    case 'sticker':
+      Object.assign(base, { textShadow: '0 0 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 3px 0 0 #fff, -3px 0 0 #fff, 4px 6px 6px rgba(43,10,46,.35)' })
+      break
+    case 'gradient':
+      Object.assign(base, { backgroundImage: `linear-gradient(180deg, ${c}, ${p.gradTo ?? '#6FE3FF'})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', filter: 'drop-shadow(2px 2px 0 rgba(43,10,46,.35))' })
+      break
+    case 'glitter':
+      Object.assign(base, {
+        backgroundImage: `radial-gradient(#fff 0.9px, transparent 1.3px), radial-gradient(rgba(255,255,255,.7) 0.6px, transparent 1px), linear-gradient(100deg, ${c}, ${p.gradTo ?? '#FFD1E8'} 45%, ${c})`,
+        backgroundSize: '5px 5px, 8px 8px, 100% 100%', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+        filter: `drop-shadow(0 0 1px #2B0A2E) drop-shadow(0 0 5px ${c})`,
+      })
+      break
+    case 'chrome':
+      Object.assign(base, {
+        backgroundImage: 'linear-gradient(180deg, #ffffff 0%, #c7ccd6 38%, #6d7383 50%, #e8ebf1 62%, #9aa0ae 100%)',
+        WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', WebkitTextStroke: '1px #2B0A2E',
+        filter: `drop-shadow(2px 3px 0 ${p.gradTo ?? '#FF4FA3'})`,
+      })
+      break
   }
   switch (p.textBg) {
     case 'highlight':
@@ -99,6 +130,18 @@ export function ImageView({ el, onPickPhoto }: { el: NbElement; onPickPhoto?: ()
       {onPickPhoto ? 'double-click to add photo' : ''}
     </div>
   )
+
+  const asset = el.props.assetFrame ? findFrameAsset(el.props.assetFrame) : undefined
+  if (asset) {
+    const w = asset.window
+    return (
+      <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <div style={{ position: 'absolute', left: `${w.x}%`, top: `${w.y}%`, width: `${w.w}%`, height: `${w.h}%`, overflow: 'hidden' }}>{img}</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={assetFull(asset.id)} alt="" draggable={false} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'fill', pointerEvents: 'none' }} />
+      </div>
+    )
+  }
 
   switch (frame) {
     case 'polaroid':
