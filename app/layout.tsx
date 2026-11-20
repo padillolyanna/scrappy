@@ -16,13 +16,15 @@ export const metadata: Metadata = {
     description: "Your little corner of the internet.",
     type: "website",
   },
+  other: {
+    "google-adsense-account": "ca-pub-1565639314627238",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full">
       <head>
-        <meta name="google-adsense-account" content="ca-pub-1565639314627238" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
