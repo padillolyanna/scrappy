@@ -289,7 +289,8 @@ on conflict (date) do nothing;
 alter table public.profiles add column if not exists is_admin boolean default false;
 
 -- ============================================================
--- EXCHANGES
+-- EXCHANGES, EXCHANGE PARTICIPANTS, EXCHANGE ANSWERS, NOTIFICATIONS
+-- NOTE: all tables created before policies to avoid forward-reference errors
 -- ============================================================
 create table if not exists public.exchanges (
   id uuid default uuid_generate_v4() primary key,
@@ -301,7 +302,39 @@ create table if not exists public.exchanges (
   created_at timestamptz default now()
 );
 
+create table if not exists public.exchange_participants (
+  id uuid default uuid_generate_v4() primary key,
+  exchange_id uuid references public.exchanges(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  joined_at timestamptz default now(),
+  unique (exchange_id, user_id)
+);
+
+create table if not exists public.exchange_answers (
+  id uuid default uuid_generate_v4() primary key,
+  exchange_id uuid references public.exchanges(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  question_id text not null,
+  question_text text not null,
+  answer_text text not null,
+  created_at timestamptz default now(),
+  unique (exchange_id, user_id, question_id)
+);
+
+create table if not exists public.notifications (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null,
+  message text not null,
+  link text,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+
 alter table public.exchanges enable row level security;
+alter table public.exchange_participants enable row level security;
+alter table public.exchange_answers enable row level security;
+alter table public.notifications enable row level security;
 
 create policy "Exchanges viewable by creator or participants" on public.exchanges
   for select using (
@@ -314,19 +347,6 @@ create policy "Authenticated users can create exchanges" on public.exchanges
 
 create policy "Creator can update exchange" on public.exchanges
   for update using (auth.uid() = creator_id);
-
--- ============================================================
--- EXCHANGE PARTICIPANTS
--- ============================================================
-create table if not exists public.exchange_participants (
-  id uuid default uuid_generate_v4() primary key,
-  exchange_id uuid references public.exchanges(id) on delete cascade not null,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  joined_at timestamptz default now(),
-  unique (exchange_id, user_id)
-);
-
-alter table public.exchange_participants enable row level security;
 
 create policy "Participants viewable by all exchange members" on public.exchange_participants
   for select using (
@@ -343,47 +363,16 @@ create policy "Participants viewable by all exchange members" on public.exchange
 create policy "Users can join exchanges" on public.exchange_participants
   for insert with check (auth.uid() = user_id);
 
--- ============================================================
--- EXCHANGE ANSWERS
--- ============================================================
-create table if not exists public.exchange_answers (
-  id uuid default uuid_generate_v4() primary key,
-  exchange_id uuid references public.exchanges(id) on delete cascade not null,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  question_id text not null,
-  question_text text not null,
-  answer_text text not null,
-  created_at timestamptz default now(),
-  unique (exchange_id, user_id, question_id)
-);
-
-alter table public.exchange_answers enable row level security;
-
 create policy "Exchange answers viewable by participants" on public.exchange_answers
   for select using (
     exists (
       select 1 from public.exchange_participants ep
-      where ep.exchange_id = exchange_id and ep.user_id = auth.uid()
+      where ep.exchange_id = exchange_answers.exchange_id and ep.user_id = auth.uid()
     )
   );
 
 create policy "Users can submit their own answers" on public.exchange_answers
   for insert with check (auth.uid() = user_id);
-
--- ============================================================
--- NOTIFICATIONS
--- ============================================================
-create table if not exists public.notifications (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references public.profiles(id) on delete cascade not null,
-  type text not null,
-  message text not null,
-  link text,
-  is_read boolean default false,
-  created_at timestamptz default now()
-);
-
-alter table public.notifications enable row level security;
 
 create policy "Users can view their own notifications" on public.notifications
   for select using (auth.uid() = user_id);
