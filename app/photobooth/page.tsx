@@ -5,11 +5,14 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 import Footer from '@/components/layout/Footer'
+import {
+  BACKGROUNDS, DEFAULT_MAG_LINES, FRAMES, ensureFonts, renderStrip,
+  type LayoutId,
+} from '@/lib/photoboothArt'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Step = 'landing' | 'layout' | 'camera' | 'customize' | 'preview'
-type LayoutId = 'classic' | 'mini' | 'double' | 'friendship' | 'grid' | 'collage'
 
 interface StickerEl {
   id: string
@@ -40,6 +43,7 @@ const LAYOUTS: { id: LayoutId; label: string; count: number; desc: string }[] = 
   { id: 'friendship', label: 'FRIENDSHIP STRIP', count: 4, desc: '4 photos · with title' },
   { id: 'grid', label: 'PHOTO GRID', count: 4, desc: '4 photos · 2×2 grid' },
   { id: 'collage', label: 'COLLAGE', count: 6, desc: '6 photos · creative' },
+  { id: 'cover', label: 'MAGAZINE COVER', count: 1, desc: '1 photo · be the cover star' },
 ]
 
 const FILTERS: { id: string; label: string; css: string }[] = [
@@ -52,28 +56,6 @@ const FILTERS: { id: string; label: string; css: string }[] = [
   { id: 'soft_glow', label: 'Soft Glow', css: 'brightness(1.2) contrast(0.88) saturate(1.15)' },
   { id: 'y2k_digital', label: 'Y2K Digital', css: 'saturate(1.6) contrast(1.1) brightness(1.07) hue-rotate(-5deg)' },
   { id: 'bw', label: 'B&W', css: 'grayscale(1) contrast(1.1) brightness(1.05)' },
-]
-
-const FRAMES: { id: string; label: string; color: string; width: number }[] = [
-  { id: 'none', label: 'None', color: 'transparent', width: 0 },
-  { id: 'pink-glitter', label: 'Pink Glitter', color: '#FF4FA3', width: 8 },
-  { id: 'chrome', label: 'Chrome Y2K', color: '#C0C0C0', width: 8 },
-  { id: 'baby-blue', label: 'Baby Blue', color: '#89CFF0', width: 8 },
-  { id: 'purple', label: 'Purple Dream', color: '#9B59B6', width: 8 },
-  { id: 'classic-white', label: 'Classic White', color: '#FFFFFF', width: 12 },
-  { id: 'hot-pink', label: 'Hot Pink', color: '#FF1493', width: 8 },
-  { id: 'vintage', label: 'Vintage Film', color: '#8B7355', width: 8 },
-]
-
-const BG_COLORS = [
-  { hex: '#FFB6D9', label: 'Pink' },
-  { hex: '#E6D0FF', label: 'Lavender' },
-  { hex: '#B9E0FF', label: 'Baby Blue' },
-  { hex: '#FFF8ED', label: 'Cream' },
-  { hex: '#FFFFFF', label: 'White' },
-  { hex: '#1A0020', label: 'Dark' },
-  { hex: '#FFD6EC', label: 'Blush' },
-  { hex: '#D6FFE8', label: 'Mint' },
 ]
 
 const STICKER_LIBRARY = [
@@ -101,6 +83,17 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 function LayoutPreview({ id }: { id: LayoutId }) {
   const base = 'fill-[#FFB6D9]/40 stroke-[#FF4FA3]/60 stroke-[0.5]'
+  if (id === 'cover') {
+    return (
+      <svg viewBox="0 0 44 60" className="w-full h-full">
+        <rect x={1} y={1} width={42} height={58} rx="1" className={base} />
+        <rect x={6} y={4} width={32} height={8} rx="1" className="fill-[#FF4FA3]/70" />
+        <rect x={28} y={22} width={12} height={2} className="fill-[#FF4FA3]/60" />
+        <rect x={30} y={26} width={10} height={2} className="fill-[#3A0030]/40" />
+        <rect x={28} y={30} width={12} height={2} className="fill-[#FF4FA3]/60" />
+      </svg>
+    )
+  }
   if (id === 'grid' || id === 'collage') {
     const slots = id === 'grid' ? [[0,0],[1,0],[0,1],[1,1]] : [[0,0],[1,0],[0,1],[1,1],[0,2],[1,2]]
     return (
@@ -151,8 +144,14 @@ export default function PhotoboothPage() {
 
   // ── Customize ──
   const [selectedFilter, setSelectedFilter] = useState('none')
-  const [selectedFrame, setSelectedFrame] = useState('pink-glitter')
-  const [bgColor, setBgColor] = useState('#FFB6D9')
+  const [selectedFrame, setSelectedFrame] = useState('rhinestone')
+  const [bgId, setBgId] = useState('glitter-pink')
+  const [magTitle, setMagTitle] = useState('sparkle')
+  const [stripTitle, setStripTitle] = useState('best friends 4ever ♡')
+  const [magLines, setMagLines] = useState<string[]>(DEFAULT_MAG_LINES)
+  const [loadedImgs, setLoadedImgs] = useState<HTMLImageElement[]>([])
+  const [fontsReady, setFontsReady] = useState(false)
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const [stickers, setStickers] = useState<StickerEl[]>([])
   const [textElements, setTextElements] = useState<TextEl[]>([])
   const stripPreviewRef = useRef<HTMLDivElement>(null)
@@ -325,116 +324,48 @@ export default function PhotoboothPage() {
   }
 
   // ── Export ──
+  const isWide = selectedLayout === 'grid' || selectedLayout === 'collage' || selectedLayout === 'cover'
+  const previewWidth = isWide ? 260 : 180
+  const artOpts = {
+    layout: selectedLayout,
+    count: Math.max(1, capturedPhotos.length),
+    filterCss: FILTERS.find(f => f.id === selectedFilter)?.css ?? 'none',
+    bgId,
+    frameId: selectedFrame,
+    magTitle,
+    magLines,
+    stripTitle,
+  }
+
   async function generateExport(): Promise<string> {
-    const scale = 2
-    const W = 400 * scale
-    const PAD = 10 * scale
-
-    const filter = FILTERS.find(f => f.id === selectedFilter)!
-    const frame = FRAMES.find(f => f.id === selectedFrame)!
-
+    await ensureFonts()
     const imgs = await Promise.all(capturedPhotos.map(loadImage))
     if (!imgs.length) throw new Error('No photos')
-
-    const imgAspect = imgs[0].height / imgs[0].width
-    const photoW = W - PAD * 2
-    const photoH = Math.round(photoW * Math.min(imgAspect, 1.1))
-
-    let canvasH = 0
-    const positions: { x: number; y: number; w: number; h: number }[] = []
-
-    if (selectedLayout === 'grid') {
-      const cw = (W - PAD * 3) / 2
-      const ch = Math.round(cw * Math.min(imgAspect, 1.0))
-      canvasH = PAD * 3 + ch * 2
-      imgs.slice(0, 4).forEach((_, i) => {
-        positions.push({ x: PAD + (i % 2) * (cw + PAD), y: PAD + Math.floor(i / 2) * (ch + PAD), w: cw, h: ch })
-      })
-    } else if (selectedLayout === 'collage') {
-      const cw = (W - PAD * 3) / 2
-      const ch = Math.round(cw * Math.min(imgAspect, 1.0))
-      const rows = Math.ceil(imgs.length / 2)
-      canvasH = PAD + rows * (ch + PAD)
-      imgs.forEach((_, i) => {
-        positions.push({ x: PAD + (i % 2) * (cw + PAD), y: PAD + Math.floor(i / 2) * (ch + PAD), w: cw, h: ch })
-      })
-    } else if (selectedLayout === 'friendship') {
-      const hdrH = 56 * scale
-      canvasH = PAD + hdrH + PAD + imgs.length * (photoH + PAD)
-      imgs.forEach((_, i) => {
-        positions.push({ x: PAD, y: PAD + hdrH + PAD + i * (photoH + PAD), w: photoW, h: photoH })
-      })
-    } else {
-      canvasH = PAD + imgs.length * (photoH + PAD)
-      imgs.forEach((_, i) => {
-        positions.push({ x: PAD, y: PAD + i * (photoH + PAD), w: photoW, h: photoH })
-      })
-    }
-
-    const footerH = 28 * scale
-    canvasH += footerH
-
     const canvas = document.createElement('canvas')
-    canvas.width = W
-    canvas.height = canvasH
+    const { W, H } = renderStrip(canvas, { ...artOpts, imgs, scale: 2 })
     const ctx = canvas.getContext('2d')!
+    // stickers/text are sized in preview pixels — scale them to the export
+    const k = W / previewWidth
 
-    // Background
-    ctx.fillStyle = bgColor
-    ctx.fillRect(0, 0, W, canvasH)
-
-    // Friendship header
-    if (selectedLayout === 'friendship') {
-      const hdrH = 56 * scale
-      ctx.fillStyle = frame.id !== 'none' ? frame.color : '#FF4FA3'
-      ctx.font = `bold ${18 * scale}px Pacifico, cursive`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillStyle = '#FFFFFF'
-      ctx.fillRect(0, PAD, W, hdrH)
-      ctx.fillStyle = '#3A0030'
-      ctx.fillText('friendship strip ♡', W / 2, PAD + hdrH / 2)
-    }
-
-    // Photos with filter
-    if (filter.css !== 'none') ctx.filter = filter.css
-    imgs.forEach((img, i) => {
-      if (!positions[i]) return
-      const { x, y, w, h } = positions[i]
-      const ia = img.width / img.height
-      const sa = w / h
-      let sx = 0, sy = 0, sw = img.width, sh = img.height
-      if (ia > sa) { sw = img.height * sa; sx = (img.width - sw) / 2 }
-      else { sh = img.width / sa; sy = (img.height - sh) / 2 }
-      ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
-    })
-    ctx.filter = 'none'
-
-    // Frame border
-    if (frame.id !== 'none') {
-      ctx.strokeStyle = frame.color
-      ctx.lineWidth = frame.width * scale
-      ctx.strokeRect(frame.width * scale / 2, frame.width * scale / 2, W - frame.width * scale, canvasH - frame.width * scale)
-    }
-
-    // Stickers
     stickers.forEach(s => {
       ctx.save()
-      ctx.translate((s.x / 100) * W, (s.y / 100) * canvasH)
+      ctx.translate((s.x / 100) * W, (s.y / 100) * H)
       ctx.rotate((s.rotation * Math.PI) / 180)
-      ctx.font = `${s.size * scale}px serif`
+      ctx.font = `${s.size * k}px serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText(s.symbol, 0, 0)
       ctx.restore()
     })
 
-    // Text elements
     textElements.forEach(t => {
       ctx.save()
-      ctx.translate((t.x / 100) * W, (t.y / 100) * canvasH)
+      ctx.translate((t.x / 100) * W, (t.y / 100) * H)
       ctx.rotate((t.rotation * Math.PI) / 180)
-      ctx.font = `${t.fontSize * scale}px ${t.fontFamily}, cursive`
+      ctx.font = `${t.fontSize * k}px ${t.fontFamily}, cursive`
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'
+      ctx.shadowBlur = 3 * k
+      ctx.shadowOffsetY = 1 * k
       ctx.fillStyle = t.color
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
@@ -442,15 +373,23 @@ export default function PhotoboothPage() {
       ctx.restore()
     })
 
-    // Watermark
-    ctx.fillStyle = 'rgba(0,0,0,0.22)'
-    ctx.font = `${8 * scale}px monospace`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'bottom'
-    ctx.fillText('✦ made with SCRAPPY ✦', W / 2, canvasH - 5 * scale)
-
     return canvas.toDataURL('image/png', 0.95)
   }
+
+  // Load captured photos + fonts once for the live canvas preview
+  useEffect(() => {
+    let cancelled = false
+    Promise.all(capturedPhotos.map(loadImage)).then(imgs => { if (!cancelled) setLoadedImgs(imgs) }).catch(() => {})
+    ensureFonts().then(() => { if (!cancelled) setFontsReady(true) })
+    return () => { cancelled = true }
+  }, [capturedPhotos])
+
+  // Redraw the live preview whenever a choice changes
+  useEffect(() => {
+    if (step !== 'customize' || !previewCanvasRef.current) return
+    renderStrip(previewCanvasRef.current, { ...artOpts, imgs: loadedImgs, scale: 1.5 })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, loadedImgs, fontsReady, selectedLayout, selectedFilter, bgId, selectedFrame, magTitle, magLines, stripTitle, capturedPhotos.length])
 
   async function goToPreview() {
     setGenerating(true)
@@ -493,7 +432,7 @@ export default function PhotoboothPage() {
         layout_id: selectedLayout,
         filter_id: selectedFilter,
         frame_id: selectedFrame,
-        bg_color: bgColor,
+        bg_color: bgId,
         photo_count: capturedPhotos.length,
         strip_url: publicUrl,
         status: 'completed',
@@ -514,8 +453,9 @@ export default function PhotoboothPage() {
     setStickers([])
     setTextElements([])
     setSelectedFilter('none')
-    setSelectedFrame('pink-glitter')
-    setBgColor('#FFB6D9')
+    setSelectedFrame('rhinestone')
+    setBgId('glitter-pink')
+    setStripTitle('best friends 4ever ♡')
     setExportedUrl(null)
     setSaved(false)
     setSaveError('')
@@ -523,8 +463,6 @@ export default function PhotoboothPage() {
   }
 
   // ─── Filter CSS helper ───
-  const filterCss = FILTERS.find(f => f.id === selectedFilter)?.css ?? 'none'
-  const frameStyle = FRAMES.find(f => f.id === selectedFrame)!
 
   // ─────────────────────────────────────────────────────────────────────────────
   // STEP: LANDING
@@ -882,8 +820,6 @@ export default function PhotoboothPage() {
   // STEP: CUSTOMIZE
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'customize') {
-    const isGrid = selectedLayout === 'grid' || selectedLayout === 'collage'
-
     return (
       <div className="flex flex-col min-h-screen">
         <main className="flex-1 py-6 px-4">
@@ -916,10 +852,9 @@ export default function PhotoboothPage() {
                   ref={stripPreviewRef}
                   className="relative select-none"
                   style={{
-                    background: bgColor,
-                    border: frameStyle.id !== 'none' ? `${frameStyle.width}px solid ${frameStyle.color}` : 'none',
-                    width: isGrid ? '260px' : '180px',
+                    width: `${previewWidth}px`,
                     cursor: draggingId ? 'grabbing' : 'default',
+                    boxShadow: '0 6px 18px rgba(43,10,46,.35)',
                   }}
                   onMouseMove={handleDragMove}
                   onMouseUp={handleDragEnd}
@@ -927,27 +862,7 @@ export default function PhotoboothPage() {
                   onTouchMove={handleDragMove}
                   onTouchEnd={handleDragEnd}
                 >
-                  {/* Friendship header */}
-                  {selectedLayout === 'friendship' && (
-                    <div className="text-center py-2 font-caveat text-[#3A0030] border-b border-black/10" style={{ fontFamily: 'Caveat, cursive', fontSize: '14px' }}>
-                      friendship strip ♡
-                    </div>
-                  )}
-
-                  {/* Photos */}
-                  {isGrid ? (
-                    <div className="grid grid-cols-2 gap-1 p-1">
-                      {capturedPhotos.map((p, i) => (
-                        <img key={i} src={p} alt="" className="w-full object-cover" style={{ filter: filterCss, aspectRatio: '1 / 1' }} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1 p-1">
-                      {capturedPhotos.map((p, i) => (
-                        <img key={i} src={p} alt="" className="w-full object-cover" style={{ filter: filterCss, aspectRatio: '4 / 3' }} />
-                      ))}
-                    </div>
-                  )}
+                  <canvas ref={previewCanvasRef} className="block w-full h-auto" aria-label="photo strip preview" />
 
                   {/* Stickers */}
                   {stickers.map(s => (
@@ -992,10 +907,6 @@ export default function PhotoboothPage() {
                     </div>
                   ))}
 
-                  {/* Watermark */}
-                  <div className="text-center py-1 font-pixel text-black/20" style={{ fontSize: '7px' }}>
-                    ✦ made with SCRAPPY ✦
-                  </div>
                 </div>
               </div>
 
@@ -1026,39 +937,66 @@ export default function PhotoboothPage() {
                   </div>
                 </div>
 
-                {/* Frame + Background */}
+                {/* Frames */}
                 <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
-                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>FRAME</div>
-                  <div className="flex gap-2 flex-wrap mb-4">
-                    {FRAMES.map(f => (
-                      <button
-                        key={f.id}
-                        onClick={() => setSelectedFrame(f.id)}
-                        title={f.label}
-                        className={`w-9 h-9 rounded-lg border-2 transition-all ${
-                          selectedFrame === f.id ? 'scale-110 shadow-md' : 'hover:scale-105'
-                        }`}
-                        style={{
-                          background: f.id === 'none' ? '#f0f0f0' : f.color,
-                          borderColor: selectedFrame === f.id ? '#FF4FA3' : '#FFB6D9',
-                          outline: f.id === 'none' ? '1px dashed #ccc' : 'none',
-                        }}
-                      />
+                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>FRAMES</div>
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                    {FRAMES.filter(f => f.group === 'frame').map(f => (
+                      <ArtChoice key={f.id} label={f.label} active={selectedFrame === f.id} onClick={() => setSelectedFrame(f.id)}>
+                        <ArtThumb kind="frame" id={f.id} bgId={bgId} layout={selectedLayout} imgs={loadedImgs} magTitle={magTitle} magLines={magLines} />
+                      </ArtChoice>
                     ))}
                   </div>
+                </div>
 
-                  <div className="font-pixel text-xs text-[#3A0030] mb-2" style={{ fontSize: '10px' }}>BACKGROUND</div>
-                  <div className="flex gap-2 flex-wrap">
-                    {BG_COLORS.map(c => (
-                      <button
-                        key={c.hex}
-                        onClick={() => setBgColor(c.hex)}
-                        title={c.label}
-                        className={`w-9 h-9 rounded-full border-2 transition-all ${
-                          bgColor === c.hex ? 'scale-110 shadow-md border-[#FF4FA3]' : 'border-[#FFB6D9]/50 hover:scale-105'
-                        }`}
-                        style={{ background: c.hex }}
-                      />
+                {/* Magazine covers */}
+                <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
+                  <div className="font-pixel text-xs text-[#3A0030] mb-1" style={{ fontSize: '10px' }}>MAGAZINE COVERS</div>
+                  <p className="font-nunito text-xs text-[#888] mb-3">be the cover star — works best with the magazine cover layout ✦</p>
+                  <div className="grid grid-cols-3 gap-2 max-w-sm">
+                    {FRAMES.filter(f => f.group === 'magazine').map(f => (
+                      <ArtChoice key={f.id} label={f.label.replace('cover: ', '')} active={selectedFrame === f.id} onClick={() => setSelectedFrame(f.id)}>
+                        <ArtThumb kind="frame" id={f.id} bgId={bgId} layout="cover" imgs={loadedImgs.slice(0, 1)} magTitle={magTitle} magLines={magLines} />
+                      </ArtChoice>
+                    ))}
+                  </div>
+                  {(selectedFrame.startsWith('mag-') || selectedLayout === 'friendship') && (
+                    <div className="mt-3 space-y-2">
+                      {selectedLayout === 'friendship' && (
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                          STRIP TITLE
+                          <input value={stripTitle} onChange={e => setStripTitle(e.target.value.slice(0, 28))} className="input-y2k text-sm mt-1" maxLength={28} />
+                        </label>
+                      )}
+                      {selectedFrame.startsWith('mag-') && (
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                          MAGAZINE NAME
+                          <input value={magTitle} onChange={e => setMagTitle(e.target.value.slice(0, 14))} className="input-y2k text-sm mt-1" placeholder="sparkle" maxLength={14} />
+                        </label>
+                      )}
+                      {selectedFrame.startsWith('mag-') && (
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                          COVER LINES (one per line · the last one goes big at the bottom)
+                          <textarea
+                            value={magLines.join('\n')}
+                            onChange={e => setMagLines(e.target.value.split('\n').slice(0, 6).map(l => l.slice(0, 32)))}
+                            className="input-y2k text-sm mt-1 resize-none"
+                            rows={6}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Backgrounds */}
+                <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
+                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>BACKGROUNDS</div>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {BACKGROUNDS.map(b => (
+                      <ArtChoice key={b.id} label={b.label} active={bgId === b.id} onClick={() => setBgId(b.id)}>
+                        <ArtThumb kind="bg" id={b.id} />
+                      </ArtChoice>
                     ))}
                   </div>
                 </div>
@@ -1240,4 +1178,48 @@ export default function PhotoboothPage() {
       <Footer />
     </div>
   )
+}
+
+// ─── Art pickers ─────────────────────────────────────────────────────────────
+
+function ArtChoice({ label, active, onClick, children }: { label: string; active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={label}
+      className={`rounded-lg overflow-hidden border-2 bg-[#f7eaf1] transition-all text-left ${
+        active ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]/50 scale-[1.04]' : 'border-[#FFB6D9]/60 hover:border-[#FF4FA3]'
+      }`}
+    >
+      <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">{children}</div>
+      <div className="font-nunito font-bold text-[#3A0030] text-center truncate px-1 py-0.5 bg-white" style={{ fontSize: '9px' }}>{label}</div>
+    </button>
+  )
+}
+
+function ArtThumb(props:
+  | { kind: 'bg'; id: string }
+  | { kind: 'frame'; id: string; bgId: string; layout: LayoutId; imgs: HTMLImageElement[]; magTitle: string; magLines: string[] }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const deps = props.kind === 'bg' ? [props.id] : [props.id, props.bgId, props.layout, props.imgs, props.magTitle, props.magLines]
+  useEffect(() => {
+    const c = ref.current
+    if (!c) return
+    if (props.kind === 'bg') {
+      c.width = 90
+      c.height = 120
+      const ctx = c.getContext('2d')!
+      ;(BACKGROUNDS.find(b => b.id === props.id) ?? BACKGROUNDS[0]).draw(ctx, 90, 120, 0.45)
+    } else {
+      const count = props.layout === 'cover' ? 1 : Math.max(1, Math.min(props.imgs.length || 3, 6))
+      renderStrip(c, {
+        layout: props.layout, count, filterCss: 'none', bgId: props.bgId, frameId: props.id,
+        magTitle: props.magTitle, magLines: props.magLines, imgs: props.imgs, scale: 0.3,
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+  return <canvas ref={ref} className="max-w-full max-h-full" style={{ display: 'block' }} />
 }
