@@ -13,6 +13,9 @@ create table public.profiles (
   mood text,
   favorite_color text,
   profile_theme text default 'pink-princess',
+  profile_style jsonb not null default '{}'::jsonb,
+  profile_extras jsonb not null default '{}'::jsonb,
+  last_seen_at timestamptz,
   created_at timestamptz default now()
 );
 
@@ -383,3 +386,14 @@ create policy "Users can update their own notifications" on public.notifications
 
 create policy "System can insert notifications" on public.notifications
   for insert with check (true);
+
+-- ============================================================
+-- PROFILE COMMENTS (see migration 20261120000004)
+-- ============================================================
+create table if not exists public.profile_comments (
+  id uuid default uuid_generate_v4() primary key,
+  profile_id uuid references public.profiles(id) on delete cascade not null,
+  author_id uuid references public.profiles(id) on delete cascade not null,
+  body text not null check (char_length(body) between 1 and 500),
+  created_at timestamptz default now()
+);

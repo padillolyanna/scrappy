@@ -4,6 +4,7 @@
 
 import type React from 'react'
 import { TEMPLATES, SCRAPBOOK_COVERS } from '@/lib/types'
+import { BACKGROUNDS as ART_BACKGROUNDS } from '@/lib/photoboothArt'
 
 export const PAGE_W = 480
 export const PAGE_H = 640
@@ -34,7 +35,14 @@ export interface ElementProps {
   // question
   question?: string
   cardStyle?: 'card' | 'lined' | 'sticky'
+  // text effects
+  textFx?: 'none' | 'outline' | 'shadow' | 'glitter' | 'chrome' | 'gradient' | 'sticker'
+  gradTo?: string
+  letterSpacing?: number
+  // image: Higgsfield/asset frame id (see lib/assetLibrary)
+  assetFrame?: string
   // common
+  shadow?: boolean
   opacity?: number
   locked?: boolean
   flipX?: boolean
@@ -55,8 +63,13 @@ export interface NbElement {
 
 export interface NbPage {
   id: string
-  paper: PaperId
+  /** a PaperId, or 'art:<backgroundId>' for a drawn texture from lib/photoboothArt */
+  paper: PaperId | `art:${string}`
   color: string
+  /** optional uploaded background photo, drawn over the paper */
+  bgImage?: string
+  /** background photo zoom, 0.5–3 (1 = cover) */
+  bgScale?: number
   elements: NbElement[]
 }
 
@@ -78,6 +91,54 @@ export const PAPERS: { id: PaperId; label: string }[] = [
 export const PAPER_COLORS = [
   '#FFFFFF', '#FFF8ED', '#FFE4F0', '#FFD1E8', '#EDE4FF', '#E4F4FF', '#E6F8E8', '#FFF6D6', '#F4E3CC', '#2B0A2E',
 ]
+
+const artCache = new Map<string, string>()
+/** Draw a photobooth texture once into a data URL (browser only). */
+function artTexture(id: string): string | null {
+  if (typeof document === 'undefined') return null
+  const hit = artCache.get(id)
+  if (hit) return hit
+  const def = ART_BACKGROUNDS.find((b) => b.id === id)
+  if (!def) return null
+  const c = document.createElement('canvas')
+  c.width = PAGE_W
+  c.height = PAGE_H
+  const ctx = c.getContext('2d')
+  if (!ctx) return null
+  def.draw(ctx, PAGE_W, PAGE_H, 1)
+  const url = c.toDataURL('image/jpeg', 0.9)
+  artCache.set(id, url)
+  return url
+}
+
+export function pageBackground(page: Pick<NbPage, 'paper' | 'color' | 'bgImage' | 'bgScale'>): React.CSSProperties {
+  const base = page.paper.startsWith('art:')
+    ? (() => {
+        const url = artTexture(page.paper.slice(4))
+        return url ? { backgroundColor: page.color, backgroundImage: `url("${url}")`, backgroundSize: 'cover' } : { backgroundColor: page.color }
+      })()
+    : paperStyle(page.paper as PaperId, page.color)
+  if (!page.bgImage) return base
+  const zoom = Math.round((page.bgScale ?? 1) * 100)
+  return {
+    ...base,
+    backgroundImage: `url("${page.bgImage.replace(/"/g, '%22')}")${base.backgroundImage ? `, ${base.backgroundImage}` : ''}`,
+    backgroundSize: `${zoom === 100 ? 'cover' : `${zoom}%`}${base.backgroundImage ? `, ${base.backgroundSize ?? 'auto'}` : ''}`,
+    backgroundPosition: 'center',
+    backgroundRepeat: zoom < 100 ? 'repeat' : 'no-repeat',
+  }
+}
+
+/** bg_texture column encoding: "<paper>" or "<paper>|img|<scale>|<url>" */
+export function encodePaper(p: NbPage) {
+  return p.bgImage ? `${p.paper}|img|${p.bgScale ?? 1}|${p.bgImage}` : p.paper
+}
+export function decodePaper(raw: string | null): Pick<NbPage, 'paper' | 'bgImage' | 'bgScale'> {
+  if (!raw) return { paper: 'plain' }
+  const [paper, kind, scale, ...rest] = raw.split('|')
+  if (kind === 'img' && rest.length) return { paper: paper as NbPage['paper'], bgScale: Number(scale) || 1, bgImage: rest.join('|') }
+  return { paper: paper as NbPage['paper'] }
+}
 
 export function paperStyle(paper: PaperId, color: string): React.CSSProperties {
   const ink = 'rgba(43,10,46,0.10)'
@@ -269,7 +330,7 @@ export function addTo(page: NbPage, el: NewEl): { page: NbPage; id: string } {
   return { page: { ...page, elements: [...page.elements, { ...el, id, z: nextZ(page) }] }, id }
 }
 
-export function blankPage(color = '#FFF8ED', paper: PaperId = 'grid'): NbPage {
+export function blankPage(color = '#FFF8ED', paper: NbPage['paper'] = 'grid'): NbPage {
   return { id: uid('pg'), paper, color, elements: [] }
 }
 

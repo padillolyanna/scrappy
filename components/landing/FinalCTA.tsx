@@ -3,12 +3,16 @@
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
-export default function FinalCTA() {
+interface Props {
+  isLoggedIn?: boolean
+}
+
+export default function FinalCTA({ isLoggedIn }: Props) {
+  if (isLoggedIn) return null
+
   return (
     <section style={{ padding: '0 20px 20px' }}>
-      <div className="panel-header">
-        ✦ join scrappy!
-      </div>
+      <div className="panel-header">✦ join scrappy!</div>
       <div
         className="widget-box"
         style={{
@@ -19,7 +23,6 @@ export default function FinalCTA() {
           overflow: 'hidden',
         }}
       >
-        {/* Decorative symbols */}
         <span aria-hidden="true" className="absolute top-4 left-6 select-none pointer-events-none" style={{ fontFamily: "'VT323', monospace", fontSize: 48, color: 'rgba(255,255,255,0.05)' }}>✦</span>
         <span aria-hidden="true" className="absolute bottom-4 right-10 select-none pointer-events-none" style={{ fontFamily: "'VT323', monospace", fontSize: 40, color: 'rgba(255,255,255,0.05)' }}>★</span>
         <span aria-hidden="true" className="absolute top-1/2 left-3 select-none pointer-events-none" style={{ fontFamily: "'VT323', monospace", fontSize: 32, color: 'rgba(255,255,255,0.05)', transform: 'translateY(-50%)' }}>♡</span>

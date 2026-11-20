@@ -1,13 +1,17 @@
 export const instant = false
 
 import Footer from '@/components/layout/Footer'
-import DailyPrompt from '@/components/landing/DailyPrompt'
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
+import PromptAnswerForm from '@/components/prompts/PromptAnswerForm'
 
 export default async function PromptsPage() {
   const supabase = await createClient()
   const today = new Date().toISOString().split('T')[0]
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const { data: todayPrompt } = await supabase
     .from('daily_prompts')
@@ -16,6 +20,7 @@ export default async function PromptsPage() {
     .single()
 
   let todayAnswers: {
+    id: string
     user_id: string | null
     answer_text: string
     is_anonymous: boolean
@@ -23,17 +28,25 @@ export default async function PromptsPage() {
     profiles: { username: string } | null
   }[] = []
 
+  let hasAnswered = false
+  let userAnswer = ''
+
   if (todayPrompt?.id) {
     const { data } = await supabase
       .from('prompt_answers')
-      .select('user_id, answer_text, is_anonymous, like_count, profiles(username)')
+      .select('id, user_id, answer_text, is_anonymous, like_count, profiles(username)')
       .eq('prompt_id', todayPrompt.id)
       .order('like_count', { ascending: false })
       .limit(50)
     todayAnswers = (data as unknown as typeof todayAnswers) ?? []
+
+    if (user) {
+      const existing = todayAnswers.find((a) => a.user_id === user.id)
+      hasAnswered = !!existing
+      userAnswer = existing?.answer_text ?? ''
+    }
   }
 
-  // Also fetch upcoming prompts for context
   const { data: upcomingPrompts } = await supabase
     .from('daily_prompts')
     .select('id, question_text, date, answer_count')
@@ -76,11 +89,34 @@ export default async function PromptsPage() {
             </div>
           </div>
         ) : (
-          <DailyPrompt initialPrompt={todayPrompt} initialAnswers={todayAnswers} />
+          <div className="max-w-2xl mx-auto px-4 space-y-5">
+            {/* Today's question */}
+            <div className="bg-white rounded-2xl border-2 border-[#FFB6D9] p-6 shadow-sm">
+              <div className="font-pixel text-xs text-[#FFB6D9] mb-2" style={{ fontSize: '9px' }}>
+                TODAY&apos;S QUESTION
+              </div>
+              <p
+                className="font-caveat text-2xl text-[#3A0030] leading-snug"
+                style={{ fontFamily: 'Caveat, cursive' }}
+              >
+                &ldquo;{todayPrompt.question_text}&rdquo;
+              </p>
+              <div className="font-nunito text-xs text-[#888] mt-2">
+                {todayAnswers.length} answer{todayAnswers.length !== 1 ? 's' : ''} so far
+              </div>
+            </div>
+
+            {/* Answer form */}
+            <PromptAnswerForm
+              promptId={todayPrompt.id}
+              hasAnswered={hasAnswered}
+              existingAnswer={userAnswer}
+            />
+          </div>
         )}
 
-        {/* All answers section */}
-        {todayAnswers.length > 3 && (
+        {/* All answers */}
+        {todayAnswers.length > 0 && (
           <div className="max-w-4xl mx-auto mt-8 px-4">
             <div className="panel-header">all answers today ✦</div>
             <div className="widget-box p-4">
@@ -91,7 +127,7 @@ export default async function PromptsPage() {
                     : (a.profiles?.username ?? 'scrappy user')
                   return (
                     <div
-                      key={i}
+                      key={a.id ?? i}
                       className="break-inside-avoid bg-white rounded-xl p-4 border border-[#FFB6D9]/30 mb-4"
                     >
                       <div className="font-pixel text-xs text-[#FF4FA3] mb-1" style={{ fontSize: '9px' }}>

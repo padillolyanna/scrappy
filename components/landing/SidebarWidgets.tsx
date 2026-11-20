@@ -2,30 +2,28 @@
 
 import { useState, useEffect } from 'react'
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher'
+import { DEMO_ACTIVITY, DEMO_ONLINE_USERS, SHOW_DEMO } from '@/lib/demoContent'
 
-// ─── Recent Messages ─────────────────────────────────────────────
-const MESSAGES = [
-  { user: 'stargazer', color: '#FF4FA3', text: 'omg the daily prompt today is so good!! loving it ✦' },
-  { user: 'neonlilacdream', color: '#7C4DDB', text: 'just finished my cyber dreams scrapbook ✦' },
-  { user: 'analogdiary', color: '#FF6B00', text: 'the confession wall is so relatable i cried lol' },
-  { user: 'glittergirl', color: '#6FE3FF', text: 'can we get more templates pleaseee!' },
-  { user: 'vintagevibes', color: '#28C840', text: 'scrapbook exchange matched me with @sunflower99!!' },
-]
+export interface ActivityItem {
+  username: string
+  text: string
+  _isDemo?: true
+}
 
-// ─── Who's Online ─────────────────────────────────────────────────
-const ONLINE_USERS = [
-  { name: 'stargrl', color: '#FFB6D9' },
-  { name: 'neonlila', color: '#C9A2FF' },
-  { name: 'analg', color: '#FFF0A8' },
-  { name: 'glitter', color: '#A8DFFF' },
-  { name: 'vintg', color: '#FFD6EC' },
-  { name: 'dreamy', color: '#E8D6FF' },
-  { name: 'sunflwr', color: '#B6FFD9' },
-  { name: 'indie404', color: '#FFB899' },
-  { name: 'melodyxo', color: '#D6EDFF' },
-]
+export interface OnlineUser {
+  username: string
+  _isDemo?: true
+}
 
-// ─── Countdown Timer ──────────────────────────────────────────────
+interface Props {
+  activity?: ActivityItem[]
+  onlineUsers?: OnlineUser[]
+  memberCount?: number
+}
+
+const USER_PALETTE = ['#FFB6D9', '#C9A2FF', '#FFF0A8', '#A8DFFF', '#FFD6EC', '#E8D6FF', '#B6FFD9', '#FFB899', '#D6EDFF']
+const MSG_PALETTE = ['#FF4FA3', '#7C4DDB', '#FF6B00', '#6FE3FF', '#28C840']
+
 function MidnightCountdown() {
   const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
 
@@ -55,19 +53,17 @@ function MidnightCountdown() {
   )
 }
 
-// ─── Hit Counter ──────────────────────────────────────────────────
-function HitCounter() {
-  const digits = '048291'.split('')
+function HitCounter({ count }: { count: number }) {
+  const str = String(count).padStart(6, '0').slice(-6)
   return (
     <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-      {digits.map((d, i) => (
+      {str.split('').map((d, i) => (
         <span key={i} className="counter-digit">{d}</span>
       ))}
     </div>
   )
 }
 
-// ─── Winamp-style Now Playing ─────────────────────────────────────
 function NowPlaying() {
   return (
     <div style={{
@@ -79,7 +75,6 @@ function NowPlaying() {
       alignItems: 'center',
       gap: 6,
     }}>
-      {/* Play button */}
       <button
         style={{
           width: 20, height: 20,
@@ -93,8 +88,6 @@ function NowPlaying() {
       >
         ▶
       </button>
-
-      {/* Scrolling song title */}
       <div style={{ overflow: 'hidden', flex: 1, background: '#000', border: '1px inset #333', padding: '1px 3px' }}>
         <div style={{
           fontFamily: "'Silkscreen', monospace",
@@ -110,7 +103,6 @@ function NowPlaying() {
   )
 }
 
-// ─── Widget wrapper ───────────────────────────────────────────────
 function Widget({ header, children }: { header: string; children: React.ReactNode }) {
   return (
     <div>
@@ -122,19 +114,33 @@ function Widget({ header, children }: { header: string; children: React.ReactNod
   )
 }
 
-// ─── Main sidebar ─────────────────────────────────────────────────
-export default function SidebarWidgets() {
+export default function SidebarWidgets({ activity = [], onlineUsers = [], memberCount = 0 }: Props) {
+  const showDemoActivity = activity.length === 0 && SHOW_DEMO
+  const showDemoOnline = onlineUsers.length === 0 && SHOW_DEMO
+
+  const displayActivity = showDemoActivity ? DEMO_ACTIVITY : activity
+  const displayOnline = showDemoOnline ? DEMO_ONLINE_USERS : onlineUsers
+
   return (
     <div className="flex flex-col gap-3">
 
-      {/* Recent messages */}
-      <Widget header="✦ recent messages!">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-          {MESSAGES.map((m, i) => (
+      <Widget header="✦ recent activity!">
+        {showDemoActivity && (
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: 10, color: '#aaa', marginBottom: 4 }}>
+            ✦ example — be the first to post!
+          </div>
+        )}
+        <div
+          style={{
+            display: 'flex', flexDirection: 'column', gap: 5,
+            opacity: showDemoActivity ? 0.75 : 1,
+          }}
+        >
+          {displayActivity.map((m, i) => (
             <div key={i} style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 11, lineHeight: 1.4 }}>
-              <span style={{ color: m.color, fontWeight: 'bold' }}>{m.user}:</span>{' '}
+              <span style={{ color: MSG_PALETTE[i % MSG_PALETTE.length], fontWeight: 'bold' }}>{m.username}:</span>{' '}
               <span style={{ color: '#3A0030' }} className="line-clamp-1">{m.text}</span>
-              {i === MESSAGES.length - 1 && (
+              {i === displayActivity.length - 1 && (
                 <span className="animate-blink" style={{ marginLeft: 1, color: '#FF4FA3' }}>|</span>
               )}
             </div>
@@ -142,55 +148,62 @@ export default function SidebarWidgets() {
         </div>
       </Widget>
 
-      {/* Who's online */}
-      <Widget header="♡ who&apos;s online">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 6px' }}>
-          {ONLINE_USERS.map((u, i) => (
+      <Widget header="♡ who's online">
+        {showDemoOnline && (
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: 10, color: '#aaa', marginBottom: 4 }}>
+            ✦ example
+          </div>
+        )}
+        <div
+          style={{
+            display: 'flex', flexWrap: 'wrap', gap: '8px 6px',
+            opacity: showDemoOnline ? 0.75 : 1,
+          }}
+        >
+          {displayOnline.map((u, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
               <div style={{ position: 'relative' }}>
                 <div style={{
                   width: 24, height: 24, borderRadius: '50%',
-                  background: u.color,
+                  background: USER_PALETTE[i % USER_PALETTE.length],
                   border: '1.5px solid #2B0A2E',
                 }} />
                 <div style={{
-                  position: 'absolute',
-                  bottom: -1, right: -1,
-                  width: 7, height: 7,
-                  borderRadius: '50%',
-                  background: '#28C840',
-                  border: '1px solid white',
+                  position: 'absolute', bottom: -1, right: -1,
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: '#28C840', border: '1px solid white',
                 }} />
               </div>
-              <span style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 9, color: '#3A0030' }}>
-                {u.name}
+              <span style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 9, color: '#3A0030', maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {u.username.length > 7 ? u.username.slice(0, 7) : u.username}
               </span>
             </div>
           ))}
+          {!showDemoOnline && onlineUsers.length === 0 && (
+            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#aaa' }}>
+              nobody online yet
+            </div>
+          )}
         </div>
       </Widget>
 
-      {/* Hit counter */}
-      <Widget header="◎ visitor counter">
+      <Widget header="◎ scrappy members">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <div style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 10, color: '#888' }}>
-            you are visitor #
+            total members
           </div>
-          <HitCounter />
+          <HitCounter count={memberCount} />
         </div>
       </Widget>
 
-      {/* Now playing */}
       <Widget header="♪ now playing">
         <NowPlaying />
       </Widget>
 
-      {/* Daily prompt countdown */}
       <Widget header="⏱ next prompt in...">
         <MidnightCountdown />
       </Widget>
 
-      {/* Theme switcher */}
       <Widget header="✿ change skin">
         <ThemeSwitcher />
       </Widget>

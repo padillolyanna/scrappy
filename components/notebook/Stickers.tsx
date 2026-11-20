@@ -3,6 +3,7 @@
 // reads like a real Y2K sticker sheet. Tintable stickers take a `color`.
 
 import type { ReactNode } from 'react'
+import { assetFull } from '@/lib/assetLibrary'
 
 const OUT = '#2B0A2E'
 
@@ -408,6 +409,14 @@ function findSticker(id: string) {
 /** `standalone` renders a self-contained 256px SVG (own defs, no CSS) so it
  *  can be serialised and drawn onto a canvas. */
 export function Sticker({ content, color, standalone }: { content: string; color?: string; standalone?: boolean }) {
+  if (content.startsWith('img:')) {
+    // realistic photographed-style asset (see lib/assetLibrary)
+    const id = content.slice(4)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={assetFull(id)} alt="" draggable={false} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }} />
+    )
+  }
   if (content.startsWith('svg:')) {
     const def = findSticker(content.slice(4))
     if (!def) return null
@@ -439,6 +448,7 @@ export function Sticker({ content, color, standalone }: { content: string; color
 }
 
 export function stickerTintable(content: string) {
+  if (content.startsWith('img:')) return false
   if (content.startsWith('txt:')) return true
   const def = findSticker(content.slice(4))
   return !!def?.tint
