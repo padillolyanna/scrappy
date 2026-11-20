@@ -282,3 +282,114 @@ insert into public.daily_prompts (question_text, date) values
   ('If you could send a letter to your younger self, what would you say?', current_date + 4),
   ('What''s one thing you''re currently looking forward to?', current_date + 5)
 on conflict (date) do nothing;
+
+-- ============================================================
+-- MIGRATION: Add is_admin to profiles (run if not exists)
+-- ============================================================
+alter table public.profiles add column if not exists is_admin boolean default false;
+
+-- ============================================================
+-- EXCHANGES
+-- ============================================================
+create table if not exists public.exchanges (
+  id uuid default uuid_generate_v4() primary key,
+  creator_id uuid references public.profiles(id) on delete cascade not null,
+  template_id text not null,
+  status text default 'pending' check (status in ('pending', 'active', 'completed', 'expired')),
+  invite_token text unique not null,
+  expires_at timestamptz default (now() + interval '7 days'),
+  created_at timestamptz default now()
+);
+
+alter table public.exchanges enable row level security;
+
+create policy "Exchanges viewable by creator or participants" on public.exchanges
+  for select using (
+    auth.uid() = creator_id or
+    exists (select 1 from public.exchange_participants ep where ep.exchange_id = id and ep.user_id = auth.uid())
+  );
+
+create policy "Authenticated users can create exchanges" on public.exchanges
+  for insert with check (auth.uid() = creator_id);
+
+create policy "Creator can update exchange" on public.exchanges
+  for update using (auth.uid() = creator_id);
+
+-- ============================================================
+-- EXCHANGE PARTICIPANTS
+-- ============================================================
+create table if not exists public.exchange_participants (
+  id uuid default uuid_generate_v4() primary key,
+  exchange_id uuid references public.exchanges(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  joined_at timestamptz default now(),
+  unique (exchange_id, user_id)
+);
+
+alter table public.exchange_participants enable row level security;
+
+create policy "Participants viewable by all exchange members" on public.exchange_participants
+  for select using (
+    exists (
+      select 1 from public.exchange_participants ep2
+      where ep2.exchange_id = exchange_id and ep2.user_id = auth.uid()
+    ) or
+    exists (
+      select 1 from public.exchanges e
+      where e.id = exchange_id and e.creator_id = auth.uid()
+    )
+  );
+
+create policy "Users can join exchanges" on public.exchange_participants
+  for insert with check (auth.uid() = user_id);
+
+-- ============================================================
+-- EXCHANGE ANSWERS
+-- ============================================================
+create table if not exists public.exchange_answers (
+  id uuid default uuid_generate_v4() primary key,
+  exchange_id uuid references public.exchanges(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  question_id text not null,
+  question_text text not null,
+  answer_text text not null,
+  created_at timestamptz default now(),
+  unique (exchange_id, user_id, question_id)
+);
+
+alter table public.exchange_answers enable row level security;
+
+create policy "Exchange answers viewable by participants" on public.exchange_answers
+  for select using (
+    exists (
+      select 1 from public.exchange_participants ep
+      where ep.exchange_id = exchange_id and ep.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can submit their own answers" on public.exchange_answers
+  for insert with check (auth.uid() = user_id);
+
+-- ============================================================
+-- NOTIFICATIONS
+-- ============================================================
+create table if not exists public.notifications (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  type text not null,
+  message text not null,
+  link text,
+  is_read boolean default false,
+  created_at timestamptz default now()
+);
+
+alter table public.notifications enable row level security;
+
+create policy "Users can view their own notifications" on public.notifications
+  for select using (auth.uid() = user_id);
+
+create policy "Users can update their own notifications" on public.notifications
+  for update using (auth.uid() = user_id);
+
+create policy "System can insert notifications" on public.notifications
+  for insert with check (true);

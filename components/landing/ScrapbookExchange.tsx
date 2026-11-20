@@ -227,7 +227,7 @@ export default function ScrapbookExchange() {
               ))}
             </div>
 
-            <Link href="/explore" className="btn-bevel" style={{ fontSize: 14 }}>
+            <Link href="/exchange" className="btn-bevel" style={{ fontSize: 14 }}>
               START AN EXCHANGE ♡
             </Link>
           </motion.div>

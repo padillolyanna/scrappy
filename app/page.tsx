@@ -1,3 +1,5 @@
+export const instant = false
+
 import Footer from '@/components/layout/Footer'
 import HomeStatusPanel from '@/components/landing/HomeStatusPanel'
 import FeaturedScrapbooks from '@/components/landing/FeaturedScrapbooks'
@@ -6,10 +8,12 @@ import ConfessionPreview from '@/components/landing/ConfessionPreview'
 import ScrapbookExchange from '@/components/landing/ScrapbookExchange'
 import FinalCTA from '@/components/landing/FinalCTA'
 import SidebarWidgets from '@/components/landing/SidebarWidgets'
+import { createClient } from '@/lib/supabase-server'
 
 // LCD marquee strip (aesthetic tags)
 function LcdMarquee() {
-  const text = '✦ pink princess ✦ cyber y2k ✦ digital diary ✦ indie sleaze ✦ sweet memories ✦ blue dream ✦ retro camera ✦ glitter explosion ✦ diy aesthetic ✦ nostalgia core ✦ '
+  const text =
+    '✦ pink princess ✦ cyber y2k ✦ digital diary ✦ indie sleaze ✦ sweet memories ✦ blue dream ✦ retro camera ✦ glitter explosion ✦ diy aesthetic ✦ nostalgia core ✦ '
   const doubled = text + text
 
   return (
@@ -50,7 +54,8 @@ function LcdMarquee() {
 
 // Top marquee (original)
 function TopMarquee() {
-  const text = 'SCRAPPY — YOUR LITTLE CORNER OF THE INTERNET ✦ MAKE MEMORIES ✦ DECORATE YOUR PAGES ✦ COLLECT ANSWERS ✦ SHARE YOUR STORY ✦ VISITORS: 48,291 ✦ '
+  const text =
+    'SCRAPPY — YOUR LITTLE CORNER OF THE INTERNET ✦ MAKE MEMORIES ✦ DECORATE YOUR PAGES ✦ COLLECT ANSWERS ✦ SHARE YOUR STORY ✦ '
   const doubled = text + text
 
   return (
@@ -62,11 +67,29 @@ function TopMarquee() {
         borderBottom: '2px solid #2B0A2E',
       }}
     >
-      <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'marquee 25s linear infinite' }}>
-        <span style={{ fontFamily: "'VT323', monospace", fontSize: 16, color: 'white', letterSpacing: '0.06em', display: 'inline-block' }}>
+      <div
+        style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'marquee 25s linear infinite' }}
+      >
+        <span
+          style={{
+            fontFamily: "'VT323', monospace",
+            fontSize: 16,
+            color: 'white',
+            letterSpacing: '0.06em',
+            display: 'inline-block',
+          }}
+        >
           {doubled}
         </span>
-        <span style={{ fontFamily: "'VT323', monospace", fontSize: 16, color: 'white', letterSpacing: '0.06em', display: 'inline-block' }}>
+        <span
+          style={{
+            fontFamily: "'VT323', monospace",
+            fontSize: 16,
+            color: 'white',
+            letterSpacing: '0.06em',
+            display: 'inline-block',
+          }}
+        >
           {doubled}
         </span>
       </div>
@@ -110,7 +133,47 @@ function StickerDecorations() {
   )
 }
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient()
+  const today = new Date().toISOString().split('T')[0]
+
+  const [
+    { data: featuredScrapbooks },
+    { data: todayPrompt },
+    { data: promptAnswers },
+  ] = await Promise.all([
+    supabase
+      .from('scrapbooks')
+      .select('id, title, cover_id, like_count, created_at, user_id, profiles!inner(username)')
+      .eq('is_public', true)
+      .order('like_count', { ascending: false })
+      .limit(3),
+    supabase.from('daily_prompts').select('*').eq('date', today).single(),
+    supabase
+      .from('prompt_answers')
+      .select('user_id, answer_text, is_anonymous, like_count, profiles(username)')
+      .eq('prompt_id', '')  // placeholder — will be replaced with actual id below
+      .limit(0),
+  ])
+
+  // Fetch answers for today's prompt if we have one
+  let todayAnswers: { user_id: string | null; answer_text: string; is_anonymous: boolean; like_count: number; profiles: { username: string } | null }[] = []
+  if (todayPrompt?.id) {
+    const { data } = await supabase
+      .from('prompt_answers')
+      .select('user_id, answer_text, is_anonymous, like_count, profiles(username)')
+      .eq('prompt_id', todayPrompt.id)
+      .order('like_count', { ascending: false })
+      .limit(5)
+    todayAnswers = (data as unknown as typeof todayAnswers) ?? []
+  }
+
+  // Map featured scrapbooks to expected shape
+  const featured = (featuredScrapbooks ?? []).map((sb) => ({
+    ...sb,
+    profiles: Array.isArray(sb.profiles) ? (sb.profiles[0] as { username: string }) : (sb.profiles as { username: string } | null),
+  }))
+
   return (
     <div className="relative">
       <StickerDecorations />
@@ -137,7 +200,7 @@ export default function Home() {
         <div className="flex flex-col gap-0 pr-4">
           {/* Featured scrapbooks */}
           <div style={{ marginBottom: 0 }}>
-            <FeaturedScrapbooks />
+            <FeaturedScrapbooks scrapbooks={featured} />
           </div>
 
           {/* Confession wall */}
@@ -153,7 +216,7 @@ export default function Home() {
       </div>
 
       {/* Below two-column: daily prompt, exchange, final CTA */}
-      <DailyPrompt />
+      <DailyPrompt initialPrompt={todayPrompt ?? null} initialAnswers={todayAnswers} />
       <ScrapbookExchange />
       <FinalCTA />
 

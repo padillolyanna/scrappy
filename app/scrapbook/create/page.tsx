@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import CoverSelector from '@/components/scrapbook/CoverSelector'
 import TemplateSelector from '@/components/scrapbook/TemplateSelector'
@@ -149,7 +148,6 @@ export default function CreateScrapbookPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <main className="flex-1 py-8 px-4">
         <div className="max-w-5xl mx-auto">
 

@@ -1,11 +1,9 @@
-import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import FeaturedScrapbooks from '@/components/landing/FeaturedScrapbooks'
 
 export default function HighlightsPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
       <main className="flex-1 py-10">
         <div className="text-center mb-2 px-4">
           <div className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest" style={{ fontSize: '11px' }}>

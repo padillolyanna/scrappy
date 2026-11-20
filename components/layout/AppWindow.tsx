@@ -40,67 +40,12 @@ export default function AppWindow({ children }: Props) {
         </span>
       ))}
 
-      {/* Title bar */}
-      <div
-        className="rounded-t-[14px] overflow-hidden"
-        style={{
-          background: 'linear-gradient(90deg, #6FE3FF 0%, #FF9ECF 50%, #C9A2FF 100%)',
-          border: '3px solid #2B0A2E',
-          borderBottom: 'none',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
-          padding: '5px 10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        {/* Fake traffic lights */}
-        <div className="flex items-center gap-2">
-          <span
-            aria-hidden="true"
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ background: '#FF5F57', border: '1px solid #c94234' }}
-          />
-          <span
-            aria-hidden="true"
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ background: '#FEBC2E', border: '1px solid #c99523' }}
-          />
-          <span
-            aria-hidden="true"
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ background: '#28C840', border: '1px solid #1fa131' }}
-          />
-          <span
-            className="font-chango ml-3 logo-glint"
-            style={{
-              fontFamily: "'Chango', 'Arial Black', sans-serif",
-              fontSize: '15px',
-              color: '#2B0A2E',
-              letterSpacing: '0.08em',
-              position: 'relative',
-            }}
-          >
-            SCRAPPY
-          </span>
-        </div>
-
-        {/* Online count */}
-        <span
-          className="font-pixel"
-          style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#2B0A2E' }}
-        >
-          <span className="animate-blink" style={{ color: '#28C840' }}>●</span> online: 1,247
-        </span>
-      </div>
-
       {/* Main window body */}
       <div
         className="relative"
         style={{
           background: 'var(--c-bg, #FFF0F7)',
           border: '3px solid #2B0A2E',
-          borderTop: 'none',
           borderRadius: '0 0 14px 14px',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 4px 8px 20px rgba(0,0,0,0.4)',
           minHeight: '400px',

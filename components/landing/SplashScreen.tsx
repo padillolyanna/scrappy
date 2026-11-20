@@ -117,11 +117,12 @@ export default function SplashScreen() {
               border: '3px solid #2B0A2E',
               borderRadius: '16px',
               padding: '36px 40px',
-              maxWidth: 440,
-              width: '90%',
+              maxWidth: 600,
+              width: '94%',
               textAlign: 'center',
               boxShadow: '6px 6px 0 #2B0A2E, 0 0 60px rgba(255,79,163,0.4)',
               position: 'relative',
+              overflow: 'visible',
             }}
           >
             {/* Glossy SCRAPPY wordmark */}
@@ -129,15 +130,16 @@ export default function SplashScreen() {
               className="logo-glint"
               style={{
                 fontFamily: "'Chango', 'Arial Black', sans-serif",
-                fontSize: 'clamp(52px, 14vw, 80px)',
+                fontSize: 'clamp(38px, 9vw, 56px)',
                 background: 'linear-gradient(180deg, #FF9ECF 0%, #FF4FA3 45%, #D4006A 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 filter: 'drop-shadow(2px 3px 0px #2B0A2E)',
                 letterSpacing: '0.04em',
-                lineHeight: 1,
+                lineHeight: 1.2,
                 marginBottom: 8,
+                padding: '4px 0 8px',
                 position: 'relative',
                 display: 'block',
               }}

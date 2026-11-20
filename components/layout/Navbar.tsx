@@ -12,14 +12,15 @@ const GUEST_LINKS = [
   { href: '/highlights', label: 'HIGHLIGHTS' },
   { href: '/confessions', label: 'CONFESSIONS' },
   { href: '/prompts', label: 'DAILY PROMPT' },
+  { href: '/exchange', label: 'EXCHANGE' },
 ]
 
 const AUTH_LINKS = [
-  { href: '/', label: 'HOME' },
+  { href: '/my-space', label: 'HOME' },
   { href: '/explore', label: 'EXPLORE' },
-  { href: '/my-space', label: 'MY SPACE' },
   { href: '/confessions', label: 'CONFESSIONS' },
   { href: '/prompts', label: 'DAILY PROMPT' },
+  { href: '/exchange', label: 'EXCHANGE' },
 ]
 
 export default function Navbar() {
@@ -31,6 +32,8 @@ export default function Navbar() {
 
   const navLinks = user ? AUTH_LINKS : GUEST_LINKS
   const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'you'
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
+  const avatarInitial = username.charAt(0).toUpperCase()
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -51,10 +54,10 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b-2 border-[#FFB6D9] shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b-2 border-[#FFB6D9] shadow-sm overflow-visible">
+        <div className="max-w-7xl mx-auto px-4 pt-2 pb-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="font-pacifico text-3xl text-glitter" style={{ fontFamily: 'Pacifico, cursive', fontSize: '28px' }}>
+            <span className="font-pacifico text-glitter" style={{ fontFamily: 'Pacifico, cursive', fontSize: '28px', lineHeight: '1.5', display: 'inline-block' }}>
               SCRAPPY
             </span>
             <span className="text-lg animate-sparkle text-[#FF4FA3]">✦</span>
@@ -65,8 +68,8 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="font-pixel text-xs px-3 py-2 rounded-full text-[#3A0030] hover:bg-[#FFB6D9] hover:text-white transition-all duration-200"
-                style={{ fontSize: '10px', letterSpacing: '0.08em' }}
+                className="font-pixel px-3 py-2 rounded-full text-[#3A0030] hover:bg-[#FFB6D9] hover:text-white transition-all duration-200"
+                style={{ fontSize: '16px', letterSpacing: '0.06em' }}
               >
                 {link.label}
               </Link>
@@ -79,10 +82,16 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center gap-2 font-pixel text-xs text-[#3A0030] px-3 py-1.5 rounded-full border-2 border-[#FFB6D9] hover:border-[#FF4FA3] transition-all"
-                    style={{ fontSize: '10px' }}
+                    className="flex items-center gap-2 font-pixel text-[#3A0030] pl-1 pr-3 py-1 rounded-full border-2 border-[#FFB6D9] hover:border-[#FF4FA3] transition-all"
+                    style={{ fontSize: '13px' }}
                   >
-                    <span className="text-[#FF4FA3]">✦</span>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={username} className="w-7 h-7 rounded-full object-cover border border-[#FFB6D9]" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-[#FF4FA3] flex items-center justify-center text-white font-pixel" style={{ fontSize: '13px' }}>
+                        {avatarInitial}
+                      </div>
+                    )}
                     <span>@{username}</span>
                     <span className="text-[#888]">▾</span>
                   </button>
@@ -91,15 +100,23 @@ export default function Navbar() {
                       <Link
                         href="/my-space"
                         className="block px-4 py-3 font-pixel text-xs text-[#3A0030] hover:bg-[#FFB6D9]/20 transition-colors border-b border-[#FFB6D9]/30"
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '13px' }}
                         onClick={() => setUserMenuOpen(false)}
                       >
                         MY SPACE
                       </Link>
                       <Link
+                        href={`/profile/${username}`}
+                        className="block px-4 py-3 font-pixel text-xs text-[#3A0030] hover:bg-[#FFB6D9]/20 transition-colors border-b border-[#FFB6D9]/30"
+                        style={{ fontSize: '13px' }}
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        MY PROFILE
+                      </Link>
+                      <Link
                         href="/scrapbook/create"
                         className="block px-4 py-3 font-pixel text-xs text-[#3A0030] hover:bg-[#FFB6D9]/20 transition-colors border-b border-[#FFB6D9]/30"
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '13px' }}
                         onClick={() => setUserMenuOpen(false)}
                       >
                         NEW SCRAPBOOK
@@ -107,7 +124,7 @@ export default function Navbar() {
                       <button
                         onClick={() => { setUserMenuOpen(false); handleLogout() }}
                         className="block w-full text-left px-4 py-3 font-pixel text-xs text-[#888] hover:bg-[#FFB6D9]/20 transition-colors"
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '13px' }}
                       >
                         LOG OUT
                       </button>
@@ -119,14 +136,14 @@ export default function Navbar() {
                   <Link
                     href="/auth/login"
                     className="btn-outline-y2k text-xs py-1.5 px-4"
-                    style={{ fontSize: '12px', padding: '6px 16px' }}
+                    style={{ fontSize: '14px', padding: '6px 18px' }}
                   >
                     LOG IN
                   </Link>
                   <Link
                     href="/auth/signup"
                     className="btn-y2k text-xs py-1.5 px-4"
-                    style={{ fontSize: '12px', padding: '6px 16px' }}
+                    style={{ fontSize: '14px', padding: '6px 18px' }}
                   >
                     JOIN SCRAPPY ✦
                   </Link>
@@ -150,7 +167,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className="font-pixel text-xs text-[#3A0030] py-2 border-b border-[#FFB6D9]/30"
-                style={{ fontSize: '11px' }}
+                style={{ fontSize: '14px' }}
                 onClick={() => setMenuOpen(false)}
               >
                 {link.label}
@@ -162,7 +179,7 @@ export default function Navbar() {
                   <Link
                     href="/my-space"
                     className="btn-y2k text-xs flex-1 text-center"
-                    style={{ fontSize: '11px' }}
+                    style={{ fontSize: '14px' }}
                     onClick={() => setMenuOpen(false)}
                   >
                     MY SPACE
@@ -170,15 +187,15 @@ export default function Navbar() {
                   <button
                     onClick={() => { setMenuOpen(false); handleLogout() }}
                     className="btn-outline-y2k text-xs flex-1 text-center"
-                    style={{ fontSize: '11px' }}
+                    style={{ fontSize: '14px' }}
                   >
                     LOG OUT
                   </button>
                 </>
               ) : (
                 <>
-                  <Link href="/auth/login" className="btn-outline-y2k text-xs flex-1 text-center" style={{ fontSize: '11px' }}>LOG IN</Link>
-                  <Link href="/auth/signup" className="btn-y2k text-xs flex-1 text-center" style={{ fontSize: '11px' }}>JOIN SCRAPPY</Link>
+                  <Link href="/auth/login" className="btn-outline-y2k text-xs flex-1 text-center" style={{ fontSize: '14px' }}>LOG IN</Link>
+                  <Link href="/auth/signup" className="btn-y2k text-xs flex-1 text-center" style={{ fontSize: '14px' }}>JOIN SCRAPPY</Link>
                 </>
               )}
             </div>
