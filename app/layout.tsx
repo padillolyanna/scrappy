@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Script from "next/script";
 import NavbarWrapper from "@/components/layout/NavbarWrapper";
 import AppWindow from "@/components/layout/AppWindow";
 import CursorTrail from "@/components/ui/CursorTrail";
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full">
       <head>
+        <meta name="google-adsense-account" content="ca-pub-1565639314627238" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -39,6 +41,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AppWindow>
           {children}
         </AppWindow>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1565639314627238"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
