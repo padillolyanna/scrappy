@@ -1,7 +1,17 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+
+interface ExchangeStats {
+  total: number
+  today: number
+}
+
+interface Props {
+  exchangeStats?: ExchangeStats | null
+}
 
 const STEPS = [
   'Choose a template and answer 10 community questions.',
@@ -10,100 +20,197 @@ const STEPS = [
   'Create a friendship scrapbook page from your exchange.',
 ]
 
-export default function ScrapbookExchange() {
+function FoldedNote() {
+  const [unfolded, setUnfolded] = useState(false)
+
   return (
-    <section className="py-16 lg:py-20 bg-[#FFF8ED] border-t-2 border-[#FFB6D9]/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* LEFT COLUMN — Visual cards */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            {/* NEW FEATURE badge */}
-            <div className="inline-block bg-[#FF4FA3] text-white font-pixel px-3 py-1 rounded-full mb-6" style={{ fontSize: '9px' }}>
-              NEW FEATURE
+    <div style={{ perspective: 600 }}>
+      <motion.div
+        onHoverStart={() => setUnfolded(true)}
+        onHoverEnd={() => setUnfolded(false)}
+        animate={{ rotateX: unfolded ? 0 : -15 }}
+        transition={{ duration: 0.4 }}
+        style={{
+          transformOrigin: 'top center',
+          background: '#FFF8ED',
+          backgroundImage: `repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 23px,
+            rgba(100,160,220,0.2) 23px,
+            rgba(100,160,220,0.2) 24px
+          )`,
+          border: '2px solid #2B0A2E',
+          borderRadius: '4px 4px 4px 4px',
+          padding: '16px 16px 16px 40px',
+          position: 'relative',
+          boxShadow: '3px 3px 0 #2B0A2E',
+          maxWidth: 300,
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          left: 28, top: 0, bottom: 0,
+          width: 1.5,
+          background: 'rgba(255,100,100,0.5)',
+        }} />
+
+        <div style={{
+          position: 'absolute', top: 0, right: 0,
+          width: 0, height: 0,
+          borderTop: '28px solid #C8945A',
+          borderLeft: '28px solid transparent',
+        }} />
+        <div style={{
+          position: 'absolute', top: 2, right: 2,
+          width: 0, height: 0,
+          borderTop: '24px solid #FFF8ED',
+          borderLeft: '24px solid transparent',
+        }} />
+
+        <div style={{
+          fontFamily: "'Chango', 'Arial Black', sans-serif",
+          fontSize: 10,
+          color: '#FF4FA3',
+          marginBottom: 10,
+          letterSpacing: '0.08em',
+        }}>
+          PASS THIS NOTE ♡
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div>
+            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
+              question 1:
             </div>
+            <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#3A0030', lineHeight: 1.3 }}>
+              your first online username?
+            </div>
+          </div>
+          <div>
+            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
+              question 2:
+            </div>
+            <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#7C4DDB', lineHeight: 1.3 }}>
+              song that defined you?
+            </div>
+          </div>
+        </div>
 
-            {/* Overlapping cards */}
-            <div className="relative h-80">
-              {/* Card 1 — behind */}
-              <div
-                className="absolute left-0 top-0 w-64 bg-white rounded-xl shadow-lg p-5 border-2 border-[#FFB6D9]"
-                style={{ transform: 'rotate(-6deg)' }}
-              >
-                <div className="font-pixel text-[#888] mb-3" style={{ fontSize: '9px' }}>
-                  EXCHANGE QUESTIONS
-                </div>
-                <div className="font-caveat text-lg text-[#3A0030] mb-2" style={{ fontFamily: 'Caveat, cursive' }}>
-                  What was your first online username?
-                </div>
-                <div className="h-8 bg-[#FFF0F7] rounded border border-[#FFB6D9]/30 mb-3" />
-                <div className="font-caveat text-base text-[#3A0030] mb-2" style={{ fontFamily: 'Caveat, cursive' }}>
-                  What song defined your childhood?
-                </div>
-                <div className="h-8 bg-[#FFF0F7] rounded border border-[#FFB6D9]/30" />
+        <div style={{
+          background: '#E8F8F0',
+          border: '1px solid #28C840',
+          borderRadius: 4,
+          padding: '3px 8px',
+          fontFamily: "'VT323', monospace",
+          fontSize: 12,
+          color: '#28C840',
+          display: 'inline-block',
+        }}>
+          WAITING FOR YOUR MATCH ♡
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+export default function ScrapbookExchange({ exchangeStats }: Props) {
+  return (
+    <section style={{ padding: '0 20px 20px' }}>
+      <div className="panel-header">✉ scrapbook exchange</div>
+      <div className="widget-box" style={{ padding: '16px' }}>
+        <div
+          className="animate-starburst"
+          style={{
+            display: 'inline-block',
+            background: '#FF4FA3',
+            color: 'white',
+            fontFamily: "'Chango', 'Arial Black', sans-serif",
+            fontSize: 11,
+            padding: '3px 10px',
+            border: '2px solid #2B0A2E',
+            borderRadius: 4,
+            boxShadow: '1px 1px 0 #2B0A2E',
+            marginBottom: 14,
+          }}
+        >
+          NEW FEATURE
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 items-start">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          >
+            <FoldedNote />
+
+            <div style={{ marginTop: 20 }}>
+              <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#888', marginBottom: 8 }}>
+                HOW IT WORKS:
               </div>
-
-              {/* Card 2 — front */}
-              <div
-                className="absolute right-0 bottom-0 w-64 bg-white rounded-xl shadow-xl p-5 border-2 border-[#C9B6FF]"
-                style={{ transform: 'rotate(4deg)' }}
-              >
-                <div className="font-pixel text-[#888] mb-3" style={{ fontSize: '9px' }}>
-                  YOUR ANSWERS
-                </div>
-                <div className="font-caveat text-base text-[#FF4FA3] mb-2" style={{ fontFamily: 'Caveat, cursive' }}>
-                  stargirl404...
-                </div>
-                <div className="font-caveat text-base text-[#FF4FA3] mb-3" style={{ fontFamily: 'Caveat, cursive' }}>
-                  Mr. Brightside by The Killers...
-                </div>
-                <div className="bg-[#E8F8F0] border border-green-200 rounded-lg p-2 font-pixel text-green-600" style={{ fontSize: '9px' }}>
-                  MATCHED WITH @sunflower99
-                </div>
-              </div>
-
-              {/* Floating heart */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-[#FF4FA3] animate-sparkle z-10 pointer-events-none select-none">
-                ♡
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {STEPS.map((step, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: '#FF4FA3', color: 'white',
+                      fontFamily: "'Chango', 'Arial Black', sans-serif",
+                      fontSize: 11,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: '2px solid #2B0A2E', flexShrink: 0,
+                    }}>
+                      {i + 1}
+                    </div>
+                    <p style={{ fontFamily: 'Verdana, sans-serif', fontSize: 11, color: '#3A0030', paddingTop: 2, lineHeight: 1.4 }}>
+                      {step}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </motion.div>
 
-          {/* RIGHT COLUMN — Description */}
           <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.15 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
           >
-            <h2 className="font-pacifico text-4xl text-[#3A0030] mb-4" style={{ fontFamily: 'Pacifico, cursive' }}>
+            <h2 style={{ fontFamily: "'Chango', 'Arial Black', sans-serif", fontSize: 24, color: '#3A0030', marginBottom: 8 }}>
               Scrapbook Exchange
             </h2>
-            <p className="font-caveat text-xl text-[#888] mb-4" style={{ fontFamily: 'Caveat, cursive' }}>
+            <p style={{ fontFamily: "'Caveat', cursive", fontSize: 18, color: '#888', marginBottom: 10 }}>
               pass notes with a stranger. find your people.
             </p>
-            <p className="font-nunito text-[#5A2050] text-base leading-relaxed mb-8">
-              Answer the same questions as a stranger or friend. Reveal your answers together and discover similarities, differences, and memories you never knew existed. It's like passing notes — but make it digital.
+            <p style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#5A2050', lineHeight: 1.6, marginBottom: 16 }}>
+              Answer the same questions as a stranger or friend. Reveal your answers together and discover similarities, differences, and memories you never knew existed. It&apos;s like passing notes — but make it digital.
             </p>
 
-            {/* Steps */}
-            <div className="space-y-3">
-              {STEPS.map((step, i) => (
-                <div key={i} className="flex gap-4 items-start">
-                  <div className="w-7 h-7 rounded-full bg-[#FF4FA3] text-white font-pixel text-sm flex items-center justify-center shrink-0">
-                    {i + 1}
-                  </div>
-                  <p className="font-nunito text-sm text-[#5A2050] pt-1">{step}</p>
-                </div>
-              ))}
-            </div>
+            {exchangeStats && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                {exchangeStats.total > 0 && (
+                  <span style={{
+                    fontFamily: "'VT323', monospace", fontSize: 13, color: '#FF4FA3',
+                    background: '#FFF0F7', border: '1.5px solid #FFB6D9',
+                    borderRadius: 20, padding: '2px 10px',
+                  }}>
+                    ✦ {exchangeStats.total.toLocaleString()} exchanges done
+                  </span>
+                )}
+                {exchangeStats.today > 0 && (
+                  <span style={{
+                    fontFamily: "'VT323', monospace", fontSize: 13, color: '#FF4FA3',
+                    background: '#FFF0F7', border: '1.5px solid #FFB6D9',
+                    borderRadius: 20, padding: '2px 10px',
+                  }}>
+                    ★ {exchangeStats.today} exchanges today
+                  </span>
+                )}
+              </div>
+            )}
 
-            <Link href="/explore" className="btn-y2k inline-block mt-8">
-              START AN EXCHANGE
+            <Link href="/exchange" className="btn-bevel" style={{ fontSize: 14 }}>
+              START AN EXCHANGE ♡
             </Link>
           </motion.div>
         </div>
