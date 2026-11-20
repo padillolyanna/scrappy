@@ -689,3 +689,21 @@ body {
   overflow: hidden;
   position: relative;
 }
+
+/* ============================================================
+   NOTEBOOK EDITOR — compact inputs
+   ============================================================ */
+.input-mini {
+  height: 32px;
+  border: 2px solid #2B0A2E;
+  border-radius: 6px;
+  background: #fff;
+  padding: 0 6px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: #2B0A2E;
+  box-shadow: inset 1px 1px 0 rgba(43,10,46,.12);
+  outline: none;
+}
+.input-mini:focus { border-color: #FF4FA3; box-shadow: 0 0 0 2px rgba(255,79,163,.3); }

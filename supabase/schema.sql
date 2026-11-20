@@ -125,6 +125,7 @@ create table public.scrapbook_elements (
   font_size int,
   color text,
   z_index int default 0,
+  props jsonb not null default '{}'::jsonb,
   created_at timestamptz default now()
 );
 

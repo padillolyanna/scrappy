@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&family=Chango&family=Silkscreen&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&family=Chango&family=Silkscreen&family=Gochi+Hand&family=Fredoka:wght@400;600&family=Cherry+Bomb+One&family=Special+Elite&display=swap"
           rel="stylesheet"
         />
       </head>
