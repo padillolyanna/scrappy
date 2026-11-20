@@ -63,6 +63,8 @@ export interface NbElement {
 
 export interface NbPage {
   id: string
+  /** the notebook's front cover — always pages[0] when present, shown closed and on its own */
+  cover?: boolean
   /** a PaperId, or 'art:<backgroundId>' for a drawn texture from lib/photoboothArt */
   paper: PaperId | `art:${string}`
   color: string
@@ -129,15 +131,19 @@ export function pageBackground(page: Pick<NbPage, 'paper' | 'color' | 'bgImage' 
   }
 }
 
-/** bg_texture column encoding: "<paper>" or "<paper>|img|<scale>|<url>" */
+/** bg_texture column encoding: "[cover~]<paper>" or "[cover~]<paper>|img|<scale>|<url>" */
 export function encodePaper(p: NbPage) {
-  return p.bgImage ? `${p.paper}|img|${p.bgScale ?? 1}|${p.bgImage}` : p.paper
+  const base = p.bgImage ? `${p.paper}|img|${p.bgScale ?? 1}|${p.bgImage}` : p.paper
+  return p.cover ? `cover~${base}` : base
 }
-export function decodePaper(raw: string | null): Pick<NbPage, 'paper' | 'bgImage' | 'bgScale'> {
+export function decodePaper(raw: string | null): Pick<NbPage, 'paper' | 'bgImage' | 'bgScale' | 'cover'> {
   if (!raw) return { paper: 'plain' }
-  const [paper, kind, scale, ...rest] = raw.split('|')
-  if (kind === 'img' && rest.length) return { paper: paper as NbPage['paper'], bgScale: Number(scale) || 1, bgImage: rest.join('|') }
-  return { paper: paper as NbPage['paper'] }
+  const cover = raw.startsWith('cover~')
+  const body = cover ? raw.slice(6) : raw
+  const [paper, kind, scale, ...rest] = body.split('|')
+  const extra = cover ? { cover: true as const } : {}
+  if (kind === 'img' && rest.length) return { paper: paper as NbPage['paper'], bgScale: Number(scale) || 1, bgImage: rest.join('|'), ...extra }
+  return { paper: paper as NbPage['paper'], ...extra }
 }
 
 export function paperStyle(paper: PaperId, color: string): React.CSSProperties {
@@ -351,7 +357,45 @@ export function coverTheme(coverId: string) {
   return COVER_PAPER[coverId] ?? COVER_PAPER['pink-princess']
 }
 
+const COVER_ART: Record<string, { bg: string; ink: string; accent: string }> = {
+  'pink-princess': { bg: 'art:glitter-pink', ink: '#3B3BB8', accent: '#FFFFFF' },
+  'cyber-y2k': { bg: 'art:starburst-blue', ink: '#FFFFFF', accent: '#FF4FA3' },
+  'digital-diary': { bg: 'art:hearts', ink: '#3B3BB8', accent: '#FF2E93' },
+  'indie-sleaze': { bg: 'art:zebra', ink: '#FF2E93', accent: '#111111' },
+  'sweet-memories': { bg: 'art:daisies', ink: '#3B3BB8', accent: '#FF9B6A' },
+  'blue-dream': { bg: 'art:clouds', ink: '#3B3BB8', accent: '#FFFFFF' },
+  'retro-camera': { bg: 'art:leopard', ink: '#2B1408', accent: '#FF5FA2' },
+  'glitter-explosion': { bg: 'art:glitter-night', ink: '#FFD1E8', accent: '#FF4FA3' },
+}
+
+/** A decorated front cover: glitter texture, heart photo window, title and doodles. */
+export function starterCover(coverId: string, title: string): NbPage {
+  const art = COVER_ART[coverId] ?? COVER_ART['pink-princess']
+  let cover: NbPage = { id: uid('pg'), cover: true, paper: art.bg as NbPage['paper'], color: '#FF9ECF', elements: [] }
+  const doodle = (content: string, x: number, y: number, rotation: number, size = 22, font = 'gochi') =>
+    ({ type: 'text' as const, x, y, w: 200, h: 34, rotation, content, props: { font, size, color: art.ink, align: 'center' as const } })
+  cover = addTo(cover, {
+    type: 'text', x: 40, y: 52, w: 400, h: 70, rotation: -4, content: title || 'my scrapbook',
+    props: { font: 'pacifico', size: 46, color: art.accent, align: 'center', textFx: 'outline' },
+  }).page
+  cover = addTo(cover, { ...makeImage('', 'heart', 115, 190), w: 250, h: 230, rotation: 0, props: { frame: 'heart', caption: '', filter: 'none', shadow: true } }).page
+  cover = addTo(cover, doodle('keep out!! ✦', 20, 140, -12)).page
+  cover = addTo(cover, doodle('xoxo', 330, 150, 10, 26)).page
+  cover = addTo(cover, doodle('dear diary…', 30, 450, 8, 24, 'caveat')).page
+  cover = addTo(cover, doodle('best. year. ever!!!', 250, 470, -8, 22)).page
+  cover = addTo(cover, doodle('don\'t read this', 120, 560, -3, 26, 'caveat')).page
+  cover = addTo(cover, { ...makeSticker('svg:heart', 50, 220), w: 64, h: 64, rotation: -14, props: { color: '#FF4FA3' } }).page
+  cover = addTo(cover, { ...makeSticker('svg:butterfly', 370, 360), w: 70, h: 70, rotation: 12, props: { color: '#C9A2FF' } }).page
+  cover = addTo(cover, { ...makeSticker('svg:sparkle', 395, 40), w: 46, h: 46, props: { color: '#FFFFFF' } }).page
+  cover = addTo(cover, { ...makeSticker('svg:gem-heart', 360, 570), w: 52, h: 52, rotation: 10, props: { color: '#FF5FB1' } }).page
+  return cover
+}
+
 export function starterPages(coverId: string, templateId: string, title: string): NbPage[] {
+  return [starterCover(coverId, title), ...starterInner(coverId, templateId, title)]
+}
+
+function starterInner(coverId: string, templateId: string, title: string): NbPage[] {
   const theme = coverTheme(coverId)
   const cover = SCRAPBOOK_COVERS.find((c) => c.id === coverId)
   const template = TEMPLATES.find((t) => t.id === templateId)

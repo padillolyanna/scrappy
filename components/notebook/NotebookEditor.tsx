@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 import { TEMPLATES } from '@/lib/types'
 import {
   FONTS, PAGE_H, PAGE_W, PAPERS, PAPER_COLORS, SPREAD_W, SWATCHES, TAPES, TAPE_COLORS,
-  addTo, blankPage, compressImage, makeImage, makeQuestion, makeShape, makeSticker, makeTape, makeText,
+  addTo, blankPage, compressImage, makeImage, makeQuestion, starterCover, makeShape, makeSticker, makeTape, makeText,
   paperStyle, pageBackground,
   type ElementProps, type NbElement, type NbPage, type PaperId,
 } from '@/lib/notebook'
@@ -17,7 +17,7 @@ import {
 } from '@/lib/assetLibrary'
 import NotebookViewer from './NotebookViewer'
 import ElementView, { QuestionView, textBoxStyle } from './ElementView'
-import StaticSpread, { SpreadFrame, placed, sortedSpreadElements } from './Spread'
+import StaticSpread, { CoverFrame, SpreadFrame, StaticCover, placed, sortedSpreadElements } from './Spread'
 import { EMOJI_STICKERS, GEM_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
 
 type Panel = 'library' | 'frames' | 'photos' | 'text' | 'stickers' | 'tape' | 'shapes' | 'backgrounds' | 'questions'
@@ -119,7 +119,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   }, [onChange, bump])
 
   // ── view state ───────────────────────────────────────────────────────
-  const [spreadState, setSpread] = useState(0)
+  const [spreadState, setSpread] = useState(-1) // -1 = front cover (when there is one)
   const [activePage, setActivePage] = useState(0)
   const [sel, setSel] = useState<Sel>(null)
   const [editing, setEditing] = useState<string | null>(null)
@@ -140,10 +140,13 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const clipboard = useRef<NbElement | null>(null)
 
-  const spreads = Math.max(1, Math.ceil(pages.length / 2))
-  const spread = Math.min(spreadState, spreads - 1)
-  const leftIdx = spread * 2
-  const rightIdx = spread * 2 + 1
+  const hasCover = !!pages[0]?.cover
+  const off = hasCover ? 1 : 0
+  const spreads = Math.max(1, Math.ceil((pages.length - off) / 2))
+  const onCover = hasCover && spreadState < 0
+  const spread = Math.max(0, Math.min(spreadState, spreads - 1))
+  const leftIdx = off + spread * 2
+  const rightIdx = leftIdx + 1
   const left = pages[leftIdx]
   const right = pages[rightIdx]
 
@@ -186,7 +189,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
     setExporting(false)
   }
 
-  const bgIdxs = bgTarget === 'left' ? [leftIdx] : bgTarget === 'right' ? [rightIdx] : [leftIdx, rightIdx]
+  const bgIdxs = onCover ? [0] : bgTarget === 'left' ? [leftIdx] : bgTarget === 'right' ? [rightIdx] : [leftIdx, rightIdx]
 
   async function handleBgFile(files: FileList | null) {
     const f = files?.[0]
@@ -228,7 +231,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   }
 
   function add(el: Omit<NbElement, 'id' | 'z'>, opts: { center?: boolean } = { center: true }) {
-    const pageIdx = activePage >= leftIdx && activePage <= rightIdx ? activePage : leftIdx
+    const pageIdx = onCover ? 0 : activePage >= leftIdx && activePage <= rightIdx ? activePage : leftIdx
     let list = ensurePage(pageIdx, pagesRef.current)
     const jitter = () => Math.round((Math.random() - 0.5) * 60)
     const placedEl = opts.center
@@ -492,9 +495,10 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
       const el = list[d.page].elements.find((x) => x.id === d.id)
       if (el) {
         const cx = el.x + el.w / 2
-        const isLeft = d.page % 2 === 0
+        const isLeft = (d.page - off) % 2 === 0
         const other = isLeft ? d.page + 1 : d.page - 1
-        if ((isLeft && cx > PAGE_W) || (!isLeft && cx < 0)) {
+        const isCoverPage = !!list[d.page]?.cover
+        if (!isCoverPage && ((isLeft && cx > PAGE_W) || (!isLeft && cx < 0))) {
           let next = ensurePage(other, list)
           const moved = { ...el, x: el.x + (isLeft ? -PAGE_W : PAGE_W), z: next[other].elements.reduce((m, x) => Math.max(m, x.z), 0) + 1 }
           next = next.map((p, i) =>
@@ -512,10 +516,11 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   // ── spreads ──────────────────────────────────────────────────────────
   function addSpread() {
     const base = pagesRef.current[pagesRef.current.length - 1]
-    const list = pagesRef.current.length % 2 ? [...pagesRef.current, blankPage(base?.color, base?.paper)] : [...pagesRef.current]
-    list.push(blankPage(base?.color, base?.paper), blankPage(base?.color, base?.paper))
+    const paper = base?.cover ? 'grid' : base?.paper
+    const list = (pagesRef.current.length - off) % 2 ? [...pagesRef.current, blankPage(base?.color, paper)] : [...pagesRef.current]
+    list.push(blankPage(base?.cover ? '#FFF8ED' : base?.color, paper), blankPage(base?.cover ? '#FFF8ED' : base?.color, paper))
     commit(list)
-    setSpread(Math.ceil(list.length / 2) - 1)
+    setSpread(Math.ceil((list.length - off) / 2) - 1)
     setSel(null)
   }
   function deleteSpread() {
@@ -536,7 +541,26 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
     setSpread(Math.max(0, Math.min(spreads - 1, n)))
     setSel(null)
     setEditing(null)
-    setActivePage(Math.max(0, Math.min(spreads - 1, n)) * 2)
+    setActivePage(off + Math.max(0, Math.min(spreads - 1, n)) * 2)
+  }
+  function goCover() {
+    setSpread(-1)
+    setSel(null)
+    setEditing(null)
+    setActivePage(0)
+  }
+  function addCover() {
+    if (pagesRef.current[0]?.cover) return goCover()
+    commit([starterCover('pink-princess', title), ...pagesRef.current])
+    setSpread(-1)
+    setActivePage(0)
+    setSel(null)
+  }
+  function removeCover() {
+    if (!pagesRef.current[0]?.cover) return
+    commit(pagesRef.current.slice(1))
+    setSpread(0)
+    setSel(null)
   }
 
   function setPaper(pageIdxs: number[], patch: Partial<Pick<NbPage, 'paper' | 'color' | 'bgImage' | 'bgScale'>>) {
@@ -923,42 +947,72 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
             {scale > 0 && (
               <div style={{ width: SPREAD_W * scale, height: PAGE_H * scale, position: 'relative', flexShrink: 0 }}>
                 <div style={{ width: SPREAD_W, height: PAGE_H, transform: `scale(${scale})`, transformOrigin: '0 0' }}>
-                  <SpreadFrame
-                    left={left ?? blankPage()}
-                    right={right}
-                    onPageBgPointerDown={(e, side) => { e.stopPropagation(); setSel(null); setEditing(null); setActivePage(side ? rightIdx : leftIdx) }}
-                  >
-                    {sortedSpreadElements(left, right).map(({ el, page }) => {
-                      const pageIdx = page === 0 ? leftIdx : rightIdx
-                      return (
-                        <EditableItem
-                          key={el.id}
-                          el={el}
-                          pageSide={page}
-                          scale={scale}
-                          selected={sel?.id === el.id}
-                          editing={editing === el.id}
-                          onPointerDown={(e) => startMove(e, pageIdx, el)}
-                          onDoubleClick={() => {
-                            if (el.type === 'text' || el.type === 'question') setEditing(el.id)
-                            if (el.type === 'image' && !el.content) pickPhotoFor({ page: pageIdx, id: el.id })
-                          }}
-                          onResize={(e, hx, hy) => startResize(e, pageIdx, el, hx, hy)}
-                          onRotate={(e) => startRotate(e, pageIdx, el)}
-                          onText={(text) => commit(mapEl(pageIdx, el.id, (x) => ({ ...x, content: text })), `type-${el.id}`)}
-                          onAutoHeight={(h) =>
-                            onChange((prev) =>
-                              prev.map((p, i) => (i === pageIdx ? { ...p, elements: p.elements.map((x) => (x.id === el.id ? { ...x, h } : x)) } : p)),
-                            )
-                          }
-                          onDoneEditing={() => setEditing(null)}
-                          onPickPhoto={() => pickPhotoFor({ page: pageIdx, id: el.id })}
-                        />
-                      )
-                    })}
-                    {guides.v !== undefined && <div style={{ position: 'absolute', left: guides.v, top: 0, bottom: 0, width: 0, borderLeft: `${1.5 / scale}px dashed #FF4FA3` }} />}
-                    {guides.h !== undefined && <div style={{ position: 'absolute', top: guides.h, left: 0, right: 0, height: 0, borderTop: `${1.5 / scale}px dashed #FF4FA3` }} />}
-                  </SpreadFrame>
+                  {onCover ? (
+                    <div style={{ marginLeft: PAGE_W / 2 }}>
+                      <CoverFrame page={pages[0]} onPageBgPointerDown={(e) => { e.stopPropagation(); setSel(null); setEditing(null); setActivePage(0) }}>
+                        {[...pages[0].elements].sort((a, b) => a.z - b.z).map((el) => (
+                          <EditableItem
+                            key={el.id}
+                            el={el}
+                            pageSide={0}
+                            scale={scale}
+                            selected={sel?.id === el.id}
+                            editing={editing === el.id}
+                            onPointerDown={(e) => startMove(e, 0, el)}
+                            onDoubleClick={() => {
+                              if (el.type === 'text' || el.type === 'question') setEditing(el.id)
+                              if (el.type === 'image' && !el.content) pickPhotoFor({ page: 0, id: el.id })
+                            }}
+                            onResize={(e, hx, hy) => startResize(e, 0, el, hx, hy)}
+                            onRotate={(e) => startRotate(e, 0, el)}
+                            onText={(text) => commit(mapEl(0, el.id, (x) => ({ ...x, content: text })), `type-${el.id}`)}
+                            onAutoHeight={(h) =>
+                              onChange((prev) => prev.map((p, i) => (i === 0 ? { ...p, elements: p.elements.map((x) => (x.id === el.id ? { ...x, h } : x)) } : p)))
+                            }
+                            onDoneEditing={() => setEditing(null)}
+                            onPickPhoto={() => pickPhotoFor({ page: 0, id: el.id })}
+                          />
+                        ))}
+                      </CoverFrame>
+                    </div>
+                  ) : (
+                    <SpreadFrame
+                      left={left ?? blankPage()}
+                      right={right}
+                      onPageBgPointerDown={(e, side) => { e.stopPropagation(); setSel(null); setEditing(null); setActivePage(side ? rightIdx : leftIdx) }}
+                    >
+                      {sortedSpreadElements(left, right).map(({ el, page }) => {
+                        const pageIdx = page === 0 ? leftIdx : rightIdx
+                        return (
+                          <EditableItem
+                            key={el.id}
+                            el={el}
+                            pageSide={page}
+                            scale={scale}
+                            selected={sel?.id === el.id}
+                            editing={editing === el.id}
+                            onPointerDown={(e) => startMove(e, pageIdx, el)}
+                            onDoubleClick={() => {
+                              if (el.type === 'text' || el.type === 'question') setEditing(el.id)
+                              if (el.type === 'image' && !el.content) pickPhotoFor({ page: pageIdx, id: el.id })
+                            }}
+                            onResize={(e, hx, hy) => startResize(e, pageIdx, el, hx, hy)}
+                            onRotate={(e) => startRotate(e, pageIdx, el)}
+                            onText={(text) => commit(mapEl(pageIdx, el.id, (x) => ({ ...x, content: text })), `type-${el.id}`)}
+                            onAutoHeight={(h) =>
+                              onChange((prev) =>
+                                prev.map((p, i) => (i === pageIdx ? { ...p, elements: p.elements.map((x) => (x.id === el.id ? { ...x, h } : x)) } : p)),
+                              )
+                            }
+                            onDoneEditing={() => setEditing(null)}
+                            onPickPhoto={() => pickPhotoFor({ page: pageIdx, id: el.id })}
+                          />
+                        )
+                      })}
+                      {guides.v !== undefined && <div style={{ position: 'absolute', left: guides.v, top: 0, bottom: 0, width: 0, borderLeft: `${1.5 / scale}px dashed #FF4FA3` }} />}
+                      {guides.h !== undefined && <div style={{ position: 'absolute', top: guides.h, left: 0, right: 0, height: 0, borderTop: `${1.5 / scale}px dashed #FF4FA3` }} />}
+                    </SpreadFrame>
+                  )}
                 </div>
               </div>
             )}
@@ -966,26 +1020,46 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
 
           {/* ── spread strip ── */}
           <div className="flex items-center gap-2 px-2 py-2 border-t-2 border-[#2B0A2E] bg-white overflow-x-auto">
-            <ToolBtn onClick={() => goSpread(spread - 1)} disabled={spread === 0} title="previous spread">◀</ToolBtn>
+            <ToolBtn onClick={() => (spread === 0 && hasCover ? goCover() : goSpread(spread - 1))} disabled={onCover || (spread === 0 && !hasCover)} title="previous">◀</ToolBtn>
+            {hasCover ? (
+              <button
+                onClick={goCover}
+                className={`shrink-0 rounded-md border-2 p-0.5 transition-all ${onCover ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]/40' : 'border-[#2B0A2E]/40 hover:border-[#2B0A2E]'}`}
+                aria-label="front cover"
+              >
+                <div style={{ width: PAGE_W * 0.085 + 6, height: PAGE_H * 0.085, overflow: 'hidden', pointerEvents: 'none', paddingLeft: 3 }}>
+                  <div style={{ transform: 'scale(0.085)', transformOrigin: '0 0' }}>
+                    <StaticCover page={pages[0]} />
+                  </div>
+                </div>
+                <div className="font-pixel text-sm leading-none text-center">cover</div>
+              </button>
+            ) : (
+              <ToolBtn onClick={addCover} title="add a front cover">＋ cover</ToolBtn>
+            )}
             {Array.from({ length: spreads }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => goSpread(i)}
-                className={`shrink-0 rounded-md border-2 p-0.5 transition-all ${i === spread ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]/40' : 'border-[#2B0A2E]/40 hover:border-[#2B0A2E]'}`}
+                className={`shrink-0 rounded-md border-2 p-0.5 transition-all ${i === spread && !onCover ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]/40' : 'border-[#2B0A2E]/40 hover:border-[#2B0A2E]'}`}
                 aria-label={`spread ${i + 1}`}
               >
                 <div style={{ width: SPREAD_W * 0.085, height: PAGE_H * 0.085, overflow: 'hidden', pointerEvents: 'none' }}>
                   <div style={{ transform: 'scale(0.085)', transformOrigin: '0 0' }}>
-                    <StaticSpread left={pages[i * 2]} right={pages[i * 2 + 1]} />
+                    <StaticSpread left={pages[off + i * 2]} right={pages[off + i * 2 + 1]} />
                   </div>
                 </div>
                 <div className="font-pixel text-sm leading-none text-center">{i * 2 + 1}–{i * 2 + 2}</div>
               </button>
             ))}
             <ToolBtn onClick={addSpread} title="add two pages">＋ pages</ToolBtn>
-            <ToolBtn onClick={() => goSpread(spread + 1)} disabled={spread >= spreads - 1} title="next spread">▶</ToolBtn>
+            <ToolBtn onClick={() => (onCover ? goSpread(0) : goSpread(spread + 1))} disabled={!onCover && spread >= spreads - 1} title="next">▶</ToolBtn>
             <div className="flex-1" />
-            <ToolBtn onClick={deleteSpread} disabled={spreads <= 1} title="delete this spread">✕ spread</ToolBtn>
+            {onCover ? (
+              <ToolBtn onClick={removeCover} title="remove the front cover (you can undo)">✕ cover</ToolBtn>
+            ) : (
+              <ToolBtn onClick={deleteSpread} disabled={spreads <= 1} title="delete this spread">✕ spread</ToolBtn>
+            )}
           </div>
         </div>
 
@@ -1015,7 +1089,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
       {exporting && (
         <div style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none' }} aria-hidden>
           <div ref={exportRef} style={{ padding: 24, background: '#f7eaf1', display: 'inline-block' }}>
-            <StaticSpread left={left} right={right} />
+            {onCover ? <StaticCover page={pages[0]} /> : <StaticSpread left={left} right={right} />}
           </div>
         </div>
       )}
