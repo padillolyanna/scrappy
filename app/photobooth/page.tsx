@@ -9,6 +9,7 @@ import {
   BACKGROUNDS, DEFAULT_MAG_LINES, FRAMES, ensureFonts, renderStrip,
   type LayoutId,
 } from '@/lib/photoboothArt'
+import { EMOJI_STICKERS, GEM_COLORS, GEM_STICKERS, STICKERS, Sticker, StickerDefs, stickerTintable } from '@/components/notebook/Stickers'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -16,10 +17,11 @@ type Step = 'landing' | 'layout' | 'camera' | 'customize' | 'preview'
 
 interface StickerEl {
   id: string
-  symbol: string
+  content: string // 'svg:<id>' or 'txt:<emoji>'
+  color?: string
   x: number // % of strip width
   y: number // % of strip height
-  size: number
+  size: number // px in the on-screen preview
   rotation: number
 }
 
@@ -58,12 +60,6 @@ const FILTERS: { id: string; label: string; css: string }[] = [
   { id: 'bw', label: 'B&W', css: 'grayscale(1) contrast(1.1) brightness(1.05)' },
 ]
 
-const STICKER_LIBRARY = [
-  '♡', '✦', '★', '✿', '◆', '🌸', '🦋', '🍒',
-  '🎀', '💫', '⭐', '🌙', '📷', '💕', '🌈', '✨',
-  '🎀', '💎', '🌺', '🫧', '🫶', '💌', '🎞️', '🪄',
-]
-
 const FONTS = ['Caveat', 'Pacifico', 'VT323', 'Nunito', 'Space Grotesk']
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -77,6 +73,16 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.onerror = reject
     img.src = src
   })
+}
+
+function newSticker(content: string, color?: string): StickerEl {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    content, color,
+    x: 30 + Math.random() * 40, y: 20 + Math.random() * 60,
+    size: content.startsWith('txt:') ? 34 : 46,
+    rotation: Math.round((Math.random() - 0.5) * 24),
+  }
 }
 
 // ─── Layout Preview SVG ───────────────────────────────────────────────────────
@@ -153,6 +159,9 @@ export default function PhotoboothPage() {
   const [fontsReady, setFontsReady] = useState(false)
   const previewCanvasRef = useRef<HTMLCanvasElement>(null)
   const [stickers, setStickers] = useState<StickerEl[]>([])
+  const [selectedStickerId, setSelectedStickerId] = useState<string | null>(null)
+  const [gemColor, setGemColor] = useState(GEM_COLORS[0].hex)
+  const [stickerTab, setStickerTab] = useState<'gems' | 'stickers' | 'emoji'>('gems')
   const [textElements, setTextElements] = useState<TextEl[]>([])
   const stripPreviewRef = useRef<HTMLDivElement>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
@@ -279,6 +288,7 @@ export default function PhotoboothPage() {
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
     const el = [...stickers, ...textElements].find(x => x.id === id)
     if (!el) return
+    setSelectedStickerId(stickers.some(x => x.id === id) ? id : null)
     setDraggingId(id)
     setDragOffset({
       x: clientX - rect.left - (el.x / 100) * rect.width,
@@ -300,12 +310,15 @@ export default function PhotoboothPage() {
 
   function handleDragEnd() { setDraggingId(null) }
 
-  function addSticker(symbol: string) {
-    setStickers(prev => [...prev, {
-      id: Date.now().toString(),
-      symbol, x: 50, y: 50,
-      size: 28, rotation: 0,
-    }])
+  function addSticker(content: string, color?: string) {
+    const el = newSticker(content, color)
+    const id = el.id
+    setStickers(prev => [...prev, el])
+    setSelectedStickerId(id)
+  }
+
+  function updateSticker(id: string, patch: Partial<StickerEl>) {
+    setStickers(prev => prev.map(s => (s.id === id ? { ...s, ...patch } : s)))
   }
 
   function addTextEl() {
@@ -347,16 +360,30 @@ export default function PhotoboothPage() {
     // stickers/text are sized in preview pixels — scale them to the export
     const k = W / previewWidth
 
-    stickers.forEach(s => {
-      ctx.save()
-      ctx.translate((s.x / 100) * W, (s.y / 100) * H)
-      ctx.rotate((s.rotation * Math.PI) / 180)
-      ctx.font = `${s.size * k}px serif`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(s.symbol, 0, 0)
-      ctx.restore()
-    })
+    // stickers are SVG art: serialise the preview's self-contained SVG and draw it
+    const serializer = new XMLSerializer()
+    for (const s of stickers) {
+      const svg = stripPreviewRef.current?.querySelector(`[data-sticker-id="${s.id}"] svg`)
+      if (!svg) continue
+      const url = URL.createObjectURL(new Blob([serializer.serializeToString(svg)], { type: 'image/svg+xml' }))
+      try {
+        const img = await loadImage(url)
+        // the SVG viewBox has a 6/112 margin around the 100-unit art
+        const box = s.size * k * (112 / 100)
+        ctx.save()
+        ctx.translate((s.x / 100) * W, (s.y / 100) * H)
+        ctx.rotate((s.rotation * Math.PI) / 180)
+        ctx.shadowColor = 'rgba(43,10,46,.3)'
+        ctx.shadowBlur = 3 * k
+        ctx.shadowOffsetY = 2 * k
+        ctx.drawImage(img, -box / 2, -box / 2, box, box)
+        ctx.restore()
+      } catch {
+        // skip a sticker that fails to rasterise rather than failing the strip
+      } finally {
+        URL.revokeObjectURL(url)
+      }
+    }
 
     textElements.forEach(t => {
       ctx.save()
@@ -451,6 +478,7 @@ export default function PhotoboothPage() {
     setCapturedPhotos([])
     setCaptureIndex(0)
     setStickers([])
+    setSelectedStickerId(null)
     setTextElements([])
     setSelectedFilter('none')
     setSelectedFrame('rhinestone')
@@ -868,19 +896,26 @@ export default function PhotoboothPage() {
                   {stickers.map(s => (
                     <div
                       key={s.id}
+                      data-sticker-id={s.id}
                       onMouseDown={e => handleDragStart(e, s.id)}
                       onTouchStart={e => handleDragStart(e, s.id)}
                       className="absolute cursor-grab active:cursor-grabbing"
                       style={{
                         left: `${s.x}%`,
                         top: `${s.y}%`,
-                        fontSize: s.size,
+                        width: s.size * (112 / 100),
+                        height: s.size * (112 / 100),
                         transform: `translate(-50%, -50%) rotate(${s.rotation}deg)`,
                         zIndex: 10,
                         userSelect: 'none',
+                        filter: 'drop-shadow(0 2px 2px rgba(43,10,46,.3))',
+                        outline: selectedStickerId === s.id ? '2px dashed #FF4FA3' : 'none',
+                        outlineOffset: 2,
                       }}
                     >
-                      {s.symbol}
+                      <div style={{ width: '100%', height: '100%' }} className="[&>svg]:w-full [&>svg]:h-full">
+                        <Sticker content={s.content} color={s.color} standalone />
+                      </div>
                     </div>
                   ))}
 
@@ -1003,32 +1038,96 @@ export default function PhotoboothPage() {
 
                 {/* Stickers */}
                 <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-4">
-                  <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>STICKERS</div>
-                  <div className="grid grid-cols-8 gap-1">
-                    {STICKER_LIBRARY.map((symbol, i) => (
-                      <button
-                        key={i}
-                        onClick={() => addSticker(symbol)}
-                        className="text-xl p-1.5 rounded-lg hover:bg-[#FFB6D9]/20 transition-colors"
-                      >
-                        {symbol}
-                      </button>
-                    ))}
-                  </div>
-                  {stickers.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {stickers.map(s => (
+                  <StickerDefs />
+                  <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+                    <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '10px' }}>STICKERS &amp; GEMS</div>
+                    <div className="flex rounded-full border-2 border-[#FFB6D9] overflow-hidden">
+                      {(['gems', 'stickers', 'emoji'] as const).map(t => (
                         <button
-                          key={s.id}
-                          onClick={() => setStickers(prev => prev.filter(x => x.id !== s.id))}
-                          className="font-nunito text-xs bg-red-50 text-red-400 border border-red-200 rounded-full px-2 py-0.5 hover:bg-red-100"
-                          style={{ fontSize: '10px' }}
+                          key={t}
+                          onClick={() => setStickerTab(t)}
+                          className={`px-3 py-1 font-nunito font-bold text-xs ${stickerTab === t ? 'bg-[#FF4FA3] text-white' : 'bg-white text-[#3A0030]'}`}
                         >
-                          {s.symbol} ×
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {stickerTab === 'gems' && (
+                    <>
+                      <div className="flex flex-wrap gap-1.5 mb-3" role="radiogroup" aria-label="gem colour">
+                        {GEM_COLORS.map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => setGemColor(c.hex)}
+                            title={c.label}
+                            aria-label={c.label}
+                            aria-checked={gemColor === c.hex}
+                            role="radio"
+                            className={`w-7 h-7 rounded-full border-2 transition-transform ${gemColor === c.hex ? 'border-[#3A0030] scale-110' : 'border-white shadow'}`}
+                            style={{ background: `radial-gradient(circle at 35% 30%, #fff 0 12%, ${c.hex} 45%, #2B0A2E 130%)` }}
+                          />
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-5 sm:grid-cols-9 gap-1">
+                        {GEM_STICKERS.map(g => (
+                          <button key={g.id} onClick={() => addSticker(`svg:${g.id}`, g.tint ? gemColor : undefined)} title={g.label} className="aspect-square p-1 rounded-lg hover:bg-[#FFB6D9]/20 hover:scale-110 transition-transform">
+                            <Sticker content={`svg:${g.id}`} color={g.tint ? gemColor : undefined} />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {stickerTab === 'stickers' && (
+                    <div className="grid grid-cols-6 sm:grid-cols-9 gap-1">
+                      {STICKERS.map(g => (
+                        <button key={g.id} onClick={() => addSticker(`svg:${g.id}`)} title={g.label} className="aspect-square p-1 rounded-lg hover:bg-[#FFB6D9]/20 hover:scale-110 hover:-rotate-6 transition-transform">
+                          <Sticker content={`svg:${g.id}`} />
                         </button>
                       ))}
                     </div>
                   )}
+                  {stickerTab === 'emoji' && (
+                    <div className="grid grid-cols-8 sm:grid-cols-12 gap-1">
+                      {EMOJI_STICKERS.map(e => (
+                        <button key={e} onClick={() => addSticker(`txt:${e}`)} className="aspect-square p-1 rounded-lg hover:bg-[#FFB6D9]/20 hover:scale-110 transition-transform">
+                          <Sticker content={`txt:${e}`} />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {stickers.find(x => x.id === selectedStickerId) && (() => {
+                    const cur = stickers.find(x => x.id === selectedStickerId)!
+                    return (
+                      <div className="mt-3 p-3 rounded-xl bg-[#FFF0F7] border-2 border-[#FFB6D9] space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 shrink-0"><Sticker content={cur.content} color={cur.color} /></div>
+                          <span className="font-pixel text-[#3A0030] flex-1" style={{ fontSize: '9px' }}>SELECTED STICKER — drag it on the strip</span>
+                          <button onClick={() => { setStickers(prev => [...prev.filter(x => x.id !== cur.id), cur]) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">to front</button>
+                          <button onClick={() => addSticker(cur.content, cur.color)} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">copy</button>
+                          <button onClick={() => { setStickers(prev => prev.filter(x => x.id !== cur.id)); setSelectedStickerId(null) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-red-200 bg-white text-red-500">delete</button>
+                        </div>
+                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
+                          <span className="w-12">size</span>
+                          <input type="range" min={16} max={150} value={cur.size} onChange={e => updateSticker(cur.id, { size: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
+                        </label>
+                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
+                          <span className="w-12">rotate</span>
+                          <input type="range" min={-180} max={180} value={cur.rotation} onChange={e => updateSticker(cur.id, { rotation: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
+                        </label>
+                        {stickerTintable(cur.content) && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-nunito text-xs text-[#3A0030] w-12">colour</span>
+                            {GEM_COLORS.map(c => (
+                              <button key={c.id} onClick={() => updateSticker(cur.id, { color: c.hex })} title={c.label} aria-label={c.label} className={`w-6 h-6 rounded-full border-2 ${cur.color === c.hex ? 'border-[#3A0030]' : 'border-white shadow'}`} style={{ background: c.hex }} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
 
                 {/* Text */}

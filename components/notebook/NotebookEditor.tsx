@@ -12,7 +12,7 @@ import {
 } from '@/lib/notebook'
 import ElementView, { QuestionView, textBoxStyle } from './ElementView'
 import StaticSpread, { SpreadFrame, placed, sortedSpreadElements } from './Spread'
-import { EMOJI_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
+import { EMOJI_STICKERS, GEM_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
 
 type Panel = 'text' | 'photos' | 'stickers' | 'tape' | 'shapes' | 'questions' | 'paper'
 type Sel = { page: number; id: string } | null
@@ -612,6 +612,14 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                     {STICKERS.map((s) => (
                       <button key={s.id} onClick={() => add(makeSticker(`svg:${s.id}`))} title={s.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110 hover:-rotate-6">
                         <Sticker content={`svg:${s.id}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[10px] text-[#D4006E]">GEMS</div>
+                  <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
+                    {GEM_STICKERS.map((g) => (
+                      <button key={g.id} onClick={() => add({ ...makeSticker(`svg:${g.id}`), w: 64, h: 64 })} title={g.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110">
+                        <Sticker content={`svg:${g.id}`} />
                       </button>
                     ))}
                   </div>
