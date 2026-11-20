@@ -425,7 +425,7 @@ function ProfileEditor() {
           <div className="lg:sticky lg:top-3">
             <div className="window-chrome overflow-hidden" style={{ border: '2px solid #2B0A2E', borderRadius: 8 }}>
               <div className="window-title-bar flex items-center gap-2 px-2 py-1" style={{ background: 'linear-gradient(#FF9ECF,#FF4FA3)', color: '#fff' }}>
-                <span className="font-silkscreen text-[10px]">LIVE PREVIEW — scrappy.fun/profile/{username}</span>
+                <span className="font-silkscreen text-[12px]">LIVE PREVIEW — scrappy.fun/profile/{username}</span>
               </div>
               <div className="overflow-hidden bg-white" style={{ maxHeight: '78vh', overflowY: 'auto' }}>
                 <div style={{ zoom: 0.62 } as React.CSSProperties}>
@@ -463,7 +463,7 @@ function Section({ title, children, toggle, onToggle }: { title: string; childre
   return (
     <section>
       <div className="flex items-center justify-between mb-1.5">
-        <div className="font-silkscreen text-[11px] text-[#D4006E]">{title}</div>
+        <div className="font-silkscreen text-[12px] text-[#D4006E]">{title}</div>
         {onToggle && (
           <label className="flex items-center gap-1 font-pixel text-base">
             <input type="checkbox" checked={!!toggle} onChange={(e) => onToggle(e.target.checked)} className="accent-[#FF4FA3]" />

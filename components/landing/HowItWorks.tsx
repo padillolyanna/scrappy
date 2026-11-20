@@ -51,7 +51,7 @@ export default function HowItWorks() {
 
       <div className="relative max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <div className="font-pixel text-xs text-[#FFB6D9] mb-2 tracking-widest" style={{ fontSize: '11px' }}>
+          <div className="font-pixel text-xs text-[#FFB6D9] mb-2 tracking-widest" style={{ fontSize: '12px' }}>
             ✦ HOW IT WORKS ✦
           </div>
           <h2
@@ -72,7 +72,7 @@ export default function HowItWorks() {
               transition={{ delay: i * 0.15 }}
               className={`${step.color} border-2 rounded-2xl p-6 relative`}
             >
-              <div className="font-press text-xs text-white/30 mb-3" style={{ fontSize: '10px' }}>
+              <div className="font-press text-xs text-white/30 mb-3" style={{ fontSize: '12px' }}>
                 {step.number}
               </div>
               <div className="text-4xl mb-3 font-pixel text-white/60">{step.symbol}</div>

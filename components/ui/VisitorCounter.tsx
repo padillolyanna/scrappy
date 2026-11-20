@@ -15,7 +15,7 @@ export default function VisitorCounter() {
 
   return (
     <div className="inline-flex items-center gap-2">
-      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '11px' }}>
+      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>
         VISITORS:
       </span>
       <div className="flex gap-0.5 items-center">

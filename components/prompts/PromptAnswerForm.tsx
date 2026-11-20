@@ -24,7 +24,7 @@ export default function PromptAnswerForm({ promptId, hasAnswered, existingAnswer
   if (!user) {
     return (
       <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-5 shadow-sm text-center">
-        <div className="font-pixel text-xs text-[#888] mb-3" style={{ fontSize: '10px' }}>
+        <div className="font-pixel text-xs text-[#888] mb-3" style={{ fontSize: '12px' }}>
           JOIN TO SHARE YOUR ANSWER
         </div>
         <Link href="/auth/signup" className="btn-y2k mr-2">join scrappy ✦</Link>
@@ -75,7 +75,7 @@ export default function PromptAnswerForm({ promptId, hasAnswered, existingAnswer
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-5 shadow-sm">
-      <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>
+      <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '12px' }}>
         YOUR ANSWER
       </div>
       {error && (
@@ -94,7 +94,7 @@ export default function PromptAnswerForm({ promptId, hasAnswered, existingAnswer
         required
       />
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <label className="flex items-center gap-2 font-pixel text-xs text-[#888] cursor-pointer" style={{ fontSize: '10px' }}>
+        <label className="flex items-center gap-2 font-pixel text-xs text-[#888] cursor-pointer" style={{ fontSize: '12px' }}>
           <input
             type="checkbox"
             checked={anonymous}

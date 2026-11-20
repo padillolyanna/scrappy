@@ -41,13 +41,13 @@ export default async function AdminDashboard() {
           <Link href="/" className="font-pacifico text-xl text-glitter" style={{ fontFamily: 'Pacifico, cursive' }}>
             SCRAPPY
           </Link>
-          <span className="font-pixel text-xs text-[#FFB6D9]/50" style={{ fontSize: '10px' }}>/ ADMIN</span>
+          <span className="font-pixel text-xs text-[#FFB6D9]/50" style={{ fontSize: '12px' }}>/ ADMIN</span>
         </div>
         <div className="flex items-center gap-4">
-          <Link href="/admin/confessions" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '10px' }}>
+          <Link href="/admin/confessions" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
             CONFESSIONS
           </Link>
-          <Link href="/" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '10px' }}>
+          <Link href="/" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '12px' }}>
             VIEW SITE
           </Link>
         </div>
@@ -70,12 +70,12 @@ export default async function AdminDashboard() {
               key={stat.label}
               className={`${stat.color} border-2 rounded-xl p-5 ${stat.urgent ? 'animate-pulse-glow' : ''}`}
             >
-              <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '9px' }}>{stat.label}</div>
+              <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '12px' }}>{stat.label}</div>
               <div className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
                 {stat.value}
               </div>
               {stat.urgent && (
-                <div className="font-pixel text-xs text-[#D4006E] mt-1" style={{ fontSize: '9px' }}>needs review</div>
+                <div className="font-pixel text-xs text-[#D4006E] mt-1" style={{ fontSize: '12px' }}>needs review</div>
               )}
             </div>
           ))}
@@ -84,7 +84,7 @@ export default async function AdminDashboard() {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Recent users */}
           <div className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5">
-            <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '10px' }}>RECENT SIGNUPS</div>
+            <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>RECENT SIGNUPS</div>
             {recentUsers?.length ? (
               <div className="space-y-2">
                 {recentUsers.map((u) => (
@@ -106,8 +106,8 @@ export default async function AdminDashboard() {
           {/* Recent confessions */}
           <div className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5">
             <div className="flex items-center justify-between mb-4">
-              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '10px' }}>RECENT CONFESSIONS</div>
-              <Link href="/admin/confessions" className="font-pixel text-xs text-[#FF4FA3] hover:underline" style={{ fontSize: '9px' }}>
+              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>RECENT CONFESSIONS</div>
+              <Link href="/admin/confessions" className="font-pixel text-xs text-[#FF4FA3] hover:underline" style={{ fontSize: '12px' }}>
                 manage all →
               </Link>
             </div>
@@ -116,8 +116,8 @@ export default async function AdminDashboard() {
                 {recentConfessions.map((c) => (
                   <div key={c.id} className="py-2 border-b border-[#FFB6D9]/20 last:border-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '8px' }}>{c.category}</span>
-                      <span className={`font-pixel text-xs px-2 py-0.5 rounded-full ${c.is_approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`} style={{ fontSize: '8px' }}>
+                      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>{c.category}</span>
+                      <span className={`font-pixel text-xs px-2 py-0.5 rounded-full ${c.is_approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`} style={{ fontSize: '12px' }}>
                         {c.is_approved ? 'approved' : 'pending'}
                       </span>
                     </div>

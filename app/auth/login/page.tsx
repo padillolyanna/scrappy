@@ -73,7 +73,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>EMAIL ADDRESS</label>
+                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>EMAIL ADDRESS</label>
                 <input
                   type="email"
                   value={email}
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>PASSWORD</label>
+                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>PASSWORD</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -98,7 +98,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 font-pixel text-xs text-[#888] hover:text-[#FF4FA3] transition-colors"
-                    style={{ fontSize: '9px' }}
+                    style={{ fontSize: '12px' }}
                   >
                     {showPassword ? 'hide' : 'show'}
                   </button>
@@ -116,7 +116,7 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="mt-4 text-center font-pixel text-xs text-[#ccc]" style={{ fontSize: '9px' }}>
+            <div className="mt-4 text-center font-pixel text-xs text-[#ccc]" style={{ fontSize: '12px' }}>
               ✦ ★ ♡ ✿ ♪ ◆ ✦
             </div>
           </div>

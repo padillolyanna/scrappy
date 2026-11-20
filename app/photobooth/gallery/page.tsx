@@ -42,8 +42,8 @@ export default async function PhotoboothGalleryPage() {
             <Link href="/photobooth" className="text-[#888] hover:text-[#FF4FA3] font-nunito text-sm flex items-center gap-1">
               ← photobooth
             </Link>
-            <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '11px' }}>✦ MY PHOTO STRIPS ✦</div>
-            <Link href="/photobooth" className="btn-y2k py-2 px-4 text-xs" style={{ fontSize: '11px' }}>
+            <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>✦ MY PHOTO STRIPS ✦</div>
+            <Link href="/photobooth" className="btn-y2k py-2 px-4 text-xs" style={{ fontSize: '12px' }}>
               + NEW STRIP
             </Link>
           </div>
@@ -84,7 +84,7 @@ export default async function PhotoboothGalleryPage() {
                     </div>
                   )}
                   <div className="p-3">
-                    <div className="font-pixel text-[#3A0030] capitalize" style={{ fontSize: '9px' }}>
+                    <div className="font-pixel text-[#3A0030] capitalize" style={{ fontSize: '12px' }}>
                       {s.layout_id?.replace('-', ' ')} · {s.photo_count} photos
                     </div>
                     <div className="font-nunito text-xs text-[#888] mt-0.5">

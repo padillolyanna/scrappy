@@ -7,7 +7,7 @@ export default function ProfileEditButton({ username }: { username: string }) {
     <Link
       href={`/profile/${username}/edit`}
       className="btn-y2k text-xs py-1 px-3"
-      style={{ fontSize: '10px' }}
+      style={{ fontSize: '12px' }}
     >
       edit profile
     </Link>

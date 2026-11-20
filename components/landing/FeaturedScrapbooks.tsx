@@ -35,7 +35,7 @@ function AwardRibbon({ label, bg }: { label: string; bg: string }) {
         background: bg,
         color: 'white',
         fontFamily: "'Chango', 'Arial Black', sans-serif",
-        fontSize: 9,
+        fontSize: 12,
         padding: '3px 8px',
         border: '2px solid #2B0A2E',
         borderRadius: 4,
@@ -60,7 +60,7 @@ function DemoRibbon() {
         background: '#888',
         color: 'white',
         fontFamily: "'Chango', 'Arial Black', sans-serif",
-        fontSize: 9,
+        fontSize: 12,
         padding: '3px 8px',
         border: '2px solid #2B0A2E',
         borderRadius: 4,
@@ -138,10 +138,10 @@ function ScrapbookCard({ item, index, isDemo }: { item: LiveScrapbook; index: nu
         }}>
           {item.title || 'untitled'}
         </div>
-        <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#FF4FA3', fontWeight: 'bold' }}>
+        <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#FF4FA3', fontWeight: 'bold' }}>
           @{username}
         </div>
-        <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#aaa' }}>
+        <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#aaa' }}>
           ♡ {item.like_count || 0}
         </div>
       </div>

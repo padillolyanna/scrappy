@@ -59,7 +59,7 @@ export default function TemplateSelector({ selected, onSelect }: Props) {
             write your own questions and answers your way
           </div>
           {selected === 'custom' && (
-            <div className="mt-2 inline-block bg-[#FF4FA3] text-white font-pixel text-xs px-2 py-0.5 rounded-full" style={{ fontSize: '9px' }}>
+            <div className="mt-2 inline-block bg-[#FF4FA3] text-white font-pixel text-xs px-2 py-0.5 rounded-full" style={{ fontSize: '12px' }}>
               ✓ SELECTED
             </div>
           )}
@@ -98,12 +98,12 @@ function TemplateCard({
     >
       <div className="flex items-start justify-between mb-3">
         <div className="text-4xl font-pixel text-[#3A0030]/30">{template.symbol}</div>
-        <span className={`font-pixel text-[8px] px-2 py-0.5 rounded-full border ${colorClass}`} style={{ fontSize: '8px' }}>
+        <span className={`font-pixel text-[12px] px-2 py-0.5 rounded-full border ${colorClass}`} style={{ fontSize: '12px' }}>
           {template.category}
         </span>
       </div>
 
-      <div className="font-pixel text-xs text-[#3A0030] mb-1" style={{ fontSize: '11px', letterSpacing: '0.05em' }}>
+      <div className="font-pixel text-xs text-[#3A0030] mb-1" style={{ fontSize: '12px', letterSpacing: '0.05em' }}>
         {template.name}
       </div>
       <div className="font-caveat text-base text-[#888] mb-3" style={{ fontFamily: 'Caveat, cursive', fontSize: '15px' }}>
@@ -125,7 +125,7 @@ function TemplateCard({
       </div>
 
       {selected && (
-        <div className="mt-3 inline-block bg-[#FF4FA3] text-white font-pixel text-xs px-2 py-0.5 rounded-full" style={{ fontSize: '9px' }}>
+        <div className="mt-3 inline-block bg-[#FF4FA3] text-white font-pixel text-xs px-2 py-0.5 rounded-full" style={{ fontSize: '12px' }}>
           ✓ SELECTED
         </div>
       )}

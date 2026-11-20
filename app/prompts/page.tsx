@@ -60,7 +60,7 @@ export default async function PromptsPage() {
         <div className="text-center mb-8">
           <div
             className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest"
-            style={{ fontSize: '11px' }}
+            style={{ fontSize: '12px' }}
           >
             ✦ COMMUNITY PROMPTS ✦
           </div>
@@ -92,7 +92,7 @@ export default async function PromptsPage() {
           <div className="max-w-2xl mx-auto px-4 space-y-5">
             {/* Today's question */}
             <div className="bg-white rounded-2xl border-2 border-[#FFB6D9] p-6 shadow-sm">
-              <div className="font-pixel text-xs text-[#FFB6D9] mb-2" style={{ fontSize: '9px' }}>
+              <div className="font-pixel text-xs text-[#FFB6D9] mb-2" style={{ fontSize: '12px' }}>
                 TODAY&apos;S QUESTION
               </div>
               <p
@@ -130,7 +130,7 @@ export default async function PromptsPage() {
                       key={a.id ?? i}
                       className="break-inside-avoid bg-white rounded-xl p-4 border border-[#FFB6D9]/30 mb-4"
                     >
-                      <div className="font-pixel text-xs text-[#FF4FA3] mb-1" style={{ fontSize: '9px' }}>
+                      <div className="font-pixel text-xs text-[#FF4FA3] mb-1" style={{ fontSize: '12px' }}>
                         @{username}
                       </div>
                       <p
@@ -155,7 +155,7 @@ export default async function PromptsPage() {
             <div className="widget-box p-4 space-y-3">
               {upcomingPrompts.map((p) => (
                 <div key={p.id} className="flex items-start gap-3 py-2 border-b border-[#FFB6D9]/20 last:border-0">
-                  <div className="font-pixel text-xs text-[#FFB6D9] flex-shrink-0" style={{ fontSize: '9px' }}>
+                  <div className="font-pixel text-xs text-[#FFB6D9] flex-shrink-0" style={{ fontSize: '12px' }}>
                     {new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </div>
                   <div

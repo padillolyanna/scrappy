@@ -105,7 +105,7 @@ export default function MySpaceClient({
                 ? 'bg-white border-[#FF4FA3] border-b-white text-[#FF4FA3] -mb-[2px]'
                 : 'bg-[#FFB6D9]/10 border-transparent text-[#888] hover:text-[#FF4FA3]'
             }`}
-            style={{ fontSize: '10px' }}
+            style={{ fontSize: '12px' }}
           >
             {t.label} ({t.count})
           </button>
@@ -116,13 +116,13 @@ export default function MySpaceClient({
       {tab === 'scrapbooks' && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <div className="font-pixel text-xs text-[#888]" style={{ fontSize: '10px' }}>
+            <div className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>
               {scrapbooks.length} scrapbook{scrapbooks.length !== 1 ? 's' : ''}
             </div>
             <Link
               href="/scrapbook/create"
               className="btn-y2k text-xs py-1.5 px-4"
-              style={{ fontSize: '11px' }}
+              style={{ fontSize: '12px' }}
             >
               + new scrapbook
             </Link>
@@ -156,7 +156,7 @@ export default function MySpaceClient({
                             ? 'bg-green-100 text-green-700'
                             : 'bg-[#888]/10 text-[#888]'
                         }`}
-                        style={{ fontSize: '8px' }}
+                        style={{ fontSize: '12px' }}
                       >
                         {sb.is_public ? 'public' : 'private'}
                       </span>
@@ -167,14 +167,14 @@ export default function MySpaceClient({
                       <Link
                         href={`/scrapbook/${sb.id}`}
                         className="font-pixel text-xs text-[#FF4FA3] hover:underline"
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '12px' }}
                       >
                         view →
                       </Link>
                       <button
                         onClick={() => handleToggleVisibility(sb.id, sb.is_public)}
                         className="font-pixel text-xs text-[#888] hover:text-[#FF4FA3] transition-colors"
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '12px' }}
                       >
                         {sb.is_public ? 'make private' : 'make public'}
                       </button>
@@ -186,7 +186,7 @@ export default function MySpaceClient({
                             ? 'text-red-500 hover:text-red-700'
                             : 'text-[#888] hover:text-red-400'
                         }`}
-                        style={{ fontSize: '10px' }}
+                        style={{ fontSize: '12px' }}
                       >
                         {deletingId === sb.id
                           ? 'deleting...'
@@ -198,7 +198,7 @@ export default function MySpaceClient({
                         <button
                           onClick={() => setConfirmDelete(null)}
                           className="font-pixel text-xs text-[#888] hover:text-[#3A0030] transition-colors"
-                          style={{ fontSize: '10px' }}
+                          style={{ fontSize: '12px' }}
                         >
                           cancel
                         </button>
@@ -277,13 +277,13 @@ export default function MySpaceClient({
       {tab === 'confessions' && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <div className="font-pixel text-xs text-[#888]" style={{ fontSize: '10px' }}>
+            <div className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>
               {confessionCount} confession{confessionCount !== 1 ? 's' : ''}
             </div>
             <Link
               href="/confessions"
               className="btn-outline-y2k text-xs py-1.5 px-4"
-              style={{ fontSize: '11px' }}
+              style={{ fontSize: '12px' }}
             >
               + new confession
             </Link>
@@ -299,7 +299,7 @@ export default function MySpaceClient({
                   <div className="flex items-center gap-2 mb-2">
                     <span
                       className="font-pixel text-xs text-[#888]"
-                      style={{ fontSize: '9px' }}
+                      style={{ fontSize: '12px' }}
                     >
                       {c.category}
                     </span>
@@ -309,7 +309,7 @@ export default function MySpaceClient({
                           ? 'bg-green-100 text-green-700'
                           : 'bg-yellow-100 text-yellow-700'
                       }`}
-                      style={{ fontSize: '8px' }}
+                      style={{ fontSize: '12px' }}
                     >
                       {c.is_approved ? 'approved' : 'pending'}
                     </span>

@@ -42,13 +42,13 @@ export default async function AdminConfessionsPage({
       {/* Top bar */}
       <div className="bg-[#3A0030] text-[#FFB6D9] px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '10px' }}>
+          <Link href="/admin" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '12px' }}>
             ← dashboard
           </Link>
-          <span className="font-pixel text-xs text-[#FFB6D9]/30" style={{ fontSize: '10px' }}>/</span>
-          <span className="font-pixel text-xs text-[#FFB6D9]" style={{ fontSize: '10px' }}>CONFESSIONS</span>
+          <span className="font-pixel text-xs text-[#FFB6D9]/30" style={{ fontSize: '12px' }}>/</span>
+          <span className="font-pixel text-xs text-[#FFB6D9]" style={{ fontSize: '12px' }}>CONFESSIONS</span>
         </div>
-        <Link href="/" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '10px' }}>
+        <Link href="/" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '12px' }}>
           view site
         </Link>
       </div>
@@ -65,7 +65,7 @@ export default async function AdminConfessionsPage({
           </div>
           {(pendingCount ?? 0) > 0 && (
             <div className="bg-yellow-100 border-2 border-yellow-300 rounded-xl px-4 py-2">
-              <div className="font-pixel text-xs text-yellow-700" style={{ fontSize: '10px' }}>
+              <div className="font-pixel text-xs text-yellow-700" style={{ fontSize: '12px' }}>
                 {pendingCount} confession{(pendingCount ?? 0) > 1 ? 's' : ''} need review
               </div>
             </div>
@@ -83,7 +83,7 @@ export default async function AdminConfessionsPage({
                   ? 'bg-[#3A0030] border-[#3A0030] text-white'
                   : 'bg-white border-[#FFB6D9] text-[#3A0030] hover:border-[#3A0030]'
               }`}
-              style={{ fontSize: '9px' }}
+              style={{ fontSize: '12px' }}
             >
               {f.label}
             </Link>
@@ -103,17 +103,17 @@ export default async function AdminConfessionsPage({
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className="font-pixel text-xs text-[#888] bg-[#FFB6D9]/20 px-2 py-0.5 rounded-full" style={{ fontSize: '8px' }}>
+                      <span className="font-pixel text-xs text-[#888] bg-[#FFB6D9]/20 px-2 py-0.5 rounded-full" style={{ fontSize: '12px' }}>
                         {c.category}
                       </span>
                       <span className={`font-pixel text-xs px-2 py-0.5 rounded-full border ${
                         c.is_approved
                           ? 'bg-green-50 border-green-200 text-green-700'
                           : 'bg-yellow-50 border-yellow-200 text-yellow-700'
-                      }`} style={{ fontSize: '8px' }}>
+                      }`} style={{ fontSize: '12px' }}>
                         {c.is_approved ? 'approved' : 'pending'}
                       </span>
-                      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '8px' }}>
+                      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>
                         {c.is_anonymous ? 'anonymous' : 'public'}
                       </span>
                       <span className="font-nunito text-xs text-[#888]">

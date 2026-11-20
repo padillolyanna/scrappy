@@ -126,7 +126,7 @@ export default function SignupPage() {
 
             <form onSubmit={handleSignup} className="space-y-4">
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>USERNAME</label>
+                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>USERNAME</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -136,7 +136,7 @@ export default function SignupPage() {
                     className="input-y2k pr-16"
                     required minLength={3} maxLength={20}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-pixel text-xs" style={{ fontSize: '9px' }}>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 font-pixel text-xs" style={{ fontSize: '12px' }}>
                     {checkingUsername && <span className="text-[#888]">...</span>}
                     {!checkingUsername && usernameAvailable === true && <span className="text-green-500">✓ free</span>}
                     {!checkingUsername && usernameAvailable === false && <span className="text-red-400">✗ taken</span>}
@@ -145,11 +145,11 @@ export default function SignupPage() {
                 <div className="font-nunito text-xs text-[#888] mt-1">letters, numbers, underscores only</div>
               </div>
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>EMAIL ADDRESS</label>
+                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>EMAIL ADDRESS</label>
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="input-y2k" required />
               </div>
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>PASSWORD</label>
+                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>PASSWORD</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -163,7 +163,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 font-pixel text-xs text-[#888] hover:text-[#FF4FA3] transition-colors"
-                    style={{ fontSize: '9px' }}
+                    style={{ fontSize: '12px' }}
                   >
                     {showPassword ? 'hide' : 'show'}
                   </button>
@@ -173,7 +173,7 @@ export default function SignupPage() {
                 )}
               </div>
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>CONFIRM PASSWORD</label>
+                <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>CONFIRM PASSWORD</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -184,7 +184,7 @@ export default function SignupPage() {
                     required
                   />
                   {confirmPassword.length > 0 && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-pixel text-xs" style={{ fontSize: '9px' }}>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 font-pixel text-xs" style={{ fontSize: '12px' }}>
                       {password === confirmPassword
                         ? <span className="text-green-500">✓</span>
                         : <span className="text-red-400">✗</span>}

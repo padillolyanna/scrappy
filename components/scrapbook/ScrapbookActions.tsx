@@ -119,7 +119,7 @@ export default function ScrapbookActions({
               ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white shadow-md'
               : 'border-[#FFB6D9] text-[#3A0030] hover:border-[#FF4FA3] bg-white'
           }`}
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: '12px' }}
         >
           {voted ? '♡ liked!' : '♡ like'} {likeCount > 0 && `(${likeCount})`}
         </button>
@@ -132,7 +132,7 @@ export default function ScrapbookActions({
               ? 'bg-[#C9B6FF] border-[#C9B6FF] text-white shadow-md'
               : 'border-[#FFB6D9] text-[#3A0030] hover:border-[#C9B6FF] bg-white'
           }`}
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: '12px' }}
         >
           {favorited ? '★ saved!' : '★ save'}
         </button>
@@ -140,7 +140,7 @@ export default function ScrapbookActions({
         <button
           onClick={handleCopyLink}
           className="font-pixel text-xs py-2 px-5 rounded-full border-2 border-[#FFB6D9] text-[#3A0030] hover:border-[#FF4FA3] bg-white transition-all"
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: '12px' }}
         >
           {copyDone ? '✓ copied!' : '◎ copy link'}
         </button>
@@ -148,7 +148,7 @@ export default function ScrapbookActions({
         <button
           onClick={handleShare}
           className="font-pixel text-xs py-2 px-5 rounded-full border-2 border-[#FFB6D9] text-[#3A0030] hover:border-[#FF4FA3] bg-white transition-all"
-          style={{ fontSize: '11px' }}
+          style={{ fontSize: '12px' }}
         >
           share ✦
         </button>

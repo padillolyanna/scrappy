@@ -74,7 +74,7 @@ export default function ScrapbookEditor({
       </div>
 
       <div className="mb-6 max-w-md mx-auto">
-        <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '10px' }}>
+        <label className="font-pixel text-xs text-[#3A0030] mb-1 block" style={{ fontSize: '12px' }}>
           SCRAPBOOK TITLE
         </label>
         <input
@@ -97,7 +97,7 @@ export default function ScrapbookEditor({
                 ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white shadow'
                 : 'bg-white border-[#FFB6D9] text-[#3A0030] hover:border-[#FF4FA3]'
             }`}
-            style={{ fontSize: '10px', letterSpacing: '0.08em' }}
+            style={{ fontSize: '12px', letterSpacing: '0.08em' }}
           >
             {tab === 'write' ? 'WRITE' : tab === 'decorate' ? 'DECORATE' : 'PREVIEW'}
           </button>
@@ -177,7 +177,7 @@ export default function ScrapbookEditor({
             exit={{ opacity: 0, y: -10 }}
           >
             <div className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5 mb-4">
-              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>PAGE BACKGROUND</div>
+              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '12px' }}>PAGE BACKGROUND</div>
               <div className="flex gap-2 flex-wrap">
                 {BG_TEXTURES.map((bg) => (
                   <button
@@ -193,7 +193,7 @@ export default function ScrapbookEditor({
             </div>
 
             <div className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5 mb-4">
-              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>ADD SYMBOLS</div>
+              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '12px' }}>ADD SYMBOLS</div>
               <div className="flex gap-2 mb-3 flex-wrap">
                 {(Object.keys(STICKER_CATEGORIES) as (keyof typeof STICKER_CATEGORIES)[]).map((cat) => (
                   <button
@@ -204,7 +204,7 @@ export default function ScrapbookEditor({
                         ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white'
                         : 'bg-white border-[#FFB6D9] text-[#3A0030]'
                     }`}
-                    style={{ fontSize: '9px' }}
+                    style={{ fontSize: '12px' }}
                   >
                     {cat}
                   </button>
@@ -224,7 +224,7 @@ export default function ScrapbookEditor({
 
               {stickers.length > 0 && (
                 <div className="mt-4 border-t border-[#FFB6D9]/30 pt-3">
-                  <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '9px' }}>ADDED (click to remove)</div>
+                  <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '12px' }}>ADDED (click to remove)</div>
                   <div className="flex gap-2 flex-wrap">
                     {stickers.map((s) => (
                       <button
@@ -233,7 +233,7 @@ export default function ScrapbookEditor({
                         className="text-2xl hover:opacity-50 transition-opacity relative group text-[#FF4FA3]"
                       >
                         {s.emoji}
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" style={{ fontSize: '8px' }}>
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" style={{ fontSize: '12px' }}>
                           x
                         </span>
                       </button>
@@ -269,7 +269,7 @@ export default function ScrapbookEditor({
               <div className="space-y-3">
                 {answers.filter((a) => a.answer_text).map((ans) => (
                   <div key={ans.question_id} className="bg-white/60 rounded-lg p-3">
-                    <div className="font-pixel text-[8px] text-[#888] mb-1" style={{ fontSize: '8px' }}>
+                    <div className="font-pixel text-[12px] text-[#888] mb-1" style={{ fontSize: '12px' }}>
                       {ans.question_text}
                     </div>
                     <div

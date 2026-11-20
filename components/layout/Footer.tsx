@@ -9,10 +9,12 @@ const NAV_LINKS = [
   { label: 'Daily Prompt', href: '/prompts' },
 ]
 
-const SOCIAL = [
-  { label: 'IG', href: '#' },
-  { label: 'X', href: '#' },
-  { label: '@', href: '#' },
+const INFO_LINKS = [
+  { label: 'About Scrappy', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Photobooth', href: '/photobooth' },
+  { label: 'Scrapbook Exchange', href: '/exchange' },
 ]
 
 export default function Footer() {
@@ -37,14 +39,14 @@ export default function Footer() {
             <p className="font-caveat text-[#FFB6D9]/70 text-lg" style={{ fontFamily: 'Caveat, cursive' }}>
               Your little corner of the internet. ✦
             </p>
-            <div className="mt-3 font-pixel text-[#FFB6D9]/40" style={{ fontSize: '10px' }}>
+            <div className="mt-3 font-pixel text-[#FFB6D9]/40" style={{ fontSize: '12px' }}>
               &copy; 2026 SCRAPPY. ALL RIGHTS RESERVED.
             </div>
           </div>
 
           {/* MIDDLE */}
           <div>
-            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '10px' }}>
+            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '12px' }}>
               EXPLORE
             </div>
             <div className="flex flex-col gap-2">
@@ -52,7 +54,7 @@ export default function Footer() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="font-nunito text-sm text-[#FFB6D9]/70 hover:text-[#FFB6D9] transition-colors"
+                  className="font-nunito text-sm text-[#FFB6D9]/85 hover:text-white transition-colors"
                 >
                   {link.label}
                 </Link>
@@ -62,21 +64,16 @@ export default function Footer() {
 
           {/* RIGHT */}
           <div>
-            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '10px' }}>
-              CONNECT
+            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '12px' }}>
+              INFO
             </div>
             <p className="font-caveat text-[#FFB6D9]/60 text-base mb-4" style={{ fontFamily: 'Caveat, cursive' }}>
               A digital scrapbook community for everyone who wants their little piece of the internet.
             </p>
-            <div className="flex gap-2">
-              {SOCIAL.map((s) => (
-                <Link
-                  key={s.label}
-                  href={s.href}
-                  className="w-9 h-9 border border-[#FFB6D9]/30 rounded-lg flex items-center justify-center text-[#FFB6D9]/60 hover:border-[#FFB6D9] hover:text-[#FFB6D9] transition-colors font-pixel"
-                  style={{ fontSize: '10px' }}
-                >
-                  {s.label}
+            <div className="flex flex-col gap-2">
+              {INFO_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} className="font-nunito text-sm text-[#FFB6D9]/80 hover:text-[#FFB6D9] transition-colors">
+                  {link.label}
                 </Link>
               ))}
             </div>
@@ -87,7 +84,7 @@ export default function Footer() {
         <div className="border-t border-[#FFB6D9]/20 pt-6 overflow-hidden">
           <div
             className="font-pixel text-[#FFB6D9]/30 whitespace-nowrap"
-            style={{ fontSize: '10px', animation: 'marquee 30s linear infinite' }}
+            style={{ fontSize: '12px', animation: 'marquee 30s linear infinite' }}
           >
             {Array(6)
               .fill('✦ make memories ✦ collect answers ✦ decorate your pages ✦ leave a little piece of yourself ✦ ')

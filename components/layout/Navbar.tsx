@@ -33,6 +33,8 @@ const COMMUNITY_ITEMS = [
   { href: '/confessions', label: 'Confession Wall', desc: 'Anonymous confessions', icon: <IcoMail /> },
   { href: '/prompts', label: 'Daily Prompt', desc: 'Answer the question of the day', icon: '◆' },
   { href: '/exchange', label: 'Scrapbook Exchange', desc: 'Exchange notes with others', icon: <IcoExchange /> },
+  { href: '/about', label: 'About Scrappy', desc: 'What Scrappy is and how it works', icon: '✿' },
+  { href: '/contact', label: 'Contact', desc: 'Questions, bugs and reports', icon: '✉' },
 ]
 
 const PROFILE_ITEMS = [
@@ -65,7 +67,7 @@ function DropPanel({
         transform: align === 'center' ? 'translateX(-50%)' : 'none',
       }}
     >
-      <div className="px-3 pb-1 font-pixel text-[#FFB6D9]" style={{ fontSize: '8px' }}>✦ ✦ ✦</div>
+      <div className="px-3 pb-1 font-pixel text-[#FFB6D9]" style={{ fontSize: '12px' }}>✦ ✦ ✦</div>
       {items.map((item) => (
         <Link
           key={item.label}
@@ -75,11 +77,11 @@ function DropPanel({
         >
           <span className="text-base flex-shrink-0 mt-0.5">{item.icon}</span>
           <div>
-            <div className="font-pixel text-[#3A0030] group-hover:text-[#FF4FA3] transition-colors" style={{ fontSize: '11px' }}>
+            <div className="font-pixel text-[#3A0030] group-hover:text-[#FF4FA3] transition-colors" style={{ fontSize: '12px' }}>
               {item.label}
             </div>
             {item.desc && (
-              <div className="font-nunito text-[#888] mt-0.5" style={{ fontSize: '11px' }}>{item.desc}</div>
+              <div className="font-nunito text-[#888] mt-0.5" style={{ fontSize: '12px' }}>{item.desc}</div>
             )}
           </div>
         </Link>
@@ -196,7 +198,7 @@ export default function Navbar() {
               aria-expanded={open === 'create'}
             >
               CREATE
-              <span style={{ fontSize: '9px', marginTop: '1px' }}>{open === 'create' ? '▴' : '▾'}</span>
+              <span style={{ fontSize: '12px', marginTop: '1px' }}>{open === 'create' ? '▴' : '▾'}</span>
             </button>
             {open === 'create' && (
               <DropPanel items={CREATE_ITEMS} onClose={closeAll} align="center" />
@@ -212,7 +214,7 @@ export default function Navbar() {
               aria-expanded={open === 'community'}
             >
               COMMUNITY
-              <span style={{ fontSize: '9px', marginTop: '1px' }}>{open === 'community' ? '▴' : '▾'}</span>
+              <span style={{ fontSize: '12px', marginTop: '1px' }}>{open === 'community' ? '▴' : '▾'}</span>
             </button>
             {open === 'community' && (
               <DropPanel items={COMMUNITY_ITEMS} onClose={closeAll} align="center" />
@@ -253,12 +255,12 @@ export default function Navbar() {
                       </div>
                     )}
                     <span className="max-w-[80px] truncate">@{username}</span>
-                    <span className="text-[#888]" style={{ fontSize: '9px' }}>{open === 'profile' ? '▴' : '▾'}</span>
+                    <span className="text-[#888]" style={{ fontSize: '12px' }}>{open === 'profile' ? '▴' : '▾'}</span>
                   </button>
 
                   {open === 'profile' && (
                     <div className="absolute right-0 top-[calc(100%+10px)] z-[200] w-56 bg-white/98 backdrop-blur-sm rounded-2xl border-2 border-[#FFB6D9]/70 shadow-xl py-2 overflow-hidden">
-                      <div className="px-3 pb-1 font-pixel text-[#FFB6D9]" style={{ fontSize: '8px' }}>✦ ✦ ✦</div>
+                      <div className="px-3 pb-1 font-pixel text-[#FFB6D9]" style={{ fontSize: '12px' }}>✦ ✦ ✦</div>
                       {profileItems.map(item => (
                         <Link
                           key={item.label}
@@ -267,7 +269,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 mx-2 px-3 py-2.5 rounded-xl hover:bg-[#FFB6D9]/15 transition-colors group"
                         >
                           <span className="text-base flex-shrink-0">{item.icon}</span>
-                          <span className="font-pixel text-[#3A0030] group-hover:text-[#FF4FA3] transition-colors" style={{ fontSize: '11px' }}>
+                          <span className="font-pixel text-[#3A0030] group-hover:text-[#FF4FA3] transition-colors" style={{ fontSize: '12px' }}>
                             {item.label}
                           </span>
                         </Link>
@@ -278,7 +280,7 @@ export default function Navbar() {
                           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors group"
                         >
                           <span className="flex-shrink-0 text-[#888] group-hover:text-red-400 transition-colors"><IcoLogOut /></span>
-                          <span className="font-pixel text-[#888] group-hover:text-red-400 transition-colors" style={{ fontSize: '11px' }}>
+                          <span className="font-pixel text-[#888] group-hover:text-red-400 transition-colors" style={{ fontSize: '12px' }}>
                             Log Out
                           </span>
                         </button>
@@ -347,7 +349,7 @@ export default function Navbar() {
               style={{ fontSize: '13px' }}
             >
               CREATE
-              <span style={{ fontSize: '9px' }}>{mobileSection === 'create' ? '▴' : '▾'}</span>
+              <span style={{ fontSize: '12px' }}>{mobileSection === 'create' ? '▴' : '▾'}</span>
             </button>
             {mobileSection === 'create' && (
               <div className="mt-1 ml-3 space-y-0.5">
@@ -360,8 +362,8 @@ export default function Navbar() {
                   >
                     <span className="text-base">{item.icon}</span>
                     <div>
-                      <div className="font-pixel text-[#3A0030]" style={{ fontSize: '11px' }}>{item.label}</div>
-                      {item.desc && <div className="font-nunito text-[#888]" style={{ fontSize: '11px' }}>{item.desc}</div>}
+                      <div className="font-pixel text-[#3A0030]" style={{ fontSize: '12px' }}>{item.label}</div>
+                      {item.desc && <div className="font-nunito text-[#888]" style={{ fontSize: '12px' }}>{item.desc}</div>}
                     </div>
                   </Link>
                 ))}
@@ -377,7 +379,7 @@ export default function Navbar() {
               style={{ fontSize: '13px' }}
             >
               COMMUNITY
-              <span style={{ fontSize: '9px' }}>{mobileSection === 'community' ? '▴' : '▾'}</span>
+              <span style={{ fontSize: '12px' }}>{mobileSection === 'community' ? '▴' : '▾'}</span>
             </button>
             {mobileSection === 'community' && (
               <div className="mt-1 ml-3 space-y-0.5">
@@ -390,8 +392,8 @@ export default function Navbar() {
                   >
                     <span className="text-base">{item.icon}</span>
                     <div>
-                      <div className="font-pixel text-[#3A0030]" style={{ fontSize: '11px' }}>{item.label}</div>
-                      {item.desc && <div className="font-nunito text-[#888]" style={{ fontSize: '11px' }}>{item.desc}</div>}
+                      <div className="font-pixel text-[#3A0030]" style={{ fontSize: '12px' }}>{item.label}</div>
+                      {item.desc && <div className="font-nunito text-[#888]" style={{ fontSize: '12px' }}>{item.desc}</div>}
                     </div>
                   </Link>
                 ))}
@@ -411,7 +413,7 @@ export default function Navbar() {
                     className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-[#FFB6D9]/15 transition-colors"
                   >
                     <span className="text-base">{item.icon}</span>
-                    <span className="font-pixel text-[#3A0030]" style={{ fontSize: '11px' }}>{item.label}</span>
+                    <span className="font-pixel text-[#3A0030]" style={{ fontSize: '12px' }}>{item.label}</span>
                   </Link>
                 ))}
                 <button
@@ -419,7 +421,7 @@ export default function Navbar() {
                   className="flex items-center gap-3 w-full py-2.5 px-3 rounded-xl hover:bg-red-50 transition-colors"
                 >
                   <span className="flex-shrink-0 text-[#888]"><IcoLogOut /></span>
-                  <span className="font-pixel text-[#888]" style={{ fontSize: '11px' }}>Log Out</span>
+                  <span className="font-pixel text-[#888]" style={{ fontSize: '12px' }}>Log Out</span>
                 </button>
               </div>
             ) : (

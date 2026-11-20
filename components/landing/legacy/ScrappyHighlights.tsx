@@ -34,14 +34,14 @@ export default function ScrappyHighlights() {
         {/* Section header */}
         <div className="flex justify-between items-end mb-10">
           <div>
-            <div className="font-pixel text-[#FF4FA3] tracking-widest mb-1" style={{ fontSize: '11px' }}>
+            <div className="font-pixel text-[#FF4FA3] tracking-widest mb-1" style={{ fontSize: '12px' }}>
               COMMUNITY PICKS
             </div>
             <h2 className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
               Scrappy Highlights
             </h2>
           </div>
-          <Link href="/highlights" className="font-pixel text-[#FF4FA3] hover:underline" style={{ fontSize: '11px' }}>
+          <Link href="/highlights" className="font-pixel text-[#FF4FA3] hover:underline" style={{ fontSize: '12px' }}>
             VIEW ALL →
           </Link>
         </div>
@@ -81,10 +81,10 @@ export default function ScrappyHighlights() {
             {/* Card content */}
             <div className="p-5">
               <div className="flex gap-2 mb-3 flex-wrap">
-                <span className="bg-[#FF4FA3] text-white font-pixel px-2 py-1 rounded-full" style={{ fontSize: '8px' }}>
+                <span className="bg-[#FF4FA3] text-white font-pixel px-2 py-1 rounded-full" style={{ fontSize: '12px' }}>
                   SCRAPBOOK OF THE DAY
                 </span>
-                <span className="bg-[#C9B6FF] text-[#3A0030] font-pixel px-2 py-1 rounded-full" style={{ fontSize: '8px' }}>
+                <span className="bg-[#C9B6FF] text-[#3A0030] font-pixel px-2 py-1 rounded-full" style={{ fontSize: '12px' }}>
                   FEATURED
                 </span>
               </div>
@@ -94,7 +94,7 @@ export default function ScrappyHighlights() {
               <div className="font-nunito font-bold text-[#FF4FA3] text-sm mb-1">@vintagevibes</div>
               <div className="font-nunito text-sm text-[#888] mb-4">Theme: Indie Sleaze · 24 pages</div>
               <div className="flex items-center justify-between">
-                <span className="font-pixel text-[#3A0030]" style={{ fontSize: '11px' }}>847 VOTES</span>
+                <span className="font-pixel text-[#3A0030]" style={{ fontSize: '12px' }}>847 VOTES</span>
                 <button className="btn-y2k px-4 py-1.5 text-sm">♡ VOTE</button>
               </div>
             </div>
@@ -107,7 +107,7 @@ export default function ScrappyHighlights() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
           >
-            <div className="font-pixel text-[#888] mb-4" style={{ fontSize: '10px' }}>
+            <div className="font-pixel text-[#888] mb-4" style={{ fontSize: '12px' }}>
               MORE HIGHLIGHTS
             </div>
             <div className="space-y-4">
@@ -126,7 +126,7 @@ export default function ScrappyHighlights() {
                       {entry.title}
                     </div>
                     <div className="font-nunito text-xs text-[#888]">@{entry.creator}</div>
-                    <div className="font-pixel text-[#FF4FA3] mt-0.5" style={{ fontSize: '10px' }}>
+                    <div className="font-pixel text-[#FF4FA3] mt-0.5" style={{ fontSize: '12px' }}>
                       {entry.votes} votes
                     </div>
                   </div>

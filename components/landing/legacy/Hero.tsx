@@ -34,7 +34,7 @@ export default function Hero() {
             className="inline-flex items-center gap-2 bg-white/10 border border-[#FFB6D9]/30 rounded-full px-4 py-1.5 mb-6"
           >
             <span className="animate-blink text-green-400 text-sm">●</span>
-            <span className="font-pixel text-[#FFB6D9]/80" style={{ fontSize: '10px' }}>
+            <span className="font-pixel text-[#FFB6D9]/80" style={{ fontSize: '12px' }}>
               ONLINE NOW: 1,247 USERS
             </span>
           </motion.div>
@@ -92,7 +92,7 @@ export default function Hero() {
             transition={{ delay: 0.8 }}
             className="mt-6"
           >
-            <span className="font-pixel text-[#FFB6D9]/50" style={{ fontSize: '10px' }}>
+            <span className="font-pixel text-[#FFB6D9]/50" style={{ fontSize: '12px' }}>
               VISITORS: 48,291 SINCE 2024
             </span>
           </motion.div>
@@ -123,15 +123,15 @@ export default function Hero() {
               <div className={`w-full h-24 rounded-sm bg-gradient-to-br ${page.bg} flex items-center justify-center mb-2`}>
                 <span className="text-4xl font-pixel text-[#3A0030]/50">{page.symbol}</span>
               </div>
-              <div className="font-pixel text-[#3A0030] text-center mb-1" style={{ fontSize: '9px' }}>
+              <div className="font-pixel text-[#3A0030] text-center mb-1" style={{ fontSize: '12px' }}>
                 {page.title}
               </div>
-              <div className="font-caveat text-[#888] text-center italic" style={{ fontFamily: 'Caveat, cursive', fontSize: '11px' }}>
+              <div className="font-caveat text-[#888] text-center italic" style={{ fontFamily: 'Caveat, cursive', fontSize: '12px' }}>
                 {page.note}
               </div>
               <div
                 className="absolute -top-3 left-1/2 bg-yellow-100/80 px-4 py-0.5 border border-yellow-200"
-                style={{ transform: 'translateX(-50%) rotate(-2deg)', fontSize: '8px', fontFamily: 'Caveat, cursive', color: '#8B6914' }}
+                style={{ transform: 'translateX(-50%) rotate(-2deg)', fontSize: '12px', fontFamily: 'Caveat, cursive', color: '#8B6914' }}
               >
                 ✦
               </div>
