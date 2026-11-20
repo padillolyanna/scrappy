@@ -110,6 +110,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [uploads, setUploads] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const clipboard = useRef<NbElement | null>(null)
 
   const spreads = Math.max(1, Math.ceil(pages.length / 2))
@@ -455,7 +456,13 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   function deleteSpread() {
     if (spreads <= 1) return
     const hasStuff = (left?.elements.length ?? 0) + (right?.elements.length ?? 0) > 0
-    if (hasStuff && !window.confirm('Delete this spread and everything on it? (you can undo)')) return
+    if (hasStuff) { setConfirmDelete(true); return }
+    commit(pagesRef.current.filter((_, i) => i !== leftIdx && i !== rightIdx))
+    setSpread((s) => Math.max(0, s - 1))
+    setSel(null)
+  }
+  function confirmDeleteSpread() {
+    setConfirmDelete(false)
     commit(pagesRef.current.filter((_, i) => i !== leftIdx && i !== rightIdx))
     setSpread((s) => Math.max(0, s - 1))
     setSel(null)
@@ -762,7 +769,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
             <ToolBtn onClick={addSpread} title="add two pages">＋ pages</ToolBtn>
             <ToolBtn onClick={() => goSpread(spread + 1)} disabled={spread >= spreads - 1} title="next spread">▶</ToolBtn>
             <div className="flex-1" />
-            <ToolBtn onClick={deleteSpread} disabled={spreads <= 1} title="delete this spread">🗑 spread</ToolBtn>
+            <ToolBtn onClick={deleteSpread} disabled={spreads <= 1} title="delete this spread">✕ spread</ToolBtn>
           </div>
         </div>
       </div>
@@ -770,6 +777,28 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
       {notice && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] bg-[#FFF0A8] border-2 border-[#2B0A2E] rounded-lg px-4 py-2 font-pixel text-lg shadow-lg" role="status" onClick={() => setNotice(null)}>
           {notice}
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-[#3A0030]/50 backdrop-blur-sm" onClick={() => setConfirmDelete(false)}>
+          <div className="bg-white rounded-2xl border-2 border-[#FFB6D9] shadow-2xl p-6 max-w-xs w-full mx-4" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="text-3xl mb-2">✦</div>
+              <h2 className="font-pacifico text-lg text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>delete this spread?</h2>
+              <p className="font-caveat text-[#888] mt-1" style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}>
+                this will remove the spread and everything on it. you can undo with ctrl+z.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(false)} className="btn-outline-y2k flex-1 py-2 text-sm" style={{ fontSize: '12px' }}>
+                cancel
+              </button>
+              <button onClick={confirmDeleteSpread} className="btn-y2k flex-1 py-2 text-sm bg-[#D4006E]" style={{ fontSize: '12px' }}>
+                delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -1072,7 +1101,7 @@ function SelectionBar({
       <ToolBtn onClick={() => onLayer('up')} title="bring forward">⬆</ToolBtn>
       <ToolBtn onClick={() => onLayer('down')} title="send backward">⬇</ToolBtn>
       <ToolBtn onClick={onDuplicate} title="duplicate (ctrl+d)">⧉</ToolBtn>
-      <ToolBtn onClick={() => setProps({ locked: !p.locked })} active={p.locked} title={p.locked ? 'unlock' : 'lock in place'}>{p.locked ? '🔒' : '🔓'}</ToolBtn>
+      <ToolBtn onClick={() => setProps({ locked: !p.locked })} active={p.locked} title={p.locked ? 'unlock' : 'lock in place'}>{p.locked ? '■' : '□'}</ToolBtn>
       <ToolBtn onClick={onDelete} title="delete (del)" danger>✕</ToolBtn>
     </>
   )

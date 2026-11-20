@@ -151,25 +151,25 @@ export default function Navbar() {
       className="sticky top-0 z-[100] bg-white/92 backdrop-blur-md border-b-2 border-[#FFB6D9] shadow-sm"
       style={{ overflow: 'visible' }}
     >
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
         {/* ── Logo ── */}
-        <Link href={user ? '/my-space' : '/'} className="flex items-center gap-1.5 flex-shrink-0 group">
+        <Link href={user ? '/my-space' : '/'} className="flex items-center gap-1.5 flex-shrink-0 group py-1">
           <span
             className="font-pacifico text-glitter"
-            style={{ fontFamily: 'Pacifico, cursive', fontSize: '24px', lineHeight: 1 }}
+            style={{ fontFamily: 'Pacifico, cursive', fontSize: '28px', lineHeight: '1.3', display: 'block' }}
           >
             SCRAPPY
           </span>
-          <span className="text-base animate-sparkle text-[#FF4FA3]">✦</span>
+          <span className="animate-sparkle text-[#FF4FA3]" style={{ fontSize: '18px' }}>✦</span>
         </Link>
 
         {/* ── Desktop nav — centered ── */}
         <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-          <Link href={user ? '/my-space' : '/'} className={navLinkCls} style={{ fontSize: '12px' }}>
+          <Link href={user ? '/my-space' : '/'} className={navLinkCls} style={{ fontSize: '13px' }}>
             HOME
           </Link>
-          <Link href="/explore" className={navLinkCls} style={{ fontSize: '12px' }}>
+          <Link href="/explore" className={navLinkCls} style={{ fontSize: '13px' }}>
             EXPLORE
           </Link>
 
@@ -194,7 +194,7 @@ export default function Navbar() {
             <button
               onClick={() => toggle('community')}
               className={dropTriggerCls('community')}
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '13px' }}
               aria-expanded={open === 'community'}
             >
               COMMUNITY
@@ -214,10 +214,13 @@ export default function Navbar() {
                 {/* Notifications */}
                 <Link
                   href="/my-space"
-                  className="w-9 h-9 rounded-full border-2 border-[#FFB6D9] flex items-center justify-center hover:border-[#FF4FA3] transition-colors text-base"
+                  className="w-9 h-9 rounded-full border-2 border-[#FFB6D9] flex items-center justify-center hover:border-[#FF4FA3] transition-colors"
                   title="Notifications"
                 >
-                  🔔
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
                 </Link>
 
                 {/* Profile dropdown */}

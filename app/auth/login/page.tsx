@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
@@ -13,6 +13,12 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (user) router.replace('/my-space')
+    })
+  }, [router])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()

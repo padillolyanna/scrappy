@@ -20,6 +20,12 @@ export default function SignupPage() {
   const router = useRouter()
 
   useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      if (user) router.replace('/my-space')
+    })
+  }, [router])
+
+  useEffect(() => {
     if (username.length < 3) {
       setUsernameAvailable(null)
       return

@@ -695,15 +695,23 @@ body {
    ============================================================ */
 .input-mini {
   height: 32px;
-  border: 2px solid #2B0A2E;
-  border-radius: 6px;
+  border: 2px solid #FFB6D9;
+  border-radius: 20px;
   background: #fff;
-  padding: 0 6px;
+  padding: 0 10px;
   font-family: 'Nunito', sans-serif;
   font-weight: 700;
-  font-size: 13px;
-  color: #2B0A2E;
-  box-shadow: inset 1px 1px 0 rgba(43,10,46,.12);
+  font-size: 12px;
+  color: #3A0030;
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23FF4FA3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.input-mini:focus { border-color: #FF4FA3; box-shadow: 0 0 0 2px rgba(255,79,163,.3); }
+.input-mini:focus { border-color: #FF4FA3; box-shadow: 0 0 0 2px rgba(255,79,163,.25); }
+.input-mini:hover { border-color: #FF4FA3; }
