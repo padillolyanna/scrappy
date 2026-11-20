@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/layout/Navbar";
+import NavbarWrapper from "@/components/layout/NavbarWrapper";
 import AppWindow from "@/components/layout/AppWindow";
 import CursorTrail from "@/components/ui/CursorTrail";
 import SplashScreen from "@/components/landing/SplashScreen";
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CursorTrail />
         {/* Navbar floats above the AppWindow */}
         <div className="w-full max-w-[960px]">
-          <Navbar />
+          <NavbarWrapper />
         </div>
         <AppWindow>
           {children}
