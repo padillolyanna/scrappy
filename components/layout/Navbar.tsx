@@ -131,7 +131,8 @@ export default function Navbar() {
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    window.location.href = '/'
+    router.push('/')
+    router.refresh()
   }
 
   function closeAll() {
