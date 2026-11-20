@@ -58,7 +58,7 @@ export default function Footer() {
             marginBottom: 10,
           }}
         >
-          &copy; 2026 SCRAPPY ✦ best viewed in 1024×768 ✦ made with ♡ in the internet
+          &copy; 2026 SCRAPPY
         </div>
 
         {/* Row 3: Blinkies + guestbook link */}

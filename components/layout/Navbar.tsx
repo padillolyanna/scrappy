@@ -12,6 +12,7 @@ const GUEST_LINKS = [
   { href: '/highlights', label: 'HIGHLIGHTS' },
   { href: '/confessions', label: 'CONFESSIONS' },
   { href: '/prompts', label: 'DAILY PROMPT' },
+  { href: '/photobooth', label: 'PHOTOBOOTH' },
   { href: '/exchange', label: 'EXCHANGE' },
 ]
 
@@ -20,6 +21,7 @@ const AUTH_LINKS = [
   { href: '/explore', label: 'EXPLORE' },
   { href: '/confessions', label: 'CONFESSIONS' },
   { href: '/prompts', label: 'DAILY PROMPT' },
+  { href: '/photobooth', label: 'PHOTOBOOTH' },
   { href: '/exchange', label: 'EXCHANGE' },
 ]
 
