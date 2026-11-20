@@ -39,7 +39,7 @@ const PROFILE_ITEMS = [
   { href: '/my-space', label: 'My Space', icon: <IcoHome /> },
   { href: '/my-space', label: 'Saved Scrapbooks', icon: '♡' },
   { href: '/exchange', label: 'My Exchanges', icon: <IcoExchange /> },
-  { href: '__SETTINGS__', label: 'Account Settings', icon: <IcoSettings /> },
+  { href: '__SETTINGS__', label: 'Customize My Page', icon: <IcoSettings /> },
 ]
 
 // ─── Dropdown panel ───────────────────────────────────────────────────────────

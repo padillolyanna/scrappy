@@ -96,8 +96,14 @@ export default async function MySpacePage() {
           </div>
 
           {/* Quick actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
             {[
+              {
+                href: `/profile/${displayName}/edit`,
+                label: 'CUSTOMIZE MY PAGE',
+                symbol: '✎',
+                color: 'bg-[#FF4FA3]/20 border-[#FF4FA3] ring-2 ring-[#FF4FA3]/30',
+              },
               {
                 href: '/scrapbook/create',
                 label: 'NEW SCRAPBOOK',
