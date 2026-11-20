@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import ThemeSwitcher from '@/components/ui/ThemeSwitcher'
-import { DEMO_ACTIVITY, DEMO_ONLINE_USERS, SHOW_DEMO } from '@/lib/demoContent'
 
 export interface ActivityItem {
   username: string
@@ -115,76 +114,57 @@ function Widget({ header, children }: { header: string; children: React.ReactNod
 }
 
 export default function SidebarWidgets({ activity = [], onlineUsers = [], memberCount = 0 }: Props) {
-  const showDemoActivity = activity.length === 0 && SHOW_DEMO
-  const showDemoOnline = onlineUsers.length === 0 && SHOW_DEMO
-
-  const displayActivity = showDemoActivity ? DEMO_ACTIVITY : activity
-  const displayOnline = showDemoOnline ? DEMO_ONLINE_USERS : onlineUsers
-
   return (
     <div className="flex flex-col gap-3">
 
       <Widget header="✦ recent activity!">
-        {showDemoActivity && (
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#aaa', marginBottom: 4 }}>
-            ✦ example — be the first to post!
+        {activity.length === 0 ? (
+          <div style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, color: '#aaa', lineHeight: 1.5 }}>
+            Nothing happening just yet. Be the first to leave a little mark! ♡
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            {activity.map((m, i) => (
+              <div key={i} style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, lineHeight: 1.4 }}>
+                <span style={{ color: MSG_PALETTE[i % MSG_PALETTE.length], fontWeight: 'bold' }}>{m.username}:</span>{' '}
+                <span style={{ color: '#3A0030' }} className="line-clamp-1">{m.text}</span>
+                {i === activity.length - 1 && (
+                  <span className="animate-blink" style={{ marginLeft: 1, color: '#FF4FA3' }}>|</span>
+                )}
+              </div>
+            ))}
           </div>
         )}
-        <div
-          style={{
-            display: 'flex', flexDirection: 'column', gap: 5,
-            opacity: showDemoActivity ? 0.75 : 1,
-          }}
-        >
-          {displayActivity.map((m, i) => (
-            <div key={i} style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, lineHeight: 1.4 }}>
-              <span style={{ color: MSG_PALETTE[i % MSG_PALETTE.length], fontWeight: 'bold' }}>{m.username}:</span>{' '}
-              <span style={{ color: '#3A0030' }} className="line-clamp-1">{m.text}</span>
-              {i === displayActivity.length - 1 && (
-                <span className="animate-blink" style={{ marginLeft: 1, color: '#FF4FA3' }}>|</span>
-              )}
-            </div>
-          ))}
-        </div>
       </Widget>
 
       <Widget header="♡ who's online">
-        {showDemoOnline && (
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#aaa', marginBottom: 4 }}>
-            ✦ example
+        {onlineUsers.length === 0 ? (
+          <div style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, color: '#aaa', lineHeight: 1.5 }}>
+            No one online right now. Come back later! ♡
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 6px' }}>
+            {onlineUsers.map((u, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    background: USER_PALETTE[i % USER_PALETTE.length],
+                    border: '1.5px solid #2B0A2E',
+                  }} />
+                  <div style={{
+                    position: 'absolute', bottom: -1, right: -1,
+                    width: 7, height: 7, borderRadius: '50%',
+                    background: '#28C840', border: '1px solid white',
+                  }} />
+                </div>
+                <span style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, color: '#3A0030', maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {u.username.length > 7 ? u.username.slice(0, 7) : u.username}
+                </span>
+              </div>
+            ))}
           </div>
         )}
-        <div
-          style={{
-            display: 'flex', flexWrap: 'wrap', gap: '8px 6px',
-            opacity: showDemoOnline ? 0.75 : 1,
-          }}
-        >
-          {displayOnline.map((u, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <div style={{ position: 'relative' }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: '50%',
-                  background: USER_PALETTE[i % USER_PALETTE.length],
-                  border: '1.5px solid #2B0A2E',
-                }} />
-                <div style={{
-                  position: 'absolute', bottom: -1, right: -1,
-                  width: 7, height: 7, borderRadius: '50%',
-                  background: '#28C840', border: '1px solid white',
-                }} />
-              </div>
-              <span style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, color: '#3A0030', maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {u.username.length > 7 ? u.username.slice(0, 7) : u.username}
-              </span>
-            </div>
-          ))}
-          {!showDemoOnline && onlineUsers.length === 0 && (
-            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#aaa' }}>
-              nobody online yet
-            </div>
-          )}
-        </div>
       </Widget>
 
       <Widget header="◎ scrappy members">

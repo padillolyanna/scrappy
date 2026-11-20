@@ -3,6 +3,7 @@ export const instant = false
 import Footer from '@/components/layout/Footer'
 import HomeStatusPanel from '@/components/landing/HomeStatusPanel'
 import FeaturedScrapbooks, { type LiveScrapbook } from '@/components/landing/FeaturedScrapbooks'
+import JournalHangouts from '@/components/landing/JournalHangouts'
 import DailyPrompt from '@/components/landing/DailyPrompt'
 import ConfessionPreview, { type ConfessionItem } from '@/components/landing/ConfessionPreview'
 import ScrapbookExchange from '@/components/landing/ScrapbookExchange'
@@ -96,6 +97,7 @@ export default async function Home() {
       .from('scrapbooks')
       .select('id, title, cover_id, like_count, view_count, profiles!inner(username)')
       .eq('is_public', true)
+      .not('profiles.username', 'in', '("testuser","test","demo","admin_test")')
       .order('like_count', { ascending: false })
       .limit(3),
     supabase.from('daily_prompts').select('*').eq('date', today).maybeSingle(),
@@ -191,6 +193,7 @@ export default async function Home() {
       <div className="grid grid-cols-1 md:grid-cols-[minmax(0,65%)_minmax(0,35%)] gap-4 md:gap-0 px-3 py-4 sm:px-5">
         <div className="flex flex-col gap-0 md:pr-4 min-w-0">
           <FeaturedScrapbooks scrapbooks={featured} />
+          <JournalHangouts />
           <ConfessionPreview confessions={confessions} />
         </div>
         <div>

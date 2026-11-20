@@ -30,6 +30,7 @@ const CREATE_ITEMS = [
 
 const COMMUNITY_ITEMS = [
   { href: '/highlights', label: 'Highlights', desc: 'Featured scrapbooks', icon: '★' },
+  { href: '/hangouts', label: 'Journal Hangouts', desc: 'Community get-togethers', icon: '♡' },
   { href: '/confessions', label: 'Confession Wall', desc: 'Anonymous confessions', icon: <IcoMail /> },
   { href: '/prompts', label: 'Daily Prompt', desc: 'Answer the question of the day', icon: '◆' },
   { href: '/exchange', label: 'Scrapbook Exchange', desc: 'Exchange notes with others', icon: <IcoExchange /> },
@@ -42,6 +43,7 @@ const PROFILE_ITEMS = [
   { href: '/my-space', label: 'My Space', icon: <IcoHome /> },
   { href: '/my-space', label: 'Saved Scrapbooks', icon: '♡' },
   { href: '/exchange', label: 'My Exchanges', icon: <IcoExchange /> },
+  { href: '/hangouts?my=1', label: 'My Hangouts', icon: '♡' },
   { href: '__SETTINGS__', label: 'Customize My Page', icon: <IcoSettings /> },
 ]
 
