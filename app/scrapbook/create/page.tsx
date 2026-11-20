@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Footer from '@/components/layout/Footer'
 import CoverSelector from '@/components/scrapbook/CoverSelector'
 import TemplateSelector from '@/components/scrapbook/TemplateSelector'
-import ScrapbookEditor from '@/components/scrapbook/ScrapbookEditor'
+import NotebookEditor from '@/components/notebook/NotebookEditor'
+import StaticSpread from '@/components/notebook/Spread'
 import AuthModal from '@/components/ui/AuthModal'
-import { TEMPLATES, SCRAPBOOK_COVERS } from '@/lib/types'
-import { generateId, slugify } from '@/lib/utils'
+import { slugify } from '@/lib/utils'
+import { PAGE_H, SPREAD_W, starterPages, type NbPage } from '@/lib/notebook'
+import { savePages, syncAnswers, uploadDataUrl } from '@/lib/notebookStore'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 
@@ -18,20 +20,21 @@ type Step = 1 | 2 | 3 | 4
 const STEPS = [
   { num: 1, label: 'Cover' },
   { num: 2, label: 'Template' },
-  { num: 3, label: 'Customize' },
+  { num: 3, label: 'Decorate' },
   { num: 4, label: 'Publish' },
 ]
 
-const DRAFT_KEY = 'scrappy_draft'
+const DRAFT_KEY = 'scrappy_draft_v2'
 
 export default function CreateScrapbookPage() {
   const [step, setStep] = useState<Step>(1)
   const [coverId, setCoverId] = useState('pink-princess')
   const [templateId, setTemplateId] = useState('about-me')
   const [title, setTitle] = useState('')
-  const [answers, setAnswers] = useState<{ question_id: string; question_text: string; answer_text: string }[]>([])
-  const [customQuestions, setCustomQuestions] = useState<{ id: string; text: string }[]>([])
-  const [stickers, setStickers] = useState<{ id: string; emoji: string; x: number; y: number }[]>([])
+  const [pages, setPages] = useState<NbPage[]>([])
+  const [seededFor, setSeededFor] = useState('')
+  const [draftWarning, setDraftWarning] = useState(false)
+  const [error, setError] = useState('')
   const [visibility, setVisibility] = useState<'public' | 'private' | 'link'>('public')
   const [saving, setSaving] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
@@ -42,15 +45,16 @@ export default function CreateScrapbookPage() {
 
   // Load draft from localStorage on mount
   useEffect(() => {
-    const raw = localStorage.getItem(DRAFT_KEY)
+    let raw: string | null = null
+    try { raw = localStorage.getItem(DRAFT_KEY) } catch {}
     if (!raw) return
     try {
       const d = JSON.parse(raw)
       if (d.coverId) setCoverId(d.coverId)
       if (d.templateId) setTemplateId(d.templateId)
       if (d.title) setTitle(d.title)
-      if (d.answers) setAnswers(d.answers)
-      if (d.stickers) setStickers(d.stickers)
+      if (Array.isArray(d.pages)) setPages(d.pages)
+      if (d.seededFor) setSeededFor(d.seededFor)
       if (d.visibility) setVisibility(d.visibility)
       if (d.step) setStep(d.step)
       setDraftRestored(true)
@@ -61,25 +65,35 @@ export default function CreateScrapbookPage() {
 
   // Save draft to localStorage on changes
   useEffect(() => {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ coverId, templateId, title, answers, stickers, visibility, step }))
-  }, [coverId, templateId, title, answers, stickers, visibility, step])
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ coverId, templateId, title, pages, seededFor, visibility, step }))
+        setDraftWarning(false)
+      } catch {
+        // usually quota: lots of un-uploaded photos held as data URLs
+        setDraftWarning(true)
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [coverId, templateId, title, pages, seededFor, visibility, step])
 
-  function handleAnswerChange(questionId: string, text: string) {
-    setAnswers((prev) => {
-      const existing = prev.find((a) => a.question_id === questionId)
-      if (existing) return prev.map((a) => a.question_id === questionId ? { ...a, answer_text: text } : a)
-      const template = TEMPLATES.find((t) => t.id === templateId)
-      const question = template?.questions.find((q) => q.id === questionId)
-      return [...prev, { question_id: questionId, question_text: question?.question_text ?? '', answer_text: text }]
-    })
+  const layoutKey = `${coverId}|${templateId}`
+
+  // Lay out a starter spread the first time the editor opens
+  function seedIfEmpty() {
+    if (pages.length === 0) {
+      setPages(starterPages(coverId, templateId, title))
+      setSeededFor(layoutKey)
+    }
   }
 
-  function handleAddSticker(emoji: string) {
-    setStickers((prev) => [
-      ...prev,
-      { id: generateId(), emoji, x: Math.random() * 60 + 5, y: Math.random() * 60 + 5 },
-    ])
-  }
+  const uploadImage = useCallback(
+    (dataUrl: string) => {
+      if (!user) return Promise.reject(new Error('guest'))
+      return uploadDataUrl(createClient(), user.id, dataUrl)
+    },
+    [user],
+  )
 
   async function handlePublish() {
     if (!user) {
@@ -104,46 +118,29 @@ export default function CreateScrapbookPage() {
 
     if (sbError || !scrapbook) {
       setSaving(false)
+      setError("couldn't publish right now — your draft is still saved here. try again in a sec ✦")
       return
     }
 
-    const { data: page } = await supabase
-      .from('scrapbook_pages')
-      .insert({ scrapbook_id: scrapbook.id })
-      .select('id')
-      .single()
-
-    if (page && stickers.length > 0) {
-      await supabase.from('scrapbook_elements').insert(
-        stickers.map((s) => ({
-          page_id: page.id,
-          type: 'sticker',
-          content: s.emoji,
-          x: s.x,
-          y: s.y,
-        }))
-      )
+    try {
+      const saved = await savePages(supabase, scrapbook.id, user.id, pages)
+      await syncAnswers(supabase, scrapbook.id, user.id, saved, visibility !== 'private')
+    } catch {
+      setSaving(false)
+      setError('your scrapbook was created but the pages could not be saved — try again from the edit page.')
+      router.push(`/scrapbook/${scrapbook.id}/edit`)
+      return
     }
 
-    const validAnswers = answers.filter((a) => a.answer_text.trim())
-    if (validAnswers.length > 0) {
-      await supabase.from('answers').insert(
-        validAnswers.map((a) => ({
-          user_id: user.id,
-          question_id: a.question_id,
-          question_text: a.question_text,
-          scrapbook_id: scrapbook.id,
-          answer_text: a.answer_text,
-          is_public: visibility !== 'private',
-        }))
-      )
-    }
-
-    localStorage.removeItem(DRAFT_KEY)
+    try { localStorage.removeItem(DRAFT_KEY) } catch {}
     router.push(`/scrapbook/${scrapbook.id}`)
   }
 
-  function goNext() { if (step < 4) setStep((s) => (s + 1) as Step) }
+  function goNext() {
+    if (step >= 4) return
+    if (step + 1 === 3) seedIfEmpty()
+    setStep((s) => (s + 1) as Step)
+  }
   function goBack() { if (step > 1) setStep((s) => (s - 1) as Step) }
 
   return (
@@ -214,21 +211,48 @@ export default function CreateScrapbookPage() {
               {step === 1 && <CoverSelector selected={coverId} onSelect={setCoverId} />}
               {step === 2 && <TemplateSelector selected={templateId} onSelect={setTemplateId} />}
               {step === 3 && (
-                <ScrapbookEditor
-                  coverId={coverId}
-                  templateId={templateId}
-                  title={title}
-                  onTitleChange={setTitle}
-                  answers={answers}
-                  onAnswerChange={handleAnswerChange}
-                  customQuestions={customQuestions}
-                  onAddQuestion={() => setCustomQuestions((prev) => [...prev, { id: generateId('cq-'), text: '' }])}
-                  onRemoveQuestion={(id) => setCustomQuestions((prev) => prev.filter((q) => q.id !== id))}
-                  onCustomQuestionChange={(id, text) => setCustomQuestions((prev) => prev.map((q) => q.id === id ? { ...q, text } : q))}
-                  stickers={stickers}
-                  onAddSticker={handleAddSticker}
-                  onRemoveSticker={(id) => setStickers((s) => s.filter((x) => x.id !== id))}
-                />
+                <div>
+                  {seededFor && seededFor !== layoutKey && pages.length > 0 && (
+                    <div className="bg-[#E4F4FF] border-2 border-[#2B0A2E] rounded-xl px-4 py-2 mb-3 flex items-center justify-between gap-3 flex-wrap">
+                      <span className="font-pixel text-lg text-[#2B0A2E]">you changed the cover or template — want a fresh starter layout?</span>
+                      <div className="flex gap-2">
+                        <button
+                          className="btn-bevel text-xs !px-3 !py-1"
+                          onClick={() => {
+                            if (window.confirm('Replace your pages with the new starter layout?')) {
+                              setPages(starterPages(coverId, templateId, title))
+                              setSeededFor(layoutKey)
+                            }
+                          }}
+                        >
+                          use new layout
+                        </button>
+                        <button className="btn-outline-y2k text-xs !px-3 !py-1" onClick={() => setSeededFor(layoutKey)}>keep mine</button>
+                      </div>
+                    </div>
+                  )}
+                  {draftWarning && (
+                    <div className="font-pixel text-lg text-[#D4006E] mb-2">
+                      ⚠ your draft is too big to autosave in this browser (lots of photos!) — {user ? 'publish or save soon' : 'log in so photos upload'} ✦
+                    </div>
+                  )}
+                  {pages.length === 0 && (
+                    <div className="text-center py-10">
+                      <button className="btn-bevel" onClick={seedIfEmpty}>✦ open my notebook</button>
+                    </div>
+                  )}
+                  {pages.length > 0 && (
+                    <NotebookEditor
+                      pages={pages}
+                      onChange={setPages}
+                      title={title}
+                      onTitleChange={setTitle}
+                      templateId={templateId}
+                      uploadImage={user ? uploadImage : undefined}
+                      actions={<button onClick={goNext} className="btn-bevel text-xs !px-3 !py-1.5">done ▶</button>}
+                    />
+                  )}
+                </div>
               )}
               {step === 4 && (
                 <PublishStep
@@ -236,6 +260,7 @@ export default function CreateScrapbookPage() {
                   onVisibilityChange={setVisibility}
                   title={title}
                   coverId={coverId}
+                  pages={pages}
                   saving={saving}
                   onPublish={handlePublish}
                   isGuest={!user}
@@ -244,6 +269,9 @@ export default function CreateScrapbookPage() {
             </motion.div>
           </AnimatePresence>
 
+          {error && (
+            <div className="mt-6 bg-[#FFE4F0] border-2 border-[#D4006E] rounded-xl px-4 py-2 font-pixel text-lg text-[#D4006E]" role="alert">{error}</div>
+          )}
           <div className="flex justify-between mt-10">
             <button onClick={goBack} className={`btn-outline-y2k ${step === 1 ? 'opacity-30 cursor-not-allowed' : ''}`} disabled={step === 1}>
               back
@@ -271,7 +299,7 @@ function PublishStep({
   visibility,
   onVisibilityChange,
   title,
-  coverId,
+  pages,
   saving,
   onPublish,
   isGuest,
@@ -280,12 +308,11 @@ function PublishStep({
   onVisibilityChange: (v: 'public' | 'private' | 'link') => void
   title: string
   coverId: string
+  pages: NbPage[]
   saving: boolean
   onPublish: () => void
   isGuest: boolean
 }) {
-  const cover = SCRAPBOOK_COVERS.find((c) => c.id === coverId)
-
   const OPTIONS = [
     { id: 'public', symbol: '◆', label: 'Public', desc: 'Anyone can discover and view your scrapbook' },
     { id: 'link', symbol: '◎', label: 'Link Only', desc: 'Only people with the link can view it' },
@@ -303,10 +330,14 @@ function PublishStep({
         </p>
       </div>
 
-      <div className="max-w-xs mx-auto mb-8">
+      <div className="max-w-md mx-auto mb-8">
         <div className="scrap-card overflow-hidden">
-          <div className={`h-32 bg-gradient-to-br ${cover?.bg_gradient ?? 'from-pink-200 to-pink-100'} flex items-center justify-center`}>
-            <span className="text-5xl font-pixel text-[#3A0030]/30">{cover?.preview_symbol}</span>
+          <div className="bg-[#f7eaf1] flex items-center justify-center py-4 overflow-hidden">
+            <div style={{ width: SPREAD_W * 0.4, height: PAGE_H * 0.4 }}>
+              <div style={{ transform: 'scale(0.4)', transformOrigin: '0 0' }}>
+                <StaticSpread left={pages[0]} right={pages[1]} />
+              </div>
+            </div>
           </div>
           <div className="p-4 bg-white">
             <div className="font-caveat text-xl text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive' }}>

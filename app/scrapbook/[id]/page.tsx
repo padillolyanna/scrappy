@@ -6,6 +6,8 @@ import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ScrapbookActions from '@/components/scrapbook/ScrapbookActions'
+import NotebookViewer from '@/components/notebook/NotebookViewer'
+import { loadPages } from '@/lib/notebookStore'
 
 export default async function ScrapbookViewPage({ params }: PageProps<'/scrapbook/[id]'>) {
   const { id } = await params
@@ -47,7 +49,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
     )
   }
 
-  const [{ data: creator }, { data: answers }] = await Promise.all([
+  const [{ data: creator }, { data: answers }, pages] = await Promise.all([
     supabase
       .from('profiles')
       .select('username, display_name, avatar_url')
@@ -59,6 +61,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
       .eq('scrapbook_id', id)
       .eq('is_public', true)
       .order('created_at', { ascending: true }),
+    loadPages(supabase, id),
   ])
 
   let userVoted = false
@@ -95,7 +98,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1 py-8 px-4">
-        <div className="max-w-2xl mx-auto">
+        <div className={`${pages.length ? "max-w-4xl" : "max-w-2xl"} mx-auto`}>
           <Link
             href="/explore"
             className="flex items-center gap-1 text-[#888] hover:text-[#FF4FA3] transition-colors font-nunito text-sm mb-4"
@@ -117,16 +120,35 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
                   Your scrapbook is live. Share this link with friends.
                 </div>
               </div>
-              <Link
-                href="/scrapbook/create"
-                className="ml-auto btn-y2k text-xs py-1 px-4"
-                style={{ fontSize: '11px' }}
-              >
-                new ✦
-              </Link>
+              <div className="ml-auto flex gap-2">
+                <Link href={`/scrapbook/${id}/edit`} className="btn-bevel text-xs !px-3 !py-1">
+                  ✎ edit pages
+                </Link>
+                <Link
+                  href="/scrapbook/create"
+                  className="btn-y2k text-xs py-1 px-4"
+                  style={{ fontSize: '11px' }}
+                >
+                  new ✦
+                </Link>
+              </div>
             </div>
           )}
 
+          {pages.length > 0 ? (
+            <div>
+              <div className="text-center mb-4">
+                <h1 className="font-chango text-3xl text-[#FF4FA3]" style={{ WebkitTextStroke: '1px #2B0A2E', textShadow: '2px 2px 0 #fff, 3px 3px 0 rgba(43,10,46,.35)' }}>
+                  {scrapbook.title || 'my scrapbook'}
+                </h1>
+                <div className="font-caveat text-lg text-[#888]">
+                  by @{creator?.username ?? 'anonymous'} ✦{' '}
+                  {new Date(scrapbook.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                </div>
+              </div>
+              <NotebookViewer pages={pages} />
+            </div>
+          ) : (
           <div className="bg-[#FFF8ED] rounded-2xl border-2 border-[#FFB6D9]/50 shadow-xl overflow-hidden">
             <div
               className={`bg-gradient-to-br ${cover?.bg_gradient ?? 'from-pink-200 via-pink-100 to-pink-50'} p-8 text-center relative`}
@@ -207,6 +229,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
               </div>
             </div>
           </div>
+          )}
 
           {creator && (
             <div className="mt-4 flex items-center gap-2">

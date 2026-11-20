@@ -1,0 +1,1184 @@
+'use client'
+
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
+import { createPortal } from 'react-dom'
+import { TEMPLATES } from '@/lib/types'
+import {
+  FONTS, PAGE_H, PAGE_W, PAPERS, PAPER_COLORS, SPREAD_W, SWATCHES, TAPES, TAPE_COLORS,
+  addTo, blankPage, compressImage, makeImage, makeQuestion, makeShape, makeSticker, makeTape, makeText,
+  paperStyle,
+  type ElementProps, type NbElement, type NbPage, type PaperId,
+} from '@/lib/notebook'
+import ElementView, { QuestionView, textBoxStyle } from './ElementView'
+import StaticSpread, { SpreadFrame, placed, sortedSpreadElements } from './Spread'
+import { EMOJI_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
+
+type Panel = 'text' | 'photos' | 'stickers' | 'tape' | 'shapes' | 'questions' | 'paper'
+type Sel = { page: number; id: string } | null
+
+const PANELS: { id: Panel; icon: string; label: string }[] = [
+  { id: 'text', icon: 'Aa', label: 'text' },
+  { id: 'photos', icon: '📷', label: 'photos' },
+  { id: 'stickers', icon: '★', label: 'stickers' },
+  { id: 'tape', icon: '▤', label: 'tape' },
+  { id: 'shapes', icon: '◆', label: 'shapes' },
+  { id: 'questions', icon: '?', label: 'Q&A' },
+  { id: 'paper', icon: '▦', label: 'paper' },
+]
+
+interface Props {
+  pages: NbPage[]
+  onChange: (next: NbPage[] | ((prev: NbPage[]) => NbPage[])) => void
+  title: string
+  onTitleChange: (t: string) => void
+  templateId?: string
+  /** Upload a compressed data URL and return a hosted URL. If omitted or it
+   *  throws, the data URL is kept and uploaded at save time. */
+  uploadImage?: (dataUrl: string) => Promise<string>
+  actions?: React.ReactNode
+}
+
+export default function NotebookEditor({ pages, onChange, title, onTitleChange, templateId, uploadImage, actions }: Props) {
+  // ── history ──────────────────────────────────────────────────────────
+  const pagesRef = useRef(pages)
+  useLayoutEffect(() => {
+    pagesRef.current = pages
+  }, [pages])
+  const past = useRef<NbPage[][]>([])
+  const future = useRef<NbPage[][]>([])
+  const lastKey = useRef<{ key: string; t: number } | null>(null)
+  const [hist, setHist] = useState({ past: 0, future: 0 })
+  const bump = useCallback(() => setHist({ past: past.current.length, future: future.current.length }), [])
+
+  const commit = useCallback(
+    (next: NbPage[], key?: string) => {
+      const now = Date.now()
+      const coalesce = key && lastKey.current?.key === key && now - lastKey.current.t < 900
+      if (!coalesce) {
+        past.current.push(pagesRef.current)
+        if (past.current.length > 100) past.current.shift()
+      }
+      lastKey.current = key ? { key, t: now } : null
+      future.current = []
+      pagesRef.current = next
+      onChange(next)
+      bump()
+    },
+    [onChange, bump],
+  )
+  const live = useCallback(
+    (next: NbPage[]) => {
+      pagesRef.current = next
+      onChange(next)
+    },
+    [onChange],
+  )
+  const pushSnapshot = useCallback((snap: NbPage[]) => {
+    past.current.push(snap)
+    future.current = []
+    lastKey.current = null
+    bump()
+  }, [bump])
+  const undo = useCallback(() => {
+    const prev = past.current.pop()
+    if (!prev) return
+    future.current.push(pagesRef.current)
+    lastKey.current = null
+    pagesRef.current = prev
+    onChange(prev)
+    bump()
+  }, [onChange, bump])
+  const redo = useCallback(() => {
+    const nxt = future.current.pop()
+    if (!nxt) return
+    past.current.push(pagesRef.current)
+    lastKey.current = null
+    pagesRef.current = nxt
+    onChange(nxt)
+    bump()
+  }, [onChange, bump])
+
+  // ── view state ───────────────────────────────────────────────────────
+  const [spreadState, setSpread] = useState(0)
+  const [activePage, setActivePage] = useState(0)
+  const [sel, setSel] = useState<Sel>(null)
+  const [editing, setEditing] = useState<string | null>(null)
+  const [panel, setPanel] = useState<Panel | null>('stickers')
+  const [fullscreen, setFullscreen] = useState(false)
+  const [guides, setGuides] = useState<{ v?: number; h?: number }>({})
+  const [uploads, setUploads] = useState<string[]>([])
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
+  const clipboard = useRef<NbElement | null>(null)
+
+  const spreads = Math.max(1, Math.ceil(pages.length / 2))
+  const spread = Math.min(spreadState, spreads - 1)
+  const leftIdx = spread * 2
+  const rightIdx = spread * 2 + 1
+  const left = pages[leftIdx]
+  const right = pages[rightIdx]
+
+  const selected = useMemo(() => {
+    if (!sel) return null
+    return pages[sel.page]?.elements.find((e) => e.id === sel.id) ?? null
+  }, [sel, pages])
+
+  // ── canvas scale ─────────────────────────────────────────────────────
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [stage, setStage] = useState({ w: 0, h: 0 })
+  useEffect(() => {
+    const el = stageRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setStage({ w: e.contentRect.width, h: e.contentRect.height }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [fullscreen])
+  const scale = stage.w
+    ? Math.min(1.25, (stage.w - 48) / (SPREAD_W + 24), fullscreen ? (stage.h - 40) / (PAGE_H + 30) : 9)
+    : 0
+
+  // ── element helpers ──────────────────────────────────────────────────
+  const mapEl = useCallback(
+    (pageIdx: number, id: string, fn: (el: NbElement) => NbElement) =>
+      pagesRef.current.map((p, i) => (i === pageIdx ? { ...p, elements: p.elements.map((e) => (e.id === id ? fn(e) : e)) } : p)),
+    [],
+  )
+  const setProps = (patch: Partial<ElementProps>, key?: string) => {
+    if (!sel) return
+    commit(mapEl(sel.page, sel.id, (e) => ({ ...e, props: { ...e.props, ...patch } })), key)
+  }
+  const setEl = (patch: Partial<NbElement>, key?: string) => {
+    if (!sel) return
+    commit(mapEl(sel.page, sel.id, (e) => ({ ...e, ...patch })), key)
+  }
+
+  function ensurePage(idx: number, list: NbPage[]) {
+    if (list[idx]) return list
+    const base = list[list.length - 1]
+    const next = [...list]
+    while (!next[idx]) next.push(blankPage(base?.color, base?.paper))
+    return next
+  }
+
+  function add(el: Omit<NbElement, 'id' | 'z'>, opts: { center?: boolean } = { center: true }) {
+    const pageIdx = activePage >= leftIdx && activePage <= rightIdx ? activePage : leftIdx
+    let list = ensurePage(pageIdx, pagesRef.current)
+    const jitter = () => Math.round((Math.random() - 0.5) * 60)
+    const placedEl = opts.center
+      ? { ...el, x: Math.round(PAGE_W / 2 - el.w / 2 + jitter()), y: Math.round(PAGE_H / 2 - el.h / 2 + jitter()) }
+      : el
+    const res = addTo(list[pageIdx], placedEl)
+    list = list.map((p, i) => (i === pageIdx ? res.page : p))
+    commit(list)
+    setSel({ page: pageIdx, id: res.id })
+    setEditing(null)
+  }
+
+  function removeSelected() {
+    if (!sel) return
+    commit(pagesRef.current.map((p, i) => (i === sel.page ? { ...p, elements: p.elements.filter((e) => e.id !== sel.id) } : p)))
+    setSel(null)
+    setEditing(null)
+  }
+
+  function duplicateSelected(src = selected, pageIdx = sel?.page) {
+    if (!src || pageIdx === undefined) return
+    const page = pagesRef.current[pageIdx]
+    const res = addTo(page, { ...structuredClone(src), x: src.x + 18, y: src.y + 18 })
+    commit(pagesRef.current.map((p, i) => (i === pageIdx ? res.page : p)))
+    setSel({ page: pageIdx, id: res.id })
+  }
+
+  function layer(dir: 'up' | 'down' | 'top' | 'bottom') {
+    if (!sel || !selected) return
+    const els = pagesRef.current[sel.page].elements
+    const zs = els.map((e) => e.z)
+    const z =
+      dir === 'top' ? Math.max(...zs) + 1 : dir === 'bottom' ? Math.min(...zs) - 1 : dir === 'up' ? selected.z + 1.5 : selected.z - 1.5
+    // renormalise
+    const reordered = els
+      .map((e) => (e.id === sel.id ? { ...e, z } : e))
+      .sort((a, b) => a.z - b.z)
+      .map((e, i) => ({ ...e, z: i + 1 }))
+    commit(pagesRef.current.map((p, i) => (i === sel.page ? { ...p, elements: reordered } : p)))
+  }
+
+  // ── photos ───────────────────────────────────────────────────────────
+  const fileRef = useRef<HTMLInputElement>(null)
+  const fillTarget = useRef<Sel>(null)
+
+  async function handleFiles(files: FileList | null) {
+    if (!files?.length) return
+    setBusy(true)
+    const urls: string[] = []
+    for (const f of Array.from(files).slice(0, 12)) {
+      if (!f.type.startsWith('image/')) continue
+      try {
+        let url = await compressImage(f)
+        if (uploadImage) {
+          try {
+            url = await uploadImage(url)
+          } catch {
+            setNotice('photo saved locally — it will upload when you save ✦')
+          }
+        }
+        urls.push(url)
+      } catch {
+        setNotice("couldn't read one of those images")
+      }
+    }
+    setBusy(false)
+    if (!urls.length) return
+    setUploads((u) => [...urls, ...u])
+    const target = fillTarget.current
+    fillTarget.current = null
+    if (target) {
+      commit(mapEl(target.page, target.id, (e) => ({ ...e, content: urls[0] })))
+      setSel(target)
+      return
+    }
+    if (selected?.type === 'image' && sel && !selected.content) {
+      commit(mapEl(sel.page, sel.id, (e) => ({ ...e, content: urls[0] })))
+      return
+    }
+    urls.slice(0, 4).forEach((u) => add(makeImage(u, 'polaroid')))
+  }
+
+  function pickPhotoFor(target: Sel) {
+    fillTarget.current = target
+    fileRef.current?.click()
+  }
+
+  const knownPhotos = useMemo(() => {
+    const set = new Set(uploads)
+    pages.forEach((p) => p.elements.forEach((e) => e.type === 'image' && e.content && set.add(e.content)))
+    return Array.from(set)
+  }, [uploads, pages])
+
+  // ── keyboard ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement
+      const typing = t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable
+      const mod = e.metaKey || e.ctrlKey
+      if (mod && e.key.toLowerCase() === 'z' && !typing) {
+        e.preventDefault()
+        if (e.shiftKey) redo()
+        else undo()
+        return
+      }
+      if (mod && e.key.toLowerCase() === 'y' && !typing) {
+        e.preventDefault()
+        redo()
+        return
+      }
+      if (typing) {
+        if (e.key === 'Escape') (t as HTMLInputElement).blur()
+        return
+      }
+      if (e.key === 'Escape') {
+        setSel(null)
+        setEditing(null)
+        if (fullscreen) setFullscreen(false)
+      }
+      if (!sel || !selected) return
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault()
+        removeSelected()
+      } else if (mod && e.key.toLowerCase() === 'd') {
+        e.preventDefault()
+        duplicateSelected()
+      } else if (mod && e.key.toLowerCase() === 'c') {
+        clipboard.current = structuredClone(selected)
+      } else if (mod && e.key.toLowerCase() === 'v' && clipboard.current) {
+        e.preventDefault()
+        duplicateSelected(clipboard.current, sel.page)
+      } else if (e.key.startsWith('Arrow') && !selected.props.locked) {
+        e.preventDefault()
+        const d = e.shiftKey ? 10 : 1
+        const dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0
+        const dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0
+        setEl({ x: selected.x + dx, y: selected.y + dy }, `nudge-${selected.id}`)
+      } else if (e.key === 'Enter' && (selected.type === 'text' || selected.type === 'question')) {
+        e.preventDefault()
+        setEditing(selected.id)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  // ── pointer interactions ─────────────────────────────────────────────
+  type Drag =
+    | { kind: 'move'; page: number; id: string; sx: number; sy: number; ox: number; oy: number; snap: NbPage[]; moved: boolean }
+    | { kind: 'resize'; page: number; id: string; sx: number; sy: number; hx: number; hy: number; o: NbElement; snap: NbPage[]; keep: boolean }
+    | { kind: 'rotate'; page: number; id: string; cx: number; cy: number; a0: number; r0: number; snap: NbPage[] }
+  const drag = useRef<Drag | null>(null)
+
+  function startMove(e: React.PointerEvent, pageIdx: number, el: NbElement) {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    setSel({ page: pageIdx, id: el.id })
+    setActivePage(pageIdx)
+    if (editing === el.id) return
+    if (editing) setEditing(null)
+    if (el.props.locked) return
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    drag.current = { kind: 'move', page: pageIdx, id: el.id, sx: e.clientX, sy: e.clientY, ox: el.x, oy: el.y, snap: pagesRef.current, moved: false }
+  }
+
+  function startResize(e: React.PointerEvent, pageIdx: number, el: NbElement, hx: number, hy: number) {
+    e.stopPropagation()
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    const keep = (hx !== 0 && hy !== 0) && (el.type === 'sticker' || el.type === 'image' || el.type === 'text')
+    drag.current = { kind: 'resize', page: pageIdx, id: el.id, sx: e.clientX, sy: e.clientY, hx, hy, o: el, snap: pagesRef.current, keep }
+  }
+
+  function startRotate(e: React.PointerEvent, pageIdx: number, el: NbElement) {
+    e.stopPropagation()
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    const box = (e.currentTarget as HTMLElement).closest('[data-el]')!.getBoundingClientRect()
+    const cx = box.left + box.width / 2
+    const cy = box.top + box.height / 2
+    drag.current = { kind: 'rotate', page: pageIdx, id: el.id, cx, cy, a0: Math.atan2(e.clientY - cy, e.clientX - cx), r0: el.rotation, snap: pagesRef.current }
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    const d = drag.current
+    if (!d || !scale) return
+    if (d.kind === 'move') {
+      const dx = (e.clientX - d.sx) / scale
+      const dy = (e.clientY - d.sy) / scale
+      if (!d.moved && Math.hypot(dx, dy) < 2) return
+      d.moved = true
+      const el = d.snap[d.page].elements.find((x) => x.id === d.id)!
+      let nx = d.ox + dx
+      let ny = d.oy + dy
+      // snap element centre to page centre lines
+      const g: { v?: number; h?: number } = {}
+      const cx = nx + el.w / 2
+      const cy = ny + el.h / 2
+      if (Math.abs(cx - PAGE_W / 2) < 6 / scale) {
+        nx = PAGE_W / 2 - el.w / 2
+        g.v = (d.page % 2) * PAGE_W + PAGE_W / 2
+      }
+      if (Math.abs(cy - PAGE_H / 2) < 6 / scale) {
+        ny = PAGE_H / 2 - el.h / 2
+        g.h = PAGE_H / 2
+      }
+      setGuides(g)
+      live(mapEl(d.page, d.id, (x) => ({ ...x, x: Math.round(nx), y: Math.round(ny) })))
+    } else if (d.kind === 'resize') {
+      const o = d.o
+      const rad = (o.rotation * Math.PI) / 180
+      const gx = (e.clientX - d.sx) / scale
+      const gy = (e.clientY - d.sy) / scale
+      // pointer delta in the element's local (unrotated) frame
+      const lx = gx * Math.cos(rad) + gy * Math.sin(rad)
+      const ly = -gx * Math.sin(rad) + gy * Math.cos(rad)
+      const min = 20
+      let w = d.hx ? Math.max(min, o.w + d.hx * lx) : o.w
+      let h = d.hy ? Math.max(min, o.h + d.hy * ly) : o.h
+      if (d.keep || e.shiftKey) {
+        const f = Math.max(w / o.w, h / o.h)
+        w = Math.max(min, o.w * f)
+        h = Math.max(min, o.h * f)
+      }
+      // keep the opposite edge/corner fixed
+      const dwx = ((w - o.w) / 2) * d.hx
+      const dhy = ((h - o.h) / 2) * d.hy
+      const ocx = o.x + o.w / 2
+      const ocy = o.y + o.h / 2
+      const ncx = ocx + dwx * Math.cos(rad) - dhy * Math.sin(rad)
+      const ncy = ocy + dwx * Math.sin(rad) + dhy * Math.cos(rad)
+      const textScale = o.type === 'text' && d.keep ? w / o.w : 1
+      live(
+        mapEl(d.page, d.id, (x) => ({
+          ...x,
+          w: Math.round(w), h: Math.round(h),
+          x: Math.round(ncx - w / 2), y: Math.round(ncy - h / 2),
+          props: textScale !== 1 ? { ...x.props, size: Math.max(8, Math.round((o.props.size ?? 24) * textScale)) } : x.props,
+        })),
+      )
+    } else {
+      const a = Math.atan2(e.clientY - d.cy, e.clientX - d.cx)
+      let r = d.r0 + ((a - d.a0) * 180) / Math.PI
+      r = ((r % 360) + 540) % 360 - 180
+      if (e.shiftKey) r = Math.round(r / 15) * 15
+      else {
+        const near = Math.round(r / 45) * 45
+        if (Math.abs(r - near) < 4) r = near
+      }
+      live(mapEl(d.page, d.id, (x) => ({ ...x, rotation: Math.round(r * 10) / 10 })))
+    }
+  }
+
+  function onPointerUp() {
+    const d = drag.current
+    drag.current = null
+    setGuides({})
+    if (!d) return
+    if (d.kind === 'move' && !d.moved) return
+    // hop between left/right page if the centre crossed the binding
+    if (d.kind === 'move') {
+      const list = pagesRef.current
+      const el = list[d.page].elements.find((x) => x.id === d.id)
+      if (el) {
+        const cx = el.x + el.w / 2
+        const isLeft = d.page % 2 === 0
+        const other = isLeft ? d.page + 1 : d.page - 1
+        if ((isLeft && cx > PAGE_W) || (!isLeft && cx < 0)) {
+          let next = ensurePage(other, list)
+          const moved = { ...el, x: el.x + (isLeft ? -PAGE_W : PAGE_W), z: next[other].elements.reduce((m, x) => Math.max(m, x.z), 0) + 1 }
+          next = next.map((p, i) =>
+            i === d.page ? { ...p, elements: p.elements.filter((x) => x.id !== el.id) } : i === other ? { ...p, elements: [...p.elements, moved] } : p,
+          )
+          live(next)
+          setSel({ page: other, id: el.id })
+          setActivePage(other)
+        }
+      }
+    }
+    pushSnapshot(d.snap)
+  }
+
+  // ── spreads ──────────────────────────────────────────────────────────
+  function addSpread() {
+    const base = pagesRef.current[pagesRef.current.length - 1]
+    const list = pagesRef.current.length % 2 ? [...pagesRef.current, blankPage(base?.color, base?.paper)] : [...pagesRef.current]
+    list.push(blankPage(base?.color, base?.paper), blankPage(base?.color, base?.paper))
+    commit(list)
+    setSpread(Math.ceil(list.length / 2) - 1)
+    setSel(null)
+  }
+  function deleteSpread() {
+    if (spreads <= 1) return
+    const hasStuff = (left?.elements.length ?? 0) + (right?.elements.length ?? 0) > 0
+    if (hasStuff && !window.confirm('Delete this spread and everything on it? (you can undo)')) return
+    commit(pagesRef.current.filter((_, i) => i !== leftIdx && i !== rightIdx))
+    setSpread((s) => Math.max(0, s - 1))
+    setSel(null)
+  }
+  function goSpread(n: number) {
+    setSpread(Math.max(0, Math.min(spreads - 1, n)))
+    setSel(null)
+    setEditing(null)
+    setActivePage(Math.max(0, Math.min(spreads - 1, n)) * 2)
+  }
+
+  function setPaper(pageIdxs: number[], patch: Partial<Pick<NbPage, 'paper' | 'color'>>) {
+    const list = pageIdxs.reduce((l, i) => ensurePage(i, l), pagesRef.current)
+    commit(list.map((p, i) => (pageIdxs.includes(i) ? { ...p, ...patch } : p)))
+  }
+
+  // ── render ───────────────────────────────────────────────────────────
+  const template = TEMPLATES.find((t) => t.id === templateId)
+  const usedQuestions = new Set(pages.flatMap((p) => p.elements.filter((e) => e.type === 'question').map((e) => e.props.question)))
+
+  const body = (
+    <div
+      className={fullscreen ? 'fixed inset-0 z-[200] flex flex-col bg-[#FFF0F7]' : 'flex flex-col'}
+      style={fullscreen ? { backgroundImage: 'radial-gradient(rgba(255,79,163,.15) 1.5px, transparent 1.6px)', backgroundSize: '22px 22px' } : undefined}
+    >
+      <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { handleFiles(e.target.files); e.target.value = '' }} />
+
+      {/* ── top bar ── */}
+      <div className="flex flex-wrap items-center gap-2 px-2 py-2 bg-white border-2 border-[#2B0A2E] rounded-t-xl" style={{ boxShadow: 'inset 0 -3px 0 #FFE4F0' }}>
+        <input
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          placeholder="name your scrapbook…"
+          aria-label="scrapbook title"
+          className="font-chango text-sm text-[#FF4FA3] bg-[#FFF0F7] border-2 border-[#2B0A2E] rounded-lg px-3 py-1 min-w-0 flex-1 max-w-[260px] outline-none focus:bg-white"
+        />
+        <ToolBtn onClick={undo} disabled={!hist.past} title="undo (ctrl+z)">↶</ToolBtn>
+        <ToolBtn onClick={redo} disabled={!hist.future} title="redo (ctrl+shift+z)">↷</ToolBtn>
+        <div className="flex-1" />
+        {busy && <span className="font-pixel text-lg text-[#D4006E] animate-blink">uploading…</span>}
+        <ToolBtn onClick={() => setFullscreen((f) => !f)} title={fullscreen ? 'exit full screen (esc)' : 'full screen'}>
+          {fullscreen ? '⤡' : '⤢'}
+        </ToolBtn>
+        {actions}
+      </div>
+
+      {/* ── selection bar ── */}
+      <div className="min-h-[46px] flex flex-wrap items-center gap-1.5 px-2 py-1.5 bg-[#FFE4F0] border-x-2 border-b-2 border-[#2B0A2E] text-[#2B0A2E]">
+        {selected && sel ? (
+          <SelectionBar
+            el={selected}
+            setProps={setProps}
+            setEl={setEl}
+            onLayer={layer}
+            onDuplicate={() => duplicateSelected()}
+            onDelete={removeSelected}
+            onReplacePhoto={() => pickPhotoFor(sel)}
+            onEdit={() => setEditing(selected.id)}
+          />
+        ) : (
+          <span className="hidden sm:inline font-pixel text-lg text-[#7C4DDB] px-1">
+            ✦ click to select · double-click to type · ⟳ to rotate · drag across the spiral to switch pages
+          </span>
+        )}
+      </div>
+
+      <div className={`flex ${fullscreen ? 'flex-1 min-h-0' : ''} flex-col md:flex-row border-x-2 border-b-2 border-[#2B0A2E] rounded-b-xl overflow-hidden bg-white`}>
+        {/* ── rail ── */}
+        <nav className="flex md:flex-col gap-1 p-1.5 bg-[#2B0A2E] overflow-x-auto md:overflow-visible" aria-label="editor tools">
+          {PANELS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setPanel((cur) => (cur === p.id ? null : p.id))}
+              className={`flex flex-col items-center justify-center w-14 h-14 shrink-0 rounded-lg border-2 transition-all ${
+                panel === p.id ? 'bg-[#FF4FA3] border-white text-white' : 'bg-[#3d1640] border-transparent text-[#FFB6D9] hover:bg-[#55205a]'
+              }`}
+              aria-pressed={panel === p.id}
+            >
+              <span className="text-lg leading-none font-chango">{p.icon}</span>
+              <span className="font-pixel text-sm leading-none mt-1">{p.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* ── panel ── */}
+        {panel && (
+          <aside className={`md:w-[232px] shrink-0 bg-[#FFF8FB] border-b-2 md:border-b-0 md:border-r-2 border-[#2B0A2E] overflow-y-auto ${fullscreen ? '' : 'max-h-[260px] md:max-h-[640px]'}`}>
+            <div className="panel-header !rounded-none !border-x-0 !border-t-0 sticky top-0 z-10">{PANELS.find((p) => p.id === panel)?.label}</div>
+            <div className="p-3">
+              {panel === 'text' && (
+                <div className="space-y-2">
+                  <PanelBtn onClick={() => add(makeText('heading'))}><span className="font-chango text-xl text-[#FF4FA3]">add a heading</span></PanelBtn>
+                  <PanelBtn onClick={() => add(makeText('subheading'))}><span className="font-pacifico text-lg">add a subheading</span></PanelBtn>
+                  <PanelBtn onClick={() => add(makeText('note'))}><span className="font-caveat text-xl">handwritten note</span></PanelBtn>
+                  <PanelBtn onClick={() => add(makeText('pixel'))}><span className="font-pixel text-xl text-[#7C4DDB]">&gt; pixel text_</span></PanelBtn>
+                  <PanelBtn onClick={() => add(makeText('label'))}><span className="font-caveat text-lg bg-[#FFE4F0] border-2 border-[#2B0A2E] rounded px-2">label tag</span></PanelBtn>
+                  <PanelBtn onClick={() => add(makeText('sticky'))}><span className="font-caveat text-lg bg-[#FFF0A8] px-3 py-1 shadow">sticky note</span></PanelBtn>
+                  <PanelBtn onClick={() => add({ ...makeText('note'), w: 220, content: 'omg hiii!! ♡', props: { font: 'gochi', size: 22, color: '#2B0A2E', align: 'center', textBg: 'bubble', bgColor: '#FFFFFF' } })}>
+                    <span className="font-caveat text-lg bg-white border-2 border-[#2B0A2E] rounded-2xl px-3">speech bubble</span>
+                  </PanelBtn>
+                </div>
+              )}
+
+              {panel === 'photos' && (
+                <div className="space-y-3">
+                  <button onClick={() => { fillTarget.current = null; fileRef.current?.click() }} className="btn-bevel w-full text-sm" disabled={busy}>
+                    {busy ? 'uploading…' : '+ upload photos'}
+                  </button>
+                  <p className="font-pixel text-base text-[#888] leading-tight">click a photo to add it — or to fill the selected empty frame.</p>
+                  <div className="font-silkscreen text-[10px] text-[#D4006E]">EMPTY FRAMES</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'] as const).map((f) => (
+                      <button key={f} onClick={() => add(makeImage('', f))} className="aspect-square rounded-lg border-2 border-[#2B0A2E] bg-white hover:bg-[#FFE4F0] p-1.5 flex flex-col items-center justify-center" title={`${f} frame`}>
+                        <div style={{ width: 40, height: f === 'film' ? 30 : 40 }}><FramePreview frame={f} /></div>
+                        <span className="font-pixel text-sm leading-none mt-0.5">{f}</span>
+                      </button>
+                    ))}
+                  </div>
+                  {knownPhotos.length > 0 && (
+                    <>
+                      <div className="font-silkscreen text-[10px] text-[#D4006E]">YOUR PHOTOS</div>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {knownPhotos.map((src, i) => (
+                          <button
+                            key={`${i}-${src.slice(-24)}`}
+                            onClick={() => {
+                              if (selected?.type === 'image' && sel) setEl({ content: src })
+                              else add(makeImage(src, 'polaroid'))
+                            }}
+                            className="aspect-square overflow-hidden rounded border-2 border-[#2B0A2E] hover:scale-105 transition-transform"
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={src} alt="" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {panel === 'stickers' && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
+                    {STICKERS.map((s) => (
+                      <button key={s.id} onClick={() => add(makeSticker(`svg:${s.id}`))} title={s.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110 hover:-rotate-6">
+                        <Sticker content={`svg:${s.id}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[10px] text-[#D4006E]">SYMBOLS & EMOJI</div>
+                  <div className="grid grid-cols-8 md:grid-cols-5 gap-1">
+                    {EMOJI_STICKERS.map((s) => (
+                      <button key={s} onClick={() => add({ ...makeSticker(`txt:${s}`), w: 64, h: 64 })} className="aspect-square rounded hover:bg-[#FFE4F0] p-0.5 hover:scale-110 transition-transform">
+                        <Sticker content={`txt:${s}`} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {panel === 'tape' && (
+                <div className="space-y-2">
+                  {TAPES.map((t) => (
+                    <div key={t.id} className="flex gap-1.5 items-center">
+                      <span className="font-pixel text-base w-14">{t.label}</span>
+                      <div className="flex gap-1 flex-wrap flex-1">
+                        {TAPE_COLORS.slice(0, 4).map((c) => (
+                          <button key={c} onClick={() => add(makeTape(t.id, c))} className="h-6 flex-1 min-w-[28px] -rotate-3 hover:rotate-0 transition-transform" style={{ ...t.css(c), opacity: 0.9, clipPath: 'polygon(0 10%, 6% 0, 94% 0, 100% 10%, 100% 90%, 94% 100%, 6% 100%, 0 90%)' }} aria-label={`${t.label} tape`} />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <p className="font-pixel text-base text-[#888] pt-1">tip: pick more colours in the bar above once it&apos;s placed.</p>
+                </div>
+              )}
+
+              {panel === 'shapes' && (
+                <div className="grid grid-cols-3 gap-2">
+                  {(['rect', 'circle', 'heart', 'star', 'speech', 'ticket', 'scallop', 'cloud'] as const).map((s) => (
+                    <button key={s} onClick={() => add(makeShape(s))} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-2 flex flex-col items-center" title={s}>
+                      <div className="w-full flex-1">
+                        <ElementView el={{ id: 'p', type: 'shape', x: 0, y: 0, w: 1, h: 1, z: 0, rotation: 0, content: '', props: { shape: s, fill: s === 'heart' ? '#FF9ECF' : s === 'star' ? '#FFD84F' : '#fff', stroke: '#2B0A2E' } }} />
+                      </div>
+                      <span className="font-pixel text-sm leading-none mt-1">{s}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {panel === 'questions' && (
+                <QuestionsPanel
+                  questions={template?.questions.map((q) => q.question_text) ?? []}
+                  used={usedQuestions}
+                  onAdd={(q, style) => add(makeQuestion(q, '', 40, 60, style))}
+                />
+              )}
+
+              {panel === 'paper' && (
+                <div className="space-y-4">
+                  {([['left page', [leftIdx]], ['right page', [rightIdx]], ['both pages', [leftIdx, rightIdx]]] as const).map(([label, idxs]) => {
+                    const pg = pages[idxs[0]]
+                    return (
+                      <div key={label}>
+                        <div className="font-silkscreen text-[10px] text-[#D4006E] mb-1.5">{label.toUpperCase()}</div>
+                        <div className="grid grid-cols-4 gap-1.5 mb-2">
+                          {PAPERS.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setPaper([...idxs], { paper: p.id as PaperId })}
+                              className={`h-10 rounded border-2 ${pg?.paper === p.id && idxs.length === 1 ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]' : 'border-[#2B0A2E]'}`}
+                              style={{ ...paperStyle(p.id, pg?.color ?? '#FFF8ED'), backgroundSize: undefined }}
+                              title={p.label}
+                            />
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {PAPER_COLORS.map((c) => (
+                            <button key={c} onClick={() => setPaper([...idxs], { color: c })} className="w-6 h-6 rounded-full border-2 border-[#2B0A2E]" style={{ background: c }} aria-label={`paper colour ${c}`} />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* ── stage ── */}
+        <div className="flex-1 min-w-0 flex flex-col bg-[#f7eaf1]" style={{ backgroundImage: 'radial-gradient(rgba(43,10,46,.08) 1px, transparent 1.2px)', backgroundSize: '14px 14px' }}>
+          <div
+            ref={stageRef}
+            className={`relative flex-1 flex items-center justify-center overflow-hidden ${fullscreen ? 'min-h-0' : ''}`}
+            style={{ minHeight: fullscreen ? undefined : scale ? (PAGE_H + 40) * scale + 24 : 360, touchAction: 'none' }}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerUp}
+            onPointerDown={() => { setSel(null); setEditing(null) }}
+          >
+            {scale > 0 && (
+              <div style={{ width: SPREAD_W * scale, height: PAGE_H * scale, position: 'relative' }}>
+                <div style={{ width: SPREAD_W, height: PAGE_H, transform: `scale(${scale})`, transformOrigin: '0 0' }}>
+                  <SpreadFrame
+                    left={left ?? blankPage()}
+                    right={right}
+                    onPageBgPointerDown={(e, side) => { e.stopPropagation(); setSel(null); setEditing(null); setActivePage(side ? rightIdx : leftIdx) }}
+                  >
+                    {sortedSpreadElements(left, right).map(({ el, page }) => {
+                      const pageIdx = page === 0 ? leftIdx : rightIdx
+                      return (
+                        <EditableItem
+                          key={el.id}
+                          el={el}
+                          pageSide={page}
+                          scale={scale}
+                          selected={sel?.id === el.id}
+                          editing={editing === el.id}
+                          onPointerDown={(e) => startMove(e, pageIdx, el)}
+                          onDoubleClick={() => {
+                            if (el.type === 'text' || el.type === 'question') setEditing(el.id)
+                            if (el.type === 'image' && !el.content) pickPhotoFor({ page: pageIdx, id: el.id })
+                          }}
+                          onResize={(e, hx, hy) => startResize(e, pageIdx, el, hx, hy)}
+                          onRotate={(e) => startRotate(e, pageIdx, el)}
+                          onText={(text) => commit(mapEl(pageIdx, el.id, (x) => ({ ...x, content: text })), `type-${el.id}`)}
+                          onAutoHeight={(h) =>
+                            onChange((prev) =>
+                              prev.map((p, i) => (i === pageIdx ? { ...p, elements: p.elements.map((x) => (x.id === el.id ? { ...x, h } : x)) } : p)),
+                            )
+                          }
+                          onDoneEditing={() => setEditing(null)}
+                          onPickPhoto={() => pickPhotoFor({ page: pageIdx, id: el.id })}
+                        />
+                      )
+                    })}
+                    {guides.v !== undefined && <div style={{ position: 'absolute', left: guides.v, top: 0, bottom: 0, width: 0, borderLeft: `${1.5 / scale}px dashed #FF4FA3` }} />}
+                    {guides.h !== undefined && <div style={{ position: 'absolute', top: guides.h, left: 0, right: 0, height: 0, borderTop: `${1.5 / scale}px dashed #FF4FA3` }} />}
+                  </SpreadFrame>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── spread strip ── */}
+          <div className="flex items-center gap-2 px-2 py-2 border-t-2 border-[#2B0A2E] bg-white overflow-x-auto">
+            <ToolBtn onClick={() => goSpread(spread - 1)} disabled={spread === 0} title="previous spread">◀</ToolBtn>
+            {Array.from({ length: spreads }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goSpread(i)}
+                className={`shrink-0 rounded-md border-2 p-0.5 transition-all ${i === spread ? 'border-[#FF4FA3] ring-2 ring-[#FF4FA3]/40' : 'border-[#2B0A2E]/40 hover:border-[#2B0A2E]'}`}
+                aria-label={`spread ${i + 1}`}
+              >
+                <div style={{ width: SPREAD_W * 0.085, height: PAGE_H * 0.085, overflow: 'hidden', pointerEvents: 'none' }}>
+                  <div style={{ transform: 'scale(0.085)', transformOrigin: '0 0' }}>
+                    <StaticSpread left={pages[i * 2]} right={pages[i * 2 + 1]} />
+                  </div>
+                </div>
+                <div className="font-pixel text-sm leading-none text-center">{i * 2 + 1}–{i * 2 + 2}</div>
+              </button>
+            ))}
+            <ToolBtn onClick={addSpread} title="add two pages">＋ pages</ToolBtn>
+            <ToolBtn onClick={() => goSpread(spread + 1)} disabled={spread >= spreads - 1} title="next spread">▶</ToolBtn>
+            <div className="flex-1" />
+            <ToolBtn onClick={deleteSpread} disabled={spreads <= 1} title="delete this spread">🗑 spread</ToolBtn>
+          </div>
+        </div>
+      </div>
+
+      {notice && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] bg-[#FFF0A8] border-2 border-[#2B0A2E] rounded-lg px-4 py-2 font-pixel text-lg shadow-lg" role="status" onClick={() => setNotice(null)}>
+          {notice}
+        </div>
+      )}
+    </div>
+  )
+
+  useEffect(() => {
+    if (!notice) return
+    const t = setTimeout(() => setNotice(null), 4000)
+    return () => clearTimeout(t)
+  }, [notice])
+
+  if (fullscreen && typeof document !== 'undefined') return createPortal(body, document.body)
+  return body
+}
+
+// ─── Editable element ─────────────────────────────────────────────────────
+
+const HANDLES: [number, number][] = [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]]
+
+function EditableItem({
+  el, pageSide, scale, selected, editing, onPointerDown, onDoubleClick, onResize, onRotate, onText, onAutoHeight, onDoneEditing, onPickPhoto,
+}: {
+  el: NbElement
+  pageSide: 0 | 1
+  scale: number
+  selected: boolean
+  editing: boolean
+  onPointerDown: (e: React.PointerEvent) => void
+  onDoubleClick: () => void
+  onResize: (e: React.PointerEvent, hx: number, hy: number) => void
+  onRotate: (e: React.PointerEvent) => void
+  onText: (t: string) => void
+  onAutoHeight: (h: number) => void
+  onDoneEditing: () => void
+  onPickPhoto: () => void
+}) {
+  const measureRef = useRef<HTMLElement | null>(null)
+  const isText = el.type === 'text'
+  const autoFit = isText && !['sticky', 'bubble'].includes(el.props.textBg ?? 'none')
+  const grows = isText || el.type === 'question'
+
+  useLayoutEffect(() => {
+    if (!grows) return
+    const node = measureRef.current
+    if (!node) return
+    if (node.tagName === 'TEXTAREA') {
+      node.style.height = 'auto'
+      node.style.height = `${node.scrollHeight}px`
+    }
+    const box = (node.closest('[data-content]') as HTMLElement | null) ?? node
+    const needed = autoFit ? Math.ceil(node.offsetHeight) : Math.max(el.h, Math.ceil(box.scrollHeight))
+    if (needed > 0 && Math.abs(needed - el.h) > 1) onAutoHeight(needed)
+  })
+
+  const hs = 12 / scale
+  const handles =
+    el.type === 'tape'
+      ? HANDLES.filter(([x, y]) => x !== 0 && y === 0)
+      : autoFit
+      ? HANDLES.filter(([x, y]) => y === 0 || x !== 0)
+      : HANDLES
+
+  const textareaStyle: React.CSSProperties = {
+    ...(isText ? textBoxStyle(el) : {}),
+    minHeight: undefined,
+    width: '100%',
+    resize: 'none',
+    border: 'none',
+    outline: 'none',
+    overflow: 'hidden',
+    display: 'block',
+    padding: isText ? (textBoxStyle(el).padding as string | undefined) ?? 0 : 0,
+    background: isText ? textBoxStyle(el).background : 'transparent',
+  }
+
+  let content: React.ReactNode
+  if (isText) {
+    content = editing ? (
+      <textarea
+        ref={(n) => { measureRef.current = n }}
+        autoFocus
+        value={el.content}
+        onChange={(e) => onText(e.target.value)}
+        onBlur={onDoneEditing}
+        onPointerDown={(e) => e.stopPropagation()}
+        style={textareaStyle}
+        rows={1}
+      />
+    ) : (
+      <div ref={(n) => { measureRef.current = n }} style={{ ...textBoxStyle(el), minHeight: autoFit ? undefined : '100%' }}>
+        {el.content || <span style={{ opacity: 0.4 }}>type here…</span>}
+      </div>
+    )
+  } else if (el.type === 'question') {
+    content = (
+      <div ref={(n) => { if (!editing) measureRef.current = n }} style={{ minHeight: '100%' }}>
+        <QuestionView
+          el={el}
+          answerSlot={
+            editing ? (
+              <textarea
+                ref={(n) => { measureRef.current = n }}
+                autoFocus
+                value={el.content}
+                placeholder="write your answer…"
+                onChange={(e) => onText(e.target.value)}
+                onBlur={onDoneEditing}
+                onPointerDown={(e) => e.stopPropagation()}
+                rows={1}
+                style={{ fontFamily: textBoxStyle(el).fontFamily, fontSize: el.props.size ?? 22, color: el.props.color ?? '#2B0A2E', width: '100%', background: 'transparent', border: 'none', outline: 'none', resize: 'none', overflow: 'hidden', lineHeight: 1.25, display: 'block' }}
+              />
+            ) : undefined
+          }
+        />
+      </div>
+    )
+  } else {
+    content = <ElementView el={el} onPickPhoto={onPickPhoto} />
+  }
+
+  return (
+    <div
+      data-el={el.id}
+      onPointerDown={onPointerDown}
+      onDoubleClick={onDoubleClick}
+      style={{
+        ...placed(el, pageSide),
+        pointerEvents: 'auto',
+        cursor: el.props.locked ? 'default' : editing ? 'text' : 'move',
+        touchAction: 'none',
+        transform: `rotate(${el.rotation}deg)`,
+        opacity: 1,
+      }}
+    >
+      <div data-content style={{ width: '100%', height: grows ? 'auto' : '100%', minHeight: '100%', transform: el.props.flipX ? 'scaleX(-1)' : undefined, opacity: el.props.opacity ?? 1 }}>
+        {content}
+      </div>
+
+      {selected && (
+        <>
+          <div style={{ position: 'absolute', inset: -2 / scale, border: `${2 / scale}px solid ${el.props.locked ? '#9CA3AF' : '#FF4FA3'}`, borderRadius: 2 / scale, pointerEvents: 'none', boxShadow: `0 0 0 ${1 / scale}px #fff` }} />
+          {!el.props.locked && !editing && (
+            <>
+              {handles.map(([hx, hy]) => (
+                <div
+                  key={`${hx}${hy}`}
+                  onPointerDown={(e) => onResize(e, hx, hy)}
+                  style={{
+                    position: 'absolute',
+                    left: `calc(${(hx + 1) * 50}% - ${hs / 2}px)`,
+                    top: `calc(${(hy + 1) * 50}% - ${hs / 2}px)`,
+                    width: hs, height: hs,
+                    background: '#fff', border: `${2 / scale}px solid #FF4FA3`, borderRadius: hx && hy ? '50%' : 3 / scale,
+                    cursor: hx && hy ? (hx === hy ? 'nwse-resize' : 'nesw-resize') : hx ? 'ew-resize' : 'ns-resize',
+                    touchAction: 'none',
+                  }}
+                />
+              ))}
+              <div style={{ position: 'absolute', left: '50%', top: -30 / scale, height: 22 / scale, borderLeft: `${1.5 / scale}px solid #FF4FA3`, pointerEvents: 'none' }} />
+              <div
+                onPointerDown={onRotate}
+                title="drag to rotate (shift = 15° steps)"
+                style={{
+                  position: 'absolute', left: `calc(50% - ${9 / scale}px)`, top: -40 / scale, width: 18 / scale, height: 18 / scale,
+                  borderRadius: '50%', background: '#FF4FA3', border: `${2 / scale}px solid #fff`, boxShadow: `0 0 0 ${1 / scale}px #2B0A2E`,
+                  cursor: 'grab', color: '#fff', fontSize: 12 / scale, lineHeight: `${14 / scale}px`, textAlign: 'center', touchAction: 'none',
+                }}
+              >
+                ⟳
+              </div>
+            </>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Selection bar ────────────────────────────────────────────────────────
+
+function SelectionBar({
+  el, setProps, setEl, onLayer, onDuplicate, onDelete, onReplacePhoto, onEdit,
+}: {
+  el: NbElement
+  setProps: (p: Partial<ElementProps>, key?: string) => void
+  setEl: (p: Partial<NbElement>, key?: string) => void
+  onLayer: (d: 'up' | 'down' | 'top' | 'bottom') => void
+  onDuplicate: () => void
+  onDelete: () => void
+  onReplacePhoto: () => void
+  onEdit: () => void
+}) {
+  const p = el.props
+  const textish = el.type === 'text' || el.type === 'question'
+  return (
+    <>
+      {textish && (
+        <>
+          {el.type === 'question' && (
+            <input
+              value={p.question ?? ''}
+              onChange={(e) => setProps({ question: e.target.value }, `q-${el.id}`)}
+              className="input-mini w-[170px]"
+              aria-label="question"
+              placeholder="question…"
+            />
+          )}
+          <select value={p.font ?? 'caveat'} onChange={(e) => setProps({ font: e.target.value })} className="input-mini" aria-label="font" style={{ fontFamily: FONTS.find((f) => f.id === p.font)?.css }}>
+            {FONTS.map((f) => <option key={f.id} value={f.id} style={{ fontFamily: f.css }}>{f.label}</option>)}
+          </select>
+          <div className="flex items-center">
+            <ToolBtn onClick={() => setProps({ size: Math.max(8, (p.size ?? 24) - 2) }, `size-${el.id}`)} title="smaller">−</ToolBtn>
+            <input
+              type="number" value={Math.round(p.size ?? 24)} min={8} max={160}
+              onChange={(e) => setProps({ size: Math.max(8, Math.min(160, Number(e.target.value) || 8)) }, `size-${el.id}`)}
+              className="input-mini w-12 text-center" aria-label="font size"
+            />
+            <ToolBtn onClick={() => setProps({ size: Math.min(160, (p.size ?? 24) + 2) }, `size-${el.id}`)} title="bigger">+</ToolBtn>
+          </div>
+          <ColorPick value={p.color ?? '#2B0A2E'} onChange={(c) => setProps({ color: c }, `color-${el.id}`)} label="text colour" letter="A" />
+          {el.type === 'text' && (
+            <>
+              <ToolBtn onClick={() => setProps({ bold: !p.bold })} active={p.bold} title="bold"><b>B</b></ToolBtn>
+              <ToolBtn onClick={() => setProps({ italic: !p.italic })} active={p.italic} title="italic"><i>I</i></ToolBtn>
+              <ToolBtn
+                onClick={() => setProps({ align: p.align === 'left' ? 'center' : p.align === 'center' ? 'right' : 'left' })}
+                title="alignment"
+              >
+                {p.align === 'center' ? '≡' : p.align === 'right' ? '⫸' : '⫷'}
+              </ToolBtn>
+              <select value={p.textBg ?? 'none'} onChange={(e) => setProps({ textBg: e.target.value as ElementProps['textBg'] })} className="input-mini" aria-label="text style">
+                <option value="none">plain</option>
+                <option value="highlight">highlighter</option>
+                <option value="label">label tag</option>
+                <option value="sticky">sticky note</option>
+                <option value="bubble">bubble</option>
+              </select>
+              {p.textBg && p.textBg !== 'none' && <ColorPick value={p.bgColor ?? '#FFF0A8'} onChange={(c) => setProps({ bgColor: c }, `bg-${el.id}`)} label="background colour" />}
+            </>
+          )}
+          {el.type === 'question' && (
+            <select value={p.cardStyle ?? 'card'} onChange={(e) => setProps({ cardStyle: e.target.value as ElementProps['cardStyle'] })} className="input-mini" aria-label="card style">
+              <option value="card">card</option>
+              <option value="lined">lined</option>
+              <option value="sticky">sticky</option>
+            </select>
+          )}
+          <ToolBtn onClick={onEdit} title="edit text (enter)">✎ type</ToolBtn>
+        </>
+      )}
+
+      {el.type === 'image' && (
+        <>
+          <select value={p.frame ?? 'none'} onChange={(e) => setProps({ frame: e.target.value as ElementProps['frame'] })} className="input-mini" aria-label="frame">
+            {['none', 'polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'].map((f) => <option key={f} value={f}>{f === 'none' ? 'no frame' : f}</option>)}
+          </select>
+          {p.frame === 'polaroid' && (
+            <input value={p.caption ?? ''} onChange={(e) => setProps({ caption: e.target.value }, `cap-${el.id}`)} placeholder="caption…" className="input-mini w-[120px] font-caveat" aria-label="caption" />
+          )}
+          <select value={p.filter ?? 'none'} onChange={(e) => setProps({ filter: e.target.value as ElementProps['filter'] })} className="input-mini" aria-label="filter">
+            {['none', 'vintage', 'bw', 'rosy', 'dreamy'].map((f) => <option key={f} value={f}>{f === 'none' ? 'no filter' : f === 'bw' ? 'b&w' : f}</option>)}
+          </select>
+          <ToolBtn onClick={onReplacePhoto} title="replace photo">📷 {el.content ? 'replace' : 'add photo'}</ToolBtn>
+          <ToolBtn onClick={() => setProps({ flipX: !p.flipX })} active={p.flipX} title="flip">⇋</ToolBtn>
+        </>
+      )}
+
+      {el.type === 'sticker' && (
+        <>
+          {stickerTintable(el.content) && <ColorPick value={p.color ?? '#FF4FA3'} onChange={(c) => setProps({ color: c }, `color-${el.id}`)} label="sticker colour" />}
+          <ToolBtn onClick={() => setProps({ flipX: !p.flipX })} active={p.flipX} title="flip">⇋</ToolBtn>
+        </>
+      )}
+
+      {el.type === 'tape' && (
+        <>
+          <select value={p.pattern ?? 'grid'} onChange={(e) => setProps({ pattern: e.target.value })} className="input-mini" aria-label="tape pattern">
+            {TAPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+          <ColorPick value={p.color ?? '#FFB6D9'} onChange={(c) => setProps({ color: c }, `color-${el.id}`)} label="tape colour" extra={TAPE_COLORS} />
+        </>
+      )}
+
+      {el.type === 'shape' && (
+        <>
+          <select value={p.shape ?? 'rect'} onChange={(e) => setProps({ shape: e.target.value as ElementProps['shape'] })} className="input-mini" aria-label="shape">
+            {['rect', 'circle', 'heart', 'star', 'speech', 'ticket', 'scallop', 'cloud'].map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <ColorPick value={p.fill ?? '#FFFFFF'} onChange={(c) => setProps({ fill: c }, `fill-${el.id}`)} label="fill" />
+          <ColorPick value={p.stroke ?? '#2B0A2E'} onChange={(c) => setProps({ stroke: c }, `stroke-${el.id}`)} label="outline" letter="◻" />
+        </>
+      )}
+
+      <div className="flex-1" />
+      <label className="flex items-center gap-1 font-pixel text-base" title="opacity">
+        ◐
+        <input type="range" min={0.15} max={1} step={0.05} value={p.opacity ?? 1} onChange={(e) => setProps({ opacity: Number(e.target.value) }, `op-${el.id}`)} className="w-16 accent-[#FF4FA3]" aria-label="opacity" />
+      </label>
+      {el.rotation !== 0 && <ToolBtn onClick={() => setEl({ rotation: 0 })} title="straighten">⟲ 0°</ToolBtn>}
+      <ToolBtn onClick={() => onLayer('up')} title="bring forward">⬆</ToolBtn>
+      <ToolBtn onClick={() => onLayer('down')} title="send backward">⬇</ToolBtn>
+      <ToolBtn onClick={onDuplicate} title="duplicate (ctrl+d)">⧉</ToolBtn>
+      <ToolBtn onClick={() => setProps({ locked: !p.locked })} active={p.locked} title={p.locked ? 'unlock' : 'lock in place'}>{p.locked ? '🔒' : '🔓'}</ToolBtn>
+      <ToolBtn onClick={onDelete} title="delete (del)" danger>✕</ToolBtn>
+    </>
+  )
+}
+
+// ─── small UI bits ────────────────────────────────────────────────────────
+
+function ToolBtn({ children, onClick, disabled, title, active, danger }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; title?: string; active?: boolean; danger?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      className={`h-8 min-w-8 px-2 rounded-md border-2 border-[#2B0A2E] font-nunito font-extrabold text-sm leading-none transition-all disabled:opacity-35 disabled:cursor-not-allowed active:translate-y-px ${
+        active ? 'bg-[#FF4FA3] text-white' : danger ? 'bg-white text-[#D4006E] hover:bg-[#FFE4F0]' : 'bg-white text-[#2B0A2E] hover:bg-[#FFF0F7]'
+      }`}
+      style={{ boxShadow: 'inset 0 -2px 0 rgba(43,10,46,.15), 1px 1px 0 #2B0A2E' }}
+    >
+      {children}
+    </button>
+  )
+}
+
+function PanelBtn({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="w-full text-left rounded-lg border-2 border-[#2B0A2E] bg-white px-3 py-2 hover:bg-[#FFE4F0] hover:-rotate-1 transition-transform" style={{ boxShadow: '2px 2px 0 #2B0A2E' }}>
+      {children}
+    </button>
+  )
+}
+
+function ColorPick({ value, onChange, label, letter, extra }: { value: string; onChange: (c: string) => void; label: string; letter?: string; extra?: string[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const close = (e: PointerEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
+    window.addEventListener('pointerdown', close)
+    return () => window.removeEventListener('pointerdown', close)
+  }, [open])
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        title={label}
+        aria-label={label}
+        className="h-8 w-9 rounded-md border-2 border-[#2B0A2E] bg-white flex flex-col items-center justify-center"
+        style={{ boxShadow: '1px 1px 0 #2B0A2E' }}
+      >
+        {letter && <span className="font-nunito font-black text-xs leading-none">{letter}</span>}
+        <span className="block rounded-sm border border-[#2B0A2E]" style={{ background: value, width: letter ? 20 : 20, height: letter ? 6 : 18 }} />
+      </button>
+      {open && (
+        <div className="absolute z-50 top-9 left-0 bg-white border-2 border-[#2B0A2E] rounded-lg p-2 w-[176px] shadow-lg">
+          <div className="grid grid-cols-7 gap-1">
+            {[...(extra ?? []), ...SWATCHES].map((c, i) => (
+              <button key={c + i} type="button" onClick={() => { onChange(c); setOpen(false) }} className={`w-5 h-5 rounded-full border-2 ${c.toLowerCase() === value.toLowerCase() ? 'border-[#FF4FA3]' : 'border-[#2B0A2E]'}`} style={{ background: c }} aria-label={c} />
+            ))}
+          </div>
+          <label className="flex items-center gap-2 mt-2 font-pixel text-base">
+            custom
+            <input type="color" value={value.length === 7 ? value : '#FF4FA3'} onChange={(e) => onChange(e.target.value)} className="w-8 h-6 border-0 bg-transparent" />
+          </label>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FramePreview({ frame }: { frame: NonNullable<ElementProps['frame']> }) {
+  return <ElementView el={{ id: 'f', type: 'image', x: 0, y: 0, w: 40, h: 40, z: 0, rotation: 0, content: '', props: { frame, caption: '' } }} />
+}
+
+function QuestionsPanel({ questions, used, onAdd }: { questions: string[]; used: Set<string | undefined>; onAdd: (q: string, style: ElementProps['cardStyle']) => void }) {
+  const [own, setOwn] = useState('')
+  const [style, setStyle] = useState<ElementProps['cardStyle']>('card')
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-1">
+        {(['card', 'lined', 'sticky'] as const).map((s) => (
+          <button key={s} onClick={() => setStyle(s)} className={`flex-1 font-pixel text-base rounded border-2 border-[#2B0A2E] ${style === s ? 'bg-[#FF4FA3] text-white' : 'bg-white'}`}>{s}</button>
+        ))}
+      </div>
+      <form
+        onSubmit={(e) => { e.preventDefault(); if (own.trim()) { onAdd(own.trim(), style); setOwn('') } }}
+        className="flex gap-1"
+      >
+        <input value={own} onChange={(e) => setOwn(e.target.value)} placeholder="ask your own question…" className="input-mini flex-1 min-w-0" aria-label="your own question" />
+        <button type="submit" className="btn-bevel !px-2 !py-1 text-xs">+</button>
+      </form>
+      {questions.length > 0 && <div className="font-silkscreen text-[10px] text-[#D4006E] pt-1">FROM YOUR TEMPLATE</div>}
+      {questions.map((q) => (
+        <button key={q} onClick={() => onAdd(q, style)} className={`w-full text-left font-caveat text-lg leading-tight rounded-lg border-2 px-2 py-1.5 hover:bg-[#FFE4F0] ${used.has(q) ? 'border-[#2B0A2E]/25 text-[#888]' : 'border-[#2B0A2E] bg-white'}`}>
+          {used.has(q) ? '✓ ' : '+ '}{q}
+        </button>
+      ))}
+      <div className="font-silkscreen text-[10px] text-[#D4006E] pt-1">MORE IDEAS</div>
+      {['Song stuck in my head…', 'Today I felt…', 'My comfort food…', 'Current wallpaper…', 'Last thing that made me laugh…', 'Dream vacation…'].map((q) => (
+        <button key={q} onClick={() => onAdd(q, style)} className="w-full text-left font-caveat text-lg leading-tight rounded-lg border-2 border-dashed border-[#2B0A2E]/60 bg-white px-2 py-1.5 hover:bg-[#FFE4F0]">
+          + {q}
+        </button>
+      ))}
+    </div>
+  )
+}
+
