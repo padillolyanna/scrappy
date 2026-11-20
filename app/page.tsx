@@ -7,6 +7,8 @@ import DailyPrompt from '@/components/landing/DailyPrompt'
 import ConfessionPreview, { type ConfessionItem } from '@/components/landing/ConfessionPreview'
 import ScrapbookExchange from '@/components/landing/ScrapbookExchange'
 import FinalCTA from '@/components/landing/FinalCTA'
+import WhatYouCanDo from '@/components/landing/WhatYouCanDo'
+import LegalBar from '@/components/layout/LegalBar'
 import SidebarWidgets, { type ActivityItem, type OnlineUser } from '@/components/landing/SidebarWidgets'
 import { createClient } from '@/lib/supabase-server'
 
@@ -18,10 +20,10 @@ function LcdMarquee() {
   return (
     <div className="lcd-strip">
       <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'marquee 25s linear infinite' }}>
-        <span style={{ fontFamily: "'Silkscreen', monospace", fontSize: 11, color: '#00ff41', letterSpacing: '0.06em', display: 'inline-block' }}>
+        <span style={{ fontFamily: "'Silkscreen', monospace", fontSize: 12, color: '#00ff41', letterSpacing: '0.06em', display: 'inline-block' }}>
           {doubled}
         </span>
-        <span style={{ fontFamily: "'Silkscreen', monospace", fontSize: 11, color: '#00ff41', letterSpacing: '0.06em', display: 'inline-block' }}>
+        <span style={{ fontFamily: "'Silkscreen', monospace", fontSize: 12, color: '#00ff41', letterSpacing: '0.06em', display: 'inline-block' }}>
           {doubled}
         </span>
       </div>
@@ -65,7 +67,7 @@ function StickerDecorations() {
         <span
           key={i}
           aria-hidden="true"
-          className="pointer-events-none select-none absolute"
+          className="pointer-events-none select-none absolute hidden md:block"
           style={{ top: s.top, left: s.left, right: s.right, fontSize: s.fontSize, color: s.color, transform: `rotate(${s.rotate})`, zIndex: 10 }}
         >
           {s.symbol}
@@ -180,14 +182,14 @@ export default async function Home() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative overflow-x-clip">
       <StickerDecorations />
       <TopMarquee />
       <HomeStatusPanel scrapbookOfDay={scrapbookOfDay} user={currentUser} />
       <LcdMarquee />
 
-      <div className="grid" style={{ gridTemplateColumns: '65% 35%', gap: 0, padding: '16px 20px' }}>
-        <div className="flex flex-col gap-0 pr-4">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,65%)_minmax(0,35%)] gap-4 md:gap-0 px-3 py-4 sm:px-5">
+        <div className="flex flex-col gap-0 md:pr-4 min-w-0">
           <FeaturedScrapbooks scrapbooks={featured} />
           <ConfessionPreview confessions={confessions} />
         </div>
@@ -202,8 +204,9 @@ export default async function Home() {
 
       <DailyPrompt initialPrompt={promptResult.data ?? null} initialAnswers={todayAnswers} />
       <ScrapbookExchange exchangeStats={exchangeStats} />
+      <WhatYouCanDo />
       {!currentUser && <FinalCTA />}
-      {!currentUser && <Footer />}
+      {currentUser ? <LegalBar /> : <Footer />}
     </div>
   )
 }

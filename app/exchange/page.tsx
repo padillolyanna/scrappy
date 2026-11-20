@@ -81,7 +81,7 @@ export default function ExchangePage() {
           <div className="text-center mb-10">
             <div
               className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest"
-              style={{ fontSize: '11px' }}
+              style={{ fontSize: '12px' }}
             >
               ✉ SCRAPBOOK EXCHANGE
             </div>
@@ -102,13 +102,13 @@ export default function ExchangePage() {
           {/* Error: missing table */}
           {error === 'exchanges_table_missing' && (
             <div className="bg-[#FFF0A8] border-2 border-[#FFD700] rounded-xl p-6 mb-8">
-              <div className="font-pixel text-xs text-[#8B6914] mb-2" style={{ fontSize: '10px' }}>
+              <div className="font-pixel text-xs text-[#8B6914] mb-2" style={{ fontSize: '12px' }}>
                 SETUP REQUIRED
               </div>
               <p className="font-nunito text-sm text-[#3A0030] mb-3">
                 The exchange feature needs a one-time database setup. Run this SQL in your Supabase dashboard:
               </p>
-              <pre className="bg-[#3A0030] text-[#00ff41] text-xs p-4 rounded-lg overflow-auto font-mono" style={{ fontSize: '11px' }}>
+              <pre className="bg-[#3A0030] text-[#00ff41] text-xs p-4 rounded-lg overflow-auto font-mono" style={{ fontSize: '12px' }}>
 {`-- exchanges
 create table if not exists public.exchanges (
   id uuid default uuid_generate_v4() primary key,
@@ -167,7 +167,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
               <button
                 onClick={() => setError('')}
                 className="btn-outline-y2k mt-4 text-xs"
-                style={{ fontSize: '11px' }}
+                style={{ fontSize: '12px' }}
               >
                 try again
               </button>
@@ -178,7 +178,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
             <div>
               {/* How it works */}
               <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-6 mb-8">
-                <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '10px' }}>
+                <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>
                   HOW IT WORKS
                 </div>
                 <div className="grid sm:grid-cols-4 gap-4">
@@ -190,7 +190,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
                   ].map((s) => (
                     <div key={s.step} className="text-center">
                       <div className="font-pixel text-2xl text-[#FF4FA3]/50 mb-2">{s.symbol}</div>
-                      <div className="font-pixel text-xs text-[#888]" style={{ fontSize: '9px' }}>
+                      <div className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>
                         {s.step}. {s.text}
                       </div>
                     </div>
@@ -200,7 +200,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
 
               {/* Template picker */}
               <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-6 mb-6">
-                <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '10px' }}>
+                <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>
                   CHOOSE A TEMPLATE
                 </div>
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -216,11 +216,11 @@ create policy "Users can submit their own answers" on public.exchange_answers
                     >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="font-pixel text-xl text-[#3A0030]/30">{t.symbol}</span>
-                        <span className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '10px' }}>
+                        <span className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
                           {t.name}
                         </span>
                         {selectedTemplate === t.id && (
-                          <span className="ml-auto font-pixel text-xs text-[#FF4FA3]" style={{ fontSize: '9px' }}>
+                          <span className="ml-auto font-pixel text-xs text-[#FF4FA3]" style={{ fontSize: '12px' }}>
                             ✓
                           </span>
                         )}
@@ -242,7 +242,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
               {/* Selected template preview */}
               {template && (
                 <div className="bg-[#FFF8ED] rounded-xl border-2 border-[#FFB6D9]/30 p-4 mb-6">
-                  <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '9px' }}>
+                  <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '12px' }}>
                     PREVIEW — {template.name}
                   </div>
                   <div className="space-y-1">
@@ -298,7 +298,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
               </p>
 
               <div className="bg-white rounded-xl border-2 border-[#FFB6D9] p-5 mb-6 max-w-lg mx-auto">
-                <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '9px' }}>
+                <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '12px' }}>
                   YOUR INVITE LINK
                 </div>
                 <div className="font-nunito text-sm text-[#3A0030] break-all mb-4 bg-[#FFF8ED] rounded-lg p-3">
@@ -327,7 +327,7 @@ create policy "Users can submit their own answers" on public.exchange_answers
               </div>
 
               <div className="bg-[#FFF0A8] border-2 border-[#FFD700] rounded-xl p-4 mb-6 max-w-lg mx-auto text-left">
-                <div className="font-pixel text-xs text-[#8B6914] mb-2" style={{ fontSize: '9px' }}>
+                <div className="font-pixel text-xs text-[#8B6914] mb-2" style={{ fontSize: '12px' }}>
                   NEXT STEPS
                 </div>
                 <div className="space-y-2">

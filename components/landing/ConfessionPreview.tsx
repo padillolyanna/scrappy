@@ -109,7 +109,7 @@ export default function ConfessionPreview({ confessions = [] }: Props) {
         }}
       >
         {isDemo && (
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: 11, color: '#fff8', marginBottom: 8 }}>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#fff8', marginBottom: 8 }}>
             ✦ example — submit the first confession!
           </div>
         )}
@@ -121,7 +121,7 @@ export default function ConfessionPreview({ confessions = [] }: Props) {
               onClick={() => setActiveCategory(cat)}
               style={{
                 fontFamily: "'Chango', 'Arial Black', sans-serif",
-                fontSize: 10,
+                fontSize: 12,
                 padding: '4px 10px',
                 border: '2px solid #2B0A2E',
                 borderBottom: activeCategory === cat ? 'none' : '2px solid #2B0A2E',
@@ -177,7 +177,7 @@ export default function ConfessionPreview({ confessions = [] }: Props) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{
                     fontFamily: "'VT323', monospace",
-                    fontSize: 11,
+                    fontSize: 12,
                     color: '#888',
                     background: 'rgba(255,255,255,0.5)',
                     padding: '1px 5px',
@@ -185,7 +185,7 @@ export default function ConfessionPreview({ confessions = [] }: Props) {
                   }}>
                     {c.category}
                   </span>
-                  <span style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#888' }}>
+                  <span style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888' }}>
                     ♡ {c.reaction_count || 0}
                   </span>
                 </div>

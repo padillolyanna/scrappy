@@ -138,7 +138,7 @@ export default function ConfessionsPage() {
           <div className="text-center mb-10">
             <div
               className="font-pixel text-xs text-[#C9B6FF] mb-2 tracking-widest"
-              style={{ fontSize: '11px' }}
+              style={{ fontSize: '12px' }}
             >
               ✦ ANONYMOUS CONFESSIONS ✦
             </div>
@@ -184,7 +184,7 @@ export default function ConfessionsPage() {
             </motion.div>
           ) : (
             <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-6 mb-10 shadow-lg">
-              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '10px' }}>
+              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '12px' }}>
                 SHARE YOUR CONFESSION (anonymously)
                 {!user && (
                   <span className="text-[#888] ml-2">— members only</span>
@@ -222,7 +222,7 @@ export default function ConfessionsPage() {
                             ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white'
                             : 'border-[#FFB6D9] text-[#3A0030]'
                         }`}
-                        style={{ fontSize: '9px' }}
+                        style={{ fontSize: '12px' }}
                       >
                         {cat}
                       </button>
@@ -251,7 +251,7 @@ export default function ConfessionsPage() {
                     ? 'bg-[#3A0030] border-[#3A0030] text-white'
                     : 'border-[#FFB6D9] text-[#3A0030] bg-white'
                 }`}
-                style={{ fontSize: '9px' }}
+                style={{ fontSize: '12px' }}
               >
                 {cat}
               </button>
@@ -299,7 +299,7 @@ export default function ConfessionsPage() {
                   <div className="flex items-center justify-between">
                     <span
                       className="font-pixel text-[#888]"
-                      style={{ fontSize: '9px' }}
+                      style={{ fontSize: '12px' }}
                     >
                       {c.category}
                     </span>

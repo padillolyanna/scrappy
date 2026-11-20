@@ -47,14 +47,14 @@ export default function ConfessionActions({ id, isApproved }: Props) {
           onClick={handleDelete}
           disabled={loading}
           className="font-pixel text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors w-full"
-          style={{ fontSize: '9px' }}
+          style={{ fontSize: '12px' }}
         >
           {loading ? '...' : 'yes, delete'}
         </button>
         <button
           onClick={() => setShowConfirmDelete(false)}
           className="font-pixel text-xs border border-[#FFB6D9] text-[#888] px-3 py-1.5 rounded-lg hover:border-[#FF4FA3] transition-colors w-full"
-          style={{ fontSize: '9px' }}
+          style={{ fontSize: '12px' }}
         >
           cancel
         </button>
@@ -69,7 +69,7 @@ export default function ConfessionActions({ id, isApproved }: Props) {
           onClick={handleApprove}
           disabled={loading}
           className="font-pixel text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors w-full"
-          style={{ fontSize: '9px' }}
+          style={{ fontSize: '12px' }}
         >
           {loading ? '...' : 'approve'}
         </button>
@@ -78,7 +78,7 @@ export default function ConfessionActions({ id, isApproved }: Props) {
           onClick={handleReject}
           disabled={loading}
           className="font-pixel text-xs bg-yellow-500 text-white px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-colors w-full"
-          style={{ fontSize: '9px' }}
+          style={{ fontSize: '12px' }}
         >
           {loading ? '...' : 'unpublish'}
         </button>
@@ -87,7 +87,7 @@ export default function ConfessionActions({ id, isApproved }: Props) {
         onClick={() => setShowConfirmDelete(true)}
         disabled={loading}
         className="font-pixel text-xs border-2 border-red-200 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors w-full"
-        style={{ fontSize: '9px' }}
+        style={{ fontSize: '12px' }}
       >
         delete
       </button>

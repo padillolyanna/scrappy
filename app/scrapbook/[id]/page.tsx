@@ -112,7 +112,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
               <div>
                 <div
                   className="font-pixel text-xs text-[#D4006E]"
-                  style={{ fontSize: '10px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   YOUR SCRAPBOOK
                 </div>
@@ -127,7 +127,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
                 <Link
                   href="/scrapbook/create"
                   className="btn-y2k text-xs py-1 px-4"
-                  style={{ fontSize: '11px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   new ✦
                 </Link>
@@ -190,7 +190,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
                   >
                     <div
                       className="font-pixel text-xs text-[#888] mb-2 uppercase"
-                      style={{ fontSize: '9px' }}
+                      style={{ fontSize: '12px' }}
                     >
                       {ans.question_text}
                     </div>
@@ -215,14 +215,14 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
               <div className="text-center pt-4 border-t border-[#FFB6D9]/20">
                 <div
                   className="font-pixel text-xs text-[#888]"
-                  style={{ fontSize: '9px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   ✦ made with SCRAPPY ✦
                 </div>
                 <Link
                   href="/scrapbook/create"
                   className="mt-3 btn-outline-y2k text-xs inline-block"
-                  style={{ fontSize: '11px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   make your own scrapbook
                 </Link>
@@ -242,7 +242,7 @@ export default async function ScrapbookViewPage({ params }: PageProps<'/scrapboo
               <div>
                 <div
                   className="font-pixel text-xs text-[#3A0030]"
-                  style={{ fontSize: '10px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   @{creator.username}
                 </div>

@@ -137,7 +137,7 @@ export default function ExplorePage() {
           <div className="text-center mb-8">
             <div
               className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest"
-              style={{ fontSize: '11px' }}
+              style={{ fontSize: '12px' }}
             >
               ✦ COMMUNITY SCRAPBOOKS ✦
             </div>
@@ -179,7 +179,7 @@ export default function ExplorePage() {
                       ? 'bg-[#3A0030] border-[#3A0030] text-white'
                       : 'border-[#FFB6D9] text-[#3A0030] bg-white hover:border-[#FF4FA3]'
                   }`}
-                  style={{ fontSize: '9px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   {opt.label}
                 </button>

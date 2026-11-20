@@ -536,7 +536,7 @@ export default function PhotoboothPage() {
             <div className="absolute top-20 left-1/4 text-xl opacity-20">♡</div>
             <div className="absolute top-8 right-1/4 text-lg opacity-20">◆</div>
 
-            <div className="font-pixel text-xs text-[#FF4FA3] mb-3 tracking-widest" style={{ fontSize: '11px' }}>
+            <div className="font-pixel text-xs text-[#FF4FA3] mb-3 tracking-widest" style={{ fontSize: '12px' }}>
               ✦ YOUR LITTLE PHOTO CORNER ✦
             </div>
             <h1
@@ -574,7 +574,7 @@ export default function PhotoboothPage() {
 
           {/* Strip style preview cards */}
           <div className="max-w-4xl mx-auto px-4 py-10">
-            <div className="font-pixel text-xs text-center text-[#3A0030] mb-6 tracking-widest" style={{ fontSize: '11px' }}>
+            <div className="font-pixel text-xs text-center text-[#3A0030] mb-6 tracking-widest" style={{ fontSize: '12px' }}>
               ✦ CHOOSE FROM 6 LAYOUTS ✦
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
@@ -589,15 +589,15 @@ export default function PhotoboothPage() {
                       <LayoutPreview id={l.id} />
                     </div>
                   </div>
-                  <div className="font-pixel text-[#3A0030] mt-1" style={{ fontSize: '8px' }}>{l.label}</div>
-                  <div className="font-nunito text-[#888] mt-0.5" style={{ fontSize: '9px' }}>{l.count} photos</div>
+                  <div className="font-pixel text-[#3A0030] mt-1" style={{ fontSize: '12px' }}>{l.label}</div>
+                  <div className="font-nunito text-[#888] mt-0.5" style={{ fontSize: '12px' }}>{l.count} photos</div>
                 </button>
               ))}
             </div>
 
             {/* How it works */}
             <div className="mt-10 bg-[#FFF8ED] rounded-2xl border-2 border-[#FFB6D9]/40 p-6">
-              <div className="font-pixel text-xs text-[#FF4FA3] mb-4 text-center" style={{ fontSize: '11px' }}>
+              <div className="font-pixel text-xs text-[#FF4FA3] mb-4 text-center" style={{ fontSize: '12px' }}>
                 ✦ HOW IT WORKS ✦
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
@@ -609,7 +609,7 @@ export default function PhotoboothPage() {
                 ].map(s => (
                   <div key={s.n} className="flex flex-col items-center gap-1">
                     <div className="flex items-center justify-center">{s.icon}</div>
-                    <div className="font-pixel text-[#FF4FA3]" style={{ fontSize: '9px' }}>{s.n}</div>
+                    <div className="font-pixel text-[#FF4FA3]" style={{ fontSize: '12px' }}>{s.n}</div>
                     <div className="font-caveat text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive', fontSize: '15px' }}>{s.label}</div>
                   </div>
                 ))}
@@ -634,7 +634,7 @@ export default function PhotoboothPage() {
               ← back
             </button>
             <div className="text-center mb-8">
-              <div className="font-pixel text-xs text-[#FF4FA3] mb-2" style={{ fontSize: '11px' }}>STEP 01</div>
+              <div className="font-pixel text-xs text-[#FF4FA3] mb-2" style={{ fontSize: '12px' }}>STEP 01</div>
               <h1 className="font-pacifico text-3xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
                 choose your layout
               </h1>
@@ -657,10 +657,10 @@ export default function PhotoboothPage() {
                       <LayoutPreview id={l.id} />
                     </div>
                   </div>
-                  <div className="font-pixel text-[#3A0030]" style={{ fontSize: '10px' }}>{l.label}</div>
+                  <div className="font-pixel text-[#3A0030]" style={{ fontSize: '12px' }}>{l.label}</div>
                   <div className="font-nunito text-[#888] text-xs mt-0.5">{l.desc}</div>
                   {selectedLayout === l.id && (
-                    <div className="mt-2 font-pixel text-[#FF4FA3]" style={{ fontSize: '9px' }}>✦ SELECTED</div>
+                    <div className="mt-2 font-pixel text-[#FF4FA3]" style={{ fontSize: '12px' }}>✦ SELECTED</div>
                   )}
                 </button>
               ))}
@@ -692,10 +692,10 @@ export default function PhotoboothPage() {
               <button onClick={() => setStep('layout')} className="text-[#FFB6D9] hover:text-white font-nunito text-sm flex items-center gap-1">
                 ← layout
               </button>
-              <div className="font-pixel text-[#FF4FA3] text-center" style={{ fontSize: '11px' }}>
+              <div className="font-pixel text-[#FF4FA3] text-center" style={{ fontSize: '12px' }}>
                 ✦ SCRAPPY PHOTOBOOTH ✦
               </div>
-              <div className="font-pixel text-[#FFB6D9]" style={{ fontSize: '11px' }}>
+              <div className="font-pixel text-[#FFB6D9]" style={{ fontSize: '12px' }}>
                 {capturedPhotos.length}/{requiredCount} photos
               </div>
             </div>
@@ -759,7 +759,7 @@ export default function PhotoboothPage() {
 
                   {/* Photo counter badge */}
                   {cameraReady && !countdown && !isCapturing && (
-                    <div className="absolute top-3 left-3 bg-black/50 rounded-full px-3 py-1 font-pixel text-white" style={{ fontSize: '10px' }}>
+                    <div className="absolute top-3 left-3 bg-black/50 rounded-full px-3 py-1 font-pixel text-white" style={{ fontSize: '12px' }}>
                       PHOTO {capturedPhotos.length + 1} OF {requiredCount}
                     </div>
                   )}
@@ -773,7 +773,7 @@ export default function PhotoboothPage() {
                       value={countdownDuration}
                       onChange={e => setCountdownDuration(Number(e.target.value))}
                       className="bg-[#2B0A2E] border border-[#FFB6D9]/30 text-[#FFB6D9] rounded-lg px-2 py-1 font-pixel text-xs"
-                      style={{ fontSize: '10px' }}
+                      style={{ fontSize: '12px' }}
                       disabled={isCapturing}
                     >
                       <option value={3}>3s</option>
@@ -790,7 +790,7 @@ export default function PhotoboothPage() {
                     style={{ boxShadow: '0 0 20px rgba(255,79,163,0.5)' }}
                   >
                     {isCapturing ? (
-                      <span className="font-pixel text-white" style={{ fontSize: '10px' }}>...</span>
+                      <span className="font-pixel text-white" style={{ fontSize: '12px' }}>...</span>
                     ) : (
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     )}
@@ -815,7 +815,7 @@ export default function PhotoboothPage() {
                         ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white'
                         : 'bg-transparent border-[#FFB6D9]/30 text-[#FFB6D9]/60'
                     }`}
-                    style={{ fontSize: '10px' }}
+                    style={{ fontSize: '12px' }}
                   >
                     <svg className="inline mr-1" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>FLASH {enableFlash ? 'ON' : 'OFF'}
                   </button>
@@ -824,7 +824,7 @@ export default function PhotoboothPage() {
                 {/* Captured thumbnails */}
                 {capturedPhotos.length > 0 && (
                   <div className="mt-5">
-                    <div className="font-pixel text-[#FFB6D9] mb-2" style={{ fontSize: '10px' }}>
+                    <div className="font-pixel text-[#FFB6D9] mb-2" style={{ fontSize: '12px' }}>
                       CAPTURED PHOTOS:
                     </div>
                     <div className="flex gap-2 overflow-x-auto pb-1">
@@ -842,7 +842,7 @@ export default function PhotoboothPage() {
                           >
                             ×
                           </button>
-                          <div className="absolute bottom-0 left-0 right-0 text-center font-pixel text-white bg-black/50 rounded-b-lg" style={{ fontSize: '8px' }}>
+                          <div className="absolute bottom-0 left-0 right-0 text-center font-pixel text-white bg-black/50 rounded-b-lg" style={{ fontSize: '12px' }}>
                             {i + 1}
                           </div>
                         </div>
@@ -929,7 +929,7 @@ export default function PhotoboothPage() {
               <button onClick={() => setStep('camera')} className="text-[#888] hover:text-[#FF4FA3] font-nunito text-sm flex items-center gap-1">
                 ← retake photos
               </button>
-              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '11px' }}>✦ STEP 03 — DECORATE ✦</div>
+              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>✦ STEP 03 — DECORATE ✦</div>
               <button onClick={goToPreview} disabled={generating} className="btn-y2k py-2 px-5 text-sm" style={{ fontSize: '12px' }}>
                 {generating ? 'generating...' : 'FINISH ✦'}
               </button>
@@ -977,7 +977,7 @@ export default function PhotoboothPage() {
 
                 {/* centre: the strip */}
                 <div className="booth-screen order-1 lg:order-2">
-                  <div className="font-pixel text-white/80 text-center mb-2" style={{ fontSize: '9px' }}>DRAG STICKERS &amp; TEXT · TAP A STICKER TO EDIT IT</div>
+                  <div className="font-pixel text-white/80 text-center mb-2" style={{ fontSize: '12px' }}>DRAG STICKERS &amp; TEXT · TAP A STICKER TO EDIT IT</div>
                   <div className="flex justify-center">
                   <div
                     ref={stripPreviewRef}
@@ -1075,7 +1075,7 @@ export default function PhotoboothPage() {
                       <div className="mt-3 p-3 rounded-xl bg-[#FFF0F7] border-2 border-[#FFB6D9] space-y-2">
                         <div className="flex items-center gap-2">
                           <div className="w-10 h-10 shrink-0"><Sticker content={cur.content} color={cur.color} /></div>
-                          <span className="font-pixel text-[#3A0030] flex-1" style={{ fontSize: '9px' }}>SELECTED STICKER — drag it on the strip</span>
+                          <span className="font-pixel text-[#3A0030] flex-1" style={{ fontSize: '12px' }}>SELECTED STICKER — drag it on the strip</span>
                           <button onClick={() => { setStickers(prev => [...prev.filter(x => x.id !== cur.id), cur]) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">to front</button>
                           <button onClick={() => addSticker(cur.content, cur.color)} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">copy</button>
                           <button onClick={() => { setStickers(prev => prev.filter(x => x.id !== cur.id)); setSelectedStickerId(null) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-red-200 bg-white text-red-500">delete</button>
@@ -1125,7 +1125,7 @@ export default function PhotoboothPage() {
                   {pageCount > 1 && (
                     <>
                       <button className="booth-page" onClick={() => setTrayPage(Math.max(0, page - 1))} disabled={page === 0}>PrevPage</button>
-                      <span className="font-silkscreen text-[10px] text-white">{page + 1}/{pageCount}</span>
+                      <span className="font-silkscreen text-[12px] text-white">{page + 1}/{pageCount}</span>
                       <button className="booth-page" onClick={() => setTrayPage(Math.min(pageCount - 1, page + 1))} disabled={page >= pageCount - 1}>NextPage</button>
                     </>
                   )}
@@ -1155,13 +1155,13 @@ export default function PhotoboothPage() {
                         </select>
                       </div>
                       <div className="flex gap-2">
-                        <button onClick={addTextEl} className="btn-y2k text-xs py-1.5 flex-1" style={{ fontSize: '11px' }}>ADD TEXT</button>
-                        <button onClick={() => setAddingText(false)} className="btn-outline-y2k text-xs py-1.5 px-3" style={{ fontSize: '11px' }}>cancel</button>
+                        <button onClick={addTextEl} className="btn-y2k text-xs py-1.5 flex-1" style={{ fontSize: '12px' }}>ADD TEXT</button>
+                        <button onClick={() => setAddingText(false)} className="btn-outline-y2k text-xs py-1.5 px-3" style={{ fontSize: '12px' }}>cancel</button>
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <button onClick={() => setAddingText(true)} className="btn-outline-y2k text-xs py-1.5 px-4 w-full" style={{ fontSize: '11px' }}>
+                      <button onClick={() => setAddingText(true)} className="btn-outline-y2k text-xs py-1.5 px-4 w-full" style={{ fontSize: '12px' }}>
                         + add text
                       </button>
                       {textElements.length > 0 && (
@@ -1171,7 +1171,7 @@ export default function PhotoboothPage() {
                               key={t.id}
                               onClick={() => setTextElements(prev => prev.filter(x => x.id !== t.id))}
                               className="font-nunito text-xs bg-red-50 text-red-400 border border-red-200 rounded-full px-2 py-0.5 hover:bg-red-100 max-w-[120px] truncate"
-                              style={{ fontSize: '10px' }}
+                              style={{ fontSize: '12px' }}
                             >
                               {t.text} ×
                             </button>
@@ -1196,19 +1196,19 @@ export default function PhotoboothPage() {
                   {(selectedFrame.startsWith('mag-') || selectedLayout === 'friendship') && (
                     <div className="mt-3 space-y-2">
                       {selectedLayout === 'friendship' && (
-                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
                           STRIP TITLE
                           <input value={stripTitle} onChange={e => setStripTitle(e.target.value.slice(0, 28))} className="input-y2k text-sm mt-1" maxLength={28} />
                         </label>
                       )}
                       {selectedFrame.startsWith('mag-') && (
-                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
                           MAGAZINE NAME
                           <input value={magTitle} onChange={e => setMagTitle(e.target.value.slice(0, 14))} className="input-y2k text-sm mt-1" placeholder="sparkle" maxLength={14} />
                         </label>
                       )}
                       {selectedFrame.startsWith('mag-') && (
-                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '9px' }}>
+                        <label className="block font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
                           COVER LINES (one per line · the last one goes big at the bottom)
                           <textarea
                             value={magLines.join('\n')}
@@ -1246,7 +1246,7 @@ export default function PhotoboothPage() {
             <button onClick={() => setStep('customize')} className="text-[#888] hover:text-[#FF4FA3] font-nunito text-sm flex items-center gap-1">
               ← edit
             </button>
-            <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '11px' }}>✦ YOUR PHOTO STRIP ✦</div>
+            <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>✦ YOUR PHOTO STRIP ✦</div>
             <div />
           </div>
 
@@ -1330,7 +1330,7 @@ function ArtChoice({ label, active, onClick, children }: { label: string; active
       }`}
     >
       <div className="aspect-[3/4] flex items-center justify-center overflow-hidden">{children}</div>
-      <div className="font-nunito font-bold text-[#3A0030] text-center truncate px-1 py-0.5 bg-white" style={{ fontSize: '9px' }}>{label}</div>
+      <div className="font-nunito font-bold text-[#3A0030] text-center truncate px-1 py-0.5 bg-white" style={{ fontSize: '12px' }}>{label}</div>
     </button>
   )
 }

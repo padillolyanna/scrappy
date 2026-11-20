@@ -45,7 +45,7 @@ export default function ThemeSwitcher() {
         className="font-chango"
         style={{
           fontFamily: "'Chango', 'Arial Black', sans-serif",
-          fontSize: 11,
+          fontSize: 12,
           color: '#2B0A2E',
           marginBottom: 6,
         }}
@@ -78,7 +78,7 @@ export default function ThemeSwitcher() {
       <div
         style={{
           fontFamily: "'VT323', monospace",
-          fontSize: 11,
+          fontSize: 12,
           color: '#888',
           marginTop: 4,
         }}

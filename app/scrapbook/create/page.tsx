@@ -157,7 +157,7 @@ export default function CreateScrapbookPage() {
               <button
                 onClick={() => setDraftBanner(false)}
                 className="font-pixel text-xs text-[#888] hover:text-[#3A0030] ml-4"
-                style={{ fontSize: '9px' }}
+                style={{ fontSize: '12px' }}
               >
                 dismiss
               </button>
@@ -186,7 +186,7 @@ export default function CreateScrapbookPage() {
                       ? 'bg-[#FFB6D9]/30 border-[#FF4FA3] text-[#FF4FA3] cursor-pointer'
                       : 'bg-white border-[#FFB6D9] text-[#888] cursor-default'
                   }`}
-                  style={{ fontSize: '10px' }}
+                  style={{ fontSize: '12px' }}
                 >
                   <span>{s.num}</span>
                   <span>{s.label}</span>

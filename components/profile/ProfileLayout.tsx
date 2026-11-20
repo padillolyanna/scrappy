@@ -100,7 +100,7 @@ function Panel({
         }}
       >
         <span>{title}</span>
-        {right && <span style={{ fontSize: 11, fontWeight: 400 }}>{right}</span>}
+        {right && <span style={{ fontSize: 12, fontWeight: 400 }}>{right}</span>}
       </header>
       <div style={{ padding: 10, fontFamily: body, fontSize: fs, lineHeight: 1.4 }}>{children}</div>
     </section>
@@ -136,7 +136,7 @@ export default function ProfileLayout({
           <div style={{ border: `3px solid ${s.borderColor}`, background: '#fff', padding: 3, boxShadow: '0 3px 12px rgba(0,0,0,.35)', width: 162, boxSizing: 'border-box' }}>
             <Avatar p={profile} size={150} />
           </div>
-          <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 11, textAlign: 'center', marginTop: 4, color: s.panelText, background: rgba(s.panelBg, s.panelOpacity), border: `1px solid ${s.borderColor}`, padding: '1px 4px' }}>
+          <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, textAlign: 'center', marginTop: 4, color: s.panelText, background: rgba(s.panelBg, s.panelOpacity), border: `1px solid ${s.borderColor}`, padding: '1px 4px' }}>
             View My: <a href="#scrapbooks" style={linkStyle}>Scrapbooks</a> | <a href="#comments" style={linkStyle}>Comments</a>
           </div>
         </div>
@@ -159,7 +159,7 @@ export default function ProfileLayout({
               <span>Last Login:<br />{lastLogin.toLocaleDateString('en-US')}</span>
             ) : null}
           </div>
-          <div style={{ marginTop: 6, opacity: 0.75, fontSize: 11 }}>
+          <div style={{ marginTop: 6, opacity: 0.75, fontSize: 12 }}>
             member since {new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
           </div>
         </div>
@@ -184,7 +184,7 @@ export default function ProfileLayout({
               </div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{x.song.title || 'my song'}</div>
-                {x.song.artist && <div style={{ fontSize: 11, color: '#555' }}>{x.song.artist}</div>}
+                {x.song.artist && <div style={{ fontSize: 12, color: '#555' }}>{x.song.artist}</div>}
               </div>
             </div>
             {(ytId || spot) && !preview ? (
@@ -208,7 +208,7 @@ export default function ProfileLayout({
             <tbody>
               {interests.map(([k, v]) => (
                 <tr key={k}>
-                  <td style={{ verticalAlign: 'top', width: 84, fontWeight: 700, background: rgba(s.headerBg, 0.25), padding: '3px 6px', fontFamily: 'Verdana, sans-serif', fontSize: 11 }}>{k}</td>
+                  <td style={{ verticalAlign: 'top', width: 84, fontWeight: 700, background: rgba(s.headerBg, 0.25), padding: '3px 6px', fontFamily: 'Verdana, sans-serif', fontSize: 12 }}>{k}</td>
                   <td style={{ padding: '3px 6px', whiteSpace: 'pre-wrap' }}>{v}</td>
                 </tr>
               ))}
@@ -233,7 +233,7 @@ export default function ProfileLayout({
                 <div style={{ border: `2px solid ${s.borderColor}`, background: '#fff', aspectRatio: '1', overflow: 'hidden' }}>
                   <Avatar p={f} size="fill" />
                 </div>
-                <div style={{ ...linkStyle, fontFamily: 'Verdana, sans-serif', fontSize: 11, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ ...linkStyle, fontFamily: 'Verdana, sans-serif', fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {f.display_name || f.username}
                 </div>
               </Link>
@@ -254,7 +254,7 @@ export default function ProfileLayout({
                       {cover?.preview_symbol ?? '✦'}
                     </div>
                     <div style={{ fontSize: 12, fontFamily: 'Verdana, sans-serif', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: s.linkColor, fontWeight: 700 }}>{sb.title || 'untitled'}</div>
-                    <div style={{ fontSize: 11, opacity: 0.7, fontFamily: 'Verdana, sans-serif' }}>♡ {sb.like_count ?? 0}</div>
+                    <div style={{ fontSize: 12, opacity: 0.7, fontFamily: 'Verdana, sans-serif' }}>♡ {sb.like_count ?? 0}</div>
                   </Link>
                 )
               })}
@@ -280,7 +280,7 @@ export default function ProfileLayout({
                     <Link href={c.author ? `/profile/${c.author.username}` : '#'} style={{ ...linkStyle, fontFamily: 'Verdana, sans-serif', fontSize: 13 }}>
                       {c.author?.display_name || c.author?.username || 'someone'}
                     </Link>
-                    <span style={{ fontSize: 10, opacity: 0.65, fontFamily: 'Verdana, sans-serif' }}>
+                    <span style={{ fontSize: 12, opacity: 0.65, fontFamily: 'Verdana, sans-serif' }}>
                       {new Date(c.created_at).toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </span>
                     <span style={{ marginLeft: 'auto' }}>{commentControls?.(c)}</span>

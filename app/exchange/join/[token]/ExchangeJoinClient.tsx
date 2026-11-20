@@ -187,7 +187,7 @@ export default function ExchangeJoinClient({ token }: { token: string }) {
           <div className="text-center mb-8">
             <div
               className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest"
-              style={{ fontSize: '11px' }}
+              style={{ fontSize: '12px' }}
             >
               ✉ EXCHANGE INVITATION
             </div>
@@ -235,7 +235,7 @@ export default function ExchangeJoinClient({ token }: { token: string }) {
                 >
                   <div
                     className="font-pixel text-xs text-[#888] mb-1"
-                    style={{ fontSize: '9px' }}
+                    style={{ fontSize: '12px' }}
                   >
                     QUESTION {i + 1} OF {template.questions.length}
                   </div>

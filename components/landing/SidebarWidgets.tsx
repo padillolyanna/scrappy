@@ -82,7 +82,7 @@ function NowPlaying() {
           border: '1px solid',
           borderColor: '#ffffff #808080 #808080 #ffffff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 9, cursor: 'pointer', flexShrink: 0,
+          fontSize: 12, cursor: 'pointer', flexShrink: 0,
         }}
         aria-label="Play"
       >
@@ -91,7 +91,7 @@ function NowPlaying() {
       <div style={{ overflow: 'hidden', flex: 1, background: '#000', border: '1px inset #333', padding: '1px 3px' }}>
         <div style={{
           fontFamily: "'Silkscreen', monospace",
-          fontSize: 10,
+          fontSize: 12,
           color: '#00ff41',
           whiteSpace: 'nowrap',
           animation: 'ticker 10s linear infinite',
@@ -126,7 +126,7 @@ export default function SidebarWidgets({ activity = [], onlineUsers = [], member
 
       <Widget header="✦ recent activity!">
         {showDemoActivity && (
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: 10, color: '#aaa', marginBottom: 4 }}>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#aaa', marginBottom: 4 }}>
             ✦ example — be the first to post!
           </div>
         )}
@@ -137,7 +137,7 @@ export default function SidebarWidgets({ activity = [], onlineUsers = [], member
           }}
         >
           {displayActivity.map((m, i) => (
-            <div key={i} style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 11, lineHeight: 1.4 }}>
+            <div key={i} style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, lineHeight: 1.4 }}>
               <span style={{ color: MSG_PALETTE[i % MSG_PALETTE.length], fontWeight: 'bold' }}>{m.username}:</span>{' '}
               <span style={{ color: '#3A0030' }} className="line-clamp-1">{m.text}</span>
               {i === displayActivity.length - 1 && (
@@ -150,7 +150,7 @@ export default function SidebarWidgets({ activity = [], onlineUsers = [], member
 
       <Widget header="♡ who's online">
         {showDemoOnline && (
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: 10, color: '#aaa', marginBottom: 4 }}>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#aaa', marginBottom: 4 }}>
             ✦ example
           </div>
         )}
@@ -174,13 +174,13 @@ export default function SidebarWidgets({ activity = [], onlineUsers = [], member
                   background: '#28C840', border: '1px solid white',
                 }} />
               </div>
-              <span style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 9, color: '#3A0030', maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, color: '#3A0030', maxWidth: 36, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {u.username.length > 7 ? u.username.slice(0, 7) : u.username}
               </span>
             </div>
           ))}
           {!showDemoOnline && onlineUsers.length === 0 && (
-            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#aaa' }}>
+            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#aaa' }}>
               nobody online yet
             </div>
           )}
@@ -189,7 +189,7 @@ export default function SidebarWidgets({ activity = [], onlineUsers = [], member
 
       <Widget header="◎ scrappy members">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 10, color: '#888' }}>
+          <div style={{ fontFamily: 'Verdana, Tahoma, sans-serif', fontSize: 12, color: '#888' }}>
             total members
           </div>
           <HitCounter count={memberCount} />

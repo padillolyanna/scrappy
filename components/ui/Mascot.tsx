@@ -131,7 +131,7 @@ export default function Mascot() {
             borderRadius: 2,
             margin: '0 auto',
           }} />
-          <div style={{ textAlign: 'center', fontSize: 10, marginTop: -2, lineHeight: 1 }}>✦</div>
+          <div style={{ textAlign: 'center', fontSize: 12, marginTop: -2, lineHeight: 1 }}>✦</div>
         </div>
       </div>
     </div>

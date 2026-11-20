@@ -290,13 +290,13 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
                         transform: `rotate(${[-1, 1, -0.5][i % 3]}deg)`,
                       }}
                     >
-                      <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 11, fontWeight: 'bold', color: '#FF4FA3', marginBottom: 3 }}>
+                      <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, fontWeight: 'bold', color: '#FF4FA3', marginBottom: 3 }}>
                         @{username}
                       </div>
                       <p style={{ fontFamily: "'Caveat', cursive", fontSize: 14, color: '#3A0030', lineHeight: 1.4 }}>
                         {a.answer_text}
                       </p>
-                      <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#aaa', marginTop: 4 }}>
+                      <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#aaa', marginTop: 4 }}>
                         ♡ {a.like_count || 0}
                       </div>
                     </div>

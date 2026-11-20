@@ -191,7 +191,7 @@ export function QuestionView({ el, answerSlot }: { el: NbElement; answerSlot?: R
       : { background: p.bgColor ?? '#fff', border: '2.5px solid #2B0A2E', borderRadius: 10, padding: '10px 14px', boxShadow: '3px 3px 0 #FF9ECF' }
   return (
     <div style={{ width: '100%', minHeight: '100%', ...wrap }}>
-      <div style={{ fontFamily: "'Silkscreen', monospace", fontSize: 11, color: '#D4006E', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 }}>{p.question}</div>
+      <div style={{ fontFamily: "'Silkscreen', monospace", fontSize: 12, color: '#D4006E', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 4 }}>{p.question}</div>
       {answerSlot ?? (
         <div style={{ fontFamily: fontCss(p.font), fontSize: p.size ?? 22, color: el.content ? p.color ?? OUT : '#B08AA8', lineHeight: 1.25, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
           {el.content || '…'}

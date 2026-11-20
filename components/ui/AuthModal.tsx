@@ -83,7 +83,7 @@ export default function AuthModal({ reason, onClose }: Props) {
               </button>
             </div>
 
-            <div className="mt-4 text-center font-pixel text-xs text-[#ddd]" style={{ fontSize: '9px' }}>
+            <div className="mt-4 text-center font-pixel text-xs text-[#ddd]" style={{ fontSize: '12px' }}>
               ✦ ★ ♡ ✿ ♪ ◆
             </div>
           </div>

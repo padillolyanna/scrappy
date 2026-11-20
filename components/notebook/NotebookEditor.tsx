@@ -566,7 +566,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
           <span className="w-3 h-3 rounded-full bg-[#FEBC2E] border border-black/30" />
           <span className="w-3 h-3 rounded-full bg-[#28C840] border border-black/30" />
         </span>
-        <span className="hidden md:inline font-silkscreen text-[11px] tracking-wide drop-shadow">SCRAPPY STUDIO</span>
+        <span className="hidden md:inline font-silkscreen text-[12px] tracking-wide drop-shadow">SCRAPPY STUDIO</span>
         <input
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
@@ -579,7 +579,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
         <ToolBtn onClick={redo} disabled={!hist.future} title="redo (ctrl+shift+z)" tone="chrome">↷</ToolBtn>
         <div className="flex items-center gap-0.5 bg-black/20 rounded-lg px-1 py-0.5">
           <ToolBtn onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))} title="zoom out" tone="chrome">−</ToolBtn>
-          <button onClick={() => setZoom(1)} className="font-silkscreen text-[10px] w-11 text-center" title="fit to screen">{Math.round(zoom * 100)}%</button>
+          <button onClick={() => setZoom(1)} className="font-silkscreen text-[12px] w-11 text-center" title="fit to screen">{Math.round(zoom * 100)}%</button>
           <ToolBtn onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.25) * 100) / 100))} title="zoom in" tone="chrome">＋</ToolBtn>
         </div>
         <div className="flex-1" />
@@ -644,7 +644,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
         {panel && meta && (
           <aside className={`${fullscreen ? 'md:w-[260px]' : 'md:w-[210px]'} shrink-0 bg-[#FFFDF7] border-b-2 md:border-b-0 md:border-r-2 border-[#0B1B4A] overflow-y-auto ${fullscreen ? '' : 'max-h-[300px] md:max-h-[680px]'}`}>
             <div
-              className="sticky top-0 z-10 px-3 py-1.5 font-silkscreen text-[11px] text-white border-b-2 border-[#0B1B4A]"
+              className="sticky top-0 z-10 px-3 py-1.5 font-silkscreen text-[12px] text-white border-b-2 border-[#0B1B4A]"
               style={{ background: `linear-gradient(180deg, #ffffff55, ${meta.color} 50%, ${meta.color})`, textShadow: '0 1px 0 rgba(0,0,0,.35)' }}
             >
               {meta.label === 'bg' ? 'BACKGROUNDS' : meta.label === 'objects' ? 'OBJECT SHELF' : meta.label.toUpperCase()}
@@ -697,7 +697,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                       ))}
                     </div>
                   )}
-                  <div className="font-silkscreen text-[10px] text-[#1D9BF0]">CLASSIC FRAMES</div>
+                  <div className="font-silkscreen text-[12px] text-[#1D9BF0]">CLASSIC FRAMES</div>
                   <div className="grid grid-cols-3 gap-2">
                     {(['polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'] as const).map((f) => (
                       <button
@@ -728,7 +728,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                   <PanelBtn onClick={() => add({ ...makeText('note'), w: 220, content: 'omg hiii!! ♡', props: { font: 'gochi', size: 22, color: '#2B0A2E', align: 'center', textBg: 'bubble', bgColor: '#FFFFFF' } })}>
                     <span className="font-caveat text-lg bg-white border-2 border-[#2B0A2E] rounded-2xl px-3">speech bubble</span>
                   </PanelBtn>
-                  <div className="font-silkscreen text-[10px] text-[#7C4DDB] pt-2">FANCY LETTERING</div>
+                  <div className="font-silkscreen text-[12px] text-[#7C4DDB] pt-2">FANCY LETTERING</div>
                   <div className="grid grid-cols-2 gap-1.5">
                     {TEXT_FX.map((fx) => (
                       <button
@@ -751,7 +751,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                     {busy ? 'uploading…' : '+ upload photos'}
                   </button>
                   <p className="font-pixel text-base text-[#888] leading-tight">click a photo to add it — or to fill the selected empty frame.</p>
-                  <div className="font-silkscreen text-[10px] text-[#D4006E]">EMPTY FRAMES</div>
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">EMPTY FRAMES</div>
                   <div className="grid grid-cols-3 gap-2">
                     {(['polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'] as const).map((f) => (
                       <button key={f} onClick={() => add(makeImage('', f))} className="aspect-square rounded-lg border-2 border-[#2B0A2E] bg-white hover:bg-[#FFE4F0] p-1.5 flex flex-col items-center justify-center" title={`${f} frame`}>
@@ -762,7 +762,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                   </div>
                   {knownPhotos.length > 0 && (
                     <>
-                      <div className="font-silkscreen text-[10px] text-[#D4006E]">YOUR PHOTOS</div>
+                      <div className="font-silkscreen text-[12px] text-[#D4006E]">YOUR PHOTOS</div>
                       <div className="grid grid-cols-3 gap-1.5">
                         {knownPhotos.map((src, i) => (
                           <button
@@ -792,7 +792,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                       </button>
                     ))}
                   </div>
-                  <div className="font-silkscreen text-[10px] text-[#D4006E]">GEMS</div>
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">GEMS</div>
                   <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
                     {GEM_STICKERS.map((g) => (
                       <button key={g.id} onClick={() => add({ ...makeSticker(`svg:${g.id}`), w: 64, h: 64 })} title={g.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110">
@@ -800,7 +800,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                       </button>
                     ))}
                   </div>
-                  <div className="font-silkscreen text-[10px] text-[#D4006E]">SYMBOLS & EMOJI</div>
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">SYMBOLS & EMOJI</div>
                   <div className="grid grid-cols-8 md:grid-cols-5 gap-1">
                     {EMOJI_STICKERS.map((s) => (
                       <button key={s} onClick={() => add({ ...makeSticker(`txt:${s}`), w: 64, h: 64 })} className="aspect-square rounded hover:bg-[#FFE4F0] p-0.5 hover:scale-110 transition-transform">
@@ -857,7 +857,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                       </button>
                     ))}
                   </div>
-                  <div className="font-silkscreen text-[10px] text-[#0EA5E9]">TEXTURES</div>
+                  <div className="font-silkscreen text-[12px] text-[#0EA5E9]">TEXTURES</div>
                   <div className="grid grid-cols-4 md:grid-cols-3 gap-1.5">
                     {ART_BACKGROUNDS.map((b) => (
                       <button
@@ -871,7 +871,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                       </button>
                     ))}
                   </div>
-                  <div className="font-silkscreen text-[10px] text-[#0EA5E9]">PAPER</div>
+                  <div className="font-silkscreen text-[12px] text-[#0EA5E9]">PAPER</div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {PAPERS.map((p) => (
                       <button
@@ -888,7 +888,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                       <button key={c} onClick={() => setPaper(bgIdxs, { color: c })} className="w-6 h-6 rounded-full border-2 border-[#0B1B4A]" style={{ background: c }} aria-label={`paper colour ${c}`} />
                     ))}
                   </div>
-                  <div className="font-silkscreen text-[10px] text-[#0EA5E9]">YOUR OWN PHOTO</div>
+                  <div className="font-silkscreen text-[12px] text-[#0EA5E9]">YOUR OWN PHOTO</div>
                   <input ref={bgFileRef} type="file" accept="image/*" hidden onChange={(e) => { handleBgFile(e.target.files); e.target.value = '' }} />
                   <button onClick={() => bgFileRef.current?.click()} className="btn-bevel w-full text-sm" disabled={busy}>↑ upload a background</button>
                   {pages[bgIdxs[0]]?.bgImage && (
@@ -991,7 +991,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
 
         {/* ── properties ── */}
         <aside className={`${fullscreen ? 'hidden lg:block' : 'hidden'} w-[210px] shrink-0 border-l-2 border-[#0B1B4A] bg-[#F4F7FF] overflow-y-auto`}>
-          <div className="px-3 py-1.5 font-silkscreen text-[11px] text-white border-b-2 border-[#0B1B4A]" style={{ background: 'linear-gradient(180deg,#9FB4FF,#5B6CFF 50%,#4453E8)' }}>
+          <div className="px-3 py-1.5 font-silkscreen text-[12px] text-white border-b-2 border-[#0B1B4A]" style={{ background: 'linear-gradient(180deg,#9FB4FF,#5B6CFF 50%,#4453E8)' }}>
             PROPERTIES
           </div>
           {selected && sel ? (
@@ -1491,7 +1491,7 @@ function CatChips({ value, onChange, cats }: { value: string; onChange: (v: stri
         <button
           key={c.id}
           onClick={() => onChange(c.id)}
-          className="font-nunito font-bold text-[11px] px-2 py-0.5 rounded-full border-2 transition-colors"
+          className="font-nunito font-bold text-[12px] px-2 py-0.5 rounded-full border-2 transition-colors"
           style={value === c.id ? { background: c.color, color: '#fff', borderColor: c.color } : { background: '#fff', color: c.color, borderColor: `${c.color}66` }}
         >
           {c.label}
@@ -1578,13 +1578,13 @@ function QuestionsPanel({ questions, used, onAdd }: { questions: string[]; used:
         <input value={own} onChange={(e) => setOwn(e.target.value)} placeholder="ask your own question…" className="input-mini flex-1 min-w-0" aria-label="your own question" />
         <button type="submit" className="btn-bevel !px-2 !py-1 text-xs">+</button>
       </form>
-      {questions.length > 0 && <div className="font-silkscreen text-[10px] text-[#D4006E] pt-1">FROM YOUR TEMPLATE</div>}
+      {questions.length > 0 && <div className="font-silkscreen text-[12px] text-[#D4006E] pt-1">FROM YOUR TEMPLATE</div>}
       {questions.map((q) => (
         <button key={q} onClick={() => onAdd(q, style)} className={`w-full text-left font-caveat text-lg leading-tight rounded-lg border-2 px-2 py-1.5 hover:bg-[#FFE4F0] ${used.has(q) ? 'border-[#2B0A2E]/25 text-[#888]' : 'border-[#2B0A2E] bg-white'}`}>
           {used.has(q) ? '✓ ' : '+ '}{q}
         </button>
       ))}
-      <div className="font-silkscreen text-[10px] text-[#D4006E] pt-1">MORE IDEAS</div>
+      <div className="font-silkscreen text-[12px] text-[#D4006E] pt-1">MORE IDEAS</div>
       {['Song stuck in my head…', 'Today I felt…', 'My comfort food…', 'Current wallpaper…', 'Last thing that made me laugh…', 'Dream vacation…'].map((q) => (
         <button key={q} onClick={() => onAdd(q, style)} className="w-full text-left font-caveat text-lg leading-tight rounded-lg border-2 border-dashed border-[#2B0A2E]/60 bg-white px-2 py-1.5 hover:bg-[#FFE4F0]">
           + {q}

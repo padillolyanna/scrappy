@@ -70,7 +70,7 @@ function FoldedNote() {
 
         <div style={{
           fontFamily: "'Chango', 'Arial Black', sans-serif",
-          fontSize: 10,
+          fontSize: 12,
           color: '#FF4FA3',
           marginBottom: 10,
           letterSpacing: '0.08em',
@@ -80,7 +80,7 @@ function FoldedNote() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <div>
-            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
+            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
               question 1:
             </div>
             <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#3A0030', lineHeight: 1.3 }}>
@@ -88,7 +88,7 @@ function FoldedNote() {
             </div>
           </div>
           <div>
-            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
+            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
               question 2:
             </div>
             <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#7C4DDB', lineHeight: 1.3 }}>
@@ -126,7 +126,7 @@ export default function ScrapbookExchange({ exchangeStats }: Props) {
             background: '#FF4FA3',
             color: 'white',
             fontFamily: "'Chango', 'Arial Black', sans-serif",
-            fontSize: 11,
+            fontSize: 12,
             padding: '3px 10px',
             border: '2px solid #2B0A2E',
             borderRadius: 4,
@@ -156,13 +156,13 @@ export default function ScrapbookExchange({ exchangeStats }: Props) {
                       width: 22, height: 22, borderRadius: '50%',
                       background: '#FF4FA3', color: 'white',
                       fontFamily: "'Chango', 'Arial Black', sans-serif",
-                      fontSize: 11,
+                      fontSize: 12,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       border: '2px solid #2B0A2E', flexShrink: 0,
                     }}>
                       {i + 1}
                     </div>
-                    <p style={{ fontFamily: 'Verdana, sans-serif', fontSize: 11, color: '#3A0030', paddingTop: 2, lineHeight: 1.4 }}>
+                    <p style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#3A0030', paddingTop: 2, lineHeight: 1.4 }}>
                       {step}
                     </p>
                   </div>

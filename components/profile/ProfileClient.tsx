@@ -100,8 +100,8 @@ export function CommentForm({ profileId, viewerId }: { profileId: string; viewer
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button type="submit" className="pf-btn" disabled={busy || !body.trim()}>{busy ? 'posting…' : 'post comment'}</button>
-        <span style={{ fontSize: 10, opacity: 0.6, fontFamily: 'Verdana, sans-serif' }}>{body.length}/500</span>
-        {err && <span style={{ fontSize: 11, color: '#c00' }} role="alert">{err}</span>}
+        <span style={{ fontSize: 12, opacity: 0.6, fontFamily: 'Verdana, sans-serif' }}>{body.length}/500</span>
+        {err && <span style={{ fontSize: 12, color: '#c00' }} role="alert">{err}</span>}
       </div>
     </form>
   )
@@ -120,7 +120,7 @@ export function DeleteCommentButton({ commentId }: { commentId: string }) {
         router.refresh()
       }}
       disabled={busy}
-      style={{ fontSize: 10, fontFamily: 'Verdana, sans-serif', textDecoration: 'underline', opacity: 0.7, background: 'none', border: 0, cursor: 'pointer', color: 'inherit' }}
+      style={{ fontSize: 12, fontFamily: 'Verdana, sans-serif', textDecoration: 'underline', opacity: 0.7, background: 'none', border: 0, cursor: 'pointer', color: 'inherit' }}
     >
       {busy ? 'deleting…' : 'delete'}
     </button>

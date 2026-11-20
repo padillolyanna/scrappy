@@ -184,7 +184,7 @@ export default function HomeStatusPanel({ scrapbookOfDay, user }: Props) {
                 background: '#FF6B00',
                 color: 'white',
                 fontFamily: "'Chango', 'Arial Black', sans-serif",
-                fontSize: 10,
+                fontSize: 12,
                 padding: '3px 8px',
                 borderRadius: 4,
                 border: '2px solid #2B0A2E',
