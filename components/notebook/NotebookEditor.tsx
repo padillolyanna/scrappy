@@ -25,6 +25,61 @@ type Sel = { page: number; id: string } | null
 
 const IcoCam = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
 
+function SelectMini({
+  value, onChange, options, style, className = '', 'aria-label': ariaLabel,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string; style?: React.CSSProperties }[]
+  style?: React.CSSProperties
+  className?: string
+  'aria-label'?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const selected = options.find((o) => o.value === value) ?? options[0]
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [])
+
+  return (
+    <div ref={ref} className={`relative ${className}`} style={{ display: 'inline-block' }}>
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        onClick={() => setOpen((o) => !o)}
+        className="input-mini flex items-center gap-1 select-none"
+        style={{ minWidth: 72, ...style }}
+      >
+        <span className="truncate flex-1 text-left" style={selected.style}>{selected.label}</span>
+        <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
+          <path d="M1 1l4 4 4-4" stroke="#FF4FA3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute top-[calc(100%+4px)] left-0 z-[300] min-w-full bg-white border-2 border-[#FFB6D9] rounded-xl shadow-xl py-1 overflow-hidden" style={{ maxHeight: 220, overflowY: 'auto' }}>
+          {options.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => { onChange(o.value); setOpen(false) }}
+              className={`w-full text-left px-3 py-1.5 font-nunito font-bold text-[#3A0030] hover:bg-[#FFB6D9]/30 transition-colors ${o.value === value ? 'bg-[#FFB6D9]/20 text-[#FF4FA3]' : ''}`}
+              style={{ fontSize: 12, ...o.style }}
+            >
+              {o.value === value && <span className="mr-1 text-[#FF4FA3]">✓</span>}{o.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const PANELS: { id: Panel; icon: React.ReactNode; label: string; color: string }[] = [
   { id: 'library', icon: '♦', label: 'objects', color: '#FF2E93' },
   { id: 'frames', icon: '▣', label: 'frames', color: '#1D9BF0' },
@@ -1436,9 +1491,13 @@ function SelectionBar({
               placeholder="question…"
             />
           )}
-          <select value={p.font ?? 'caveat'} onChange={(e) => setProps({ font: e.target.value })} className="input-mini" aria-label="font" style={{ fontFamily: FONTS.find((f) => f.id === p.font)?.css }}>
-            {FONTS.map((f) => <option key={f.id} value={f.id} style={{ fontFamily: f.css }}>{f.label}</option>)}
-          </select>
+          <SelectMini
+            value={p.font ?? 'caveat'}
+            onChange={(v) => setProps({ font: v })}
+            options={FONTS.map((f) => ({ value: f.id, label: f.label, style: { fontFamily: f.css } }))}
+            style={{ fontFamily: FONTS.find((f) => f.id === (p.font ?? 'caveat'))?.css }}
+            aria-label="font"
+          />
           <div className="flex items-center">
             <ToolBtn onClick={() => setProps({ size: Math.max(8, (p.size ?? 24) - 2) }, `size-${el.id}`)} title="smaller">−</ToolBtn>
             <input
@@ -1459,23 +1518,33 @@ function SelectionBar({
               >
                 {p.align === 'center' ? '≡' : p.align === 'right' ? '⫸' : '⫷'}
               </ToolBtn>
-              <select value={p.textBg ?? 'none'} onChange={(e) => setProps({ textBg: e.target.value as ElementProps['textBg'] })} className="input-mini" aria-label="text style">
-                <option value="none">plain</option>
-                <option value="highlight">highlighter</option>
-                <option value="label">label tag</option>
-                <option value="sticky">sticky note</option>
-                <option value="bubble">bubble</option>
-              </select>
+              <SelectMini
+                value={p.textBg ?? 'none'}
+                onChange={(v) => setProps({ textBg: v as ElementProps['textBg'] })}
+                options={[
+                  { value: 'none', label: 'plain' },
+                  { value: 'highlight', label: 'highlighter' },
+                  { value: 'label', label: 'label tag' },
+                  { value: 'sticky', label: 'sticky note' },
+                  { value: 'bubble', label: 'bubble' },
+                ]}
+                aria-label="text style"
+              />
               {p.textBg && p.textBg !== 'none' && <ColorPick value={p.bgColor ?? '#FFF0A8'} onChange={(c) => setProps({ bgColor: c }, `bg-${el.id}`)} label="background colour" />}
-              <select value={p.textFx ?? 'none'} onChange={(e) => setProps({ textFx: e.target.value === 'none' ? undefined : (e.target.value as ElementProps['textFx']) })} className="input-mini" aria-label="text effect">
-                <option value="none">no effect</option>
-                <option value="glitter">glitter</option>
-                <option value="chrome">chrome</option>
-                <option value="outline">bubble outline</option>
-                <option value="sticker">sticker</option>
-                <option value="gradient">gradient</option>
-                <option value="shadow">pop shadow</option>
-              </select>
+              <SelectMini
+                value={p.textFx ?? 'none'}
+                onChange={(v) => setProps({ textFx: v === 'none' ? undefined : (v as ElementProps['textFx']) })}
+                options={[
+                  { value: 'none', label: 'no effect' },
+                  { value: 'glitter', label: 'glitter' },
+                  { value: 'chrome', label: 'chrome' },
+                  { value: 'outline', label: 'bubble outline' },
+                  { value: 'sticker', label: 'sticker' },
+                  { value: 'gradient', label: 'gradient' },
+                  { value: 'shadow', label: 'pop shadow' },
+                ]}
+                aria-label="text effect"
+              />
               {(p.textFx === 'gradient' || p.textFx === 'glitter' || p.textFx === 'chrome' || p.textFx === 'shadow') && (
                 <ColorPick value={p.gradTo ?? '#6FE3FF'} onChange={(c) => setProps({ gradTo: c }, `grad-${el.id}`)} label="second colour" letter="2" />
               )}
@@ -1486,11 +1555,16 @@ function SelectionBar({
             </>
           )}
           {el.type === 'question' && (
-            <select value={p.cardStyle ?? 'card'} onChange={(e) => setProps({ cardStyle: e.target.value as ElementProps['cardStyle'] })} className="input-mini" aria-label="card style">
-              <option value="card">card</option>
-              <option value="lined">lined</option>
-              <option value="sticky">sticky</option>
-            </select>
+            <SelectMini
+              value={p.cardStyle ?? 'card'}
+              onChange={(v) => setProps({ cardStyle: v as ElementProps['cardStyle'] })}
+              options={[
+                { value: 'card', label: 'card' },
+                { value: 'lined', label: 'lined' },
+                { value: 'sticky', label: 'sticky' },
+              ]}
+              aria-label="card style"
+            />
           )}
           <ToolBtn onClick={onEdit} title="edit text (enter)">✎ type</ToolBtn>
         </>
@@ -1498,15 +1572,21 @@ function SelectionBar({
 
       {el.type === 'image' && (
         <>
-          <select value={p.frame ?? 'none'} onChange={(e) => setProps({ frame: e.target.value as ElementProps['frame'] })} className="input-mini" aria-label="frame">
-            {['none', 'polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'].map((f) => <option key={f} value={f}>{f === 'none' ? 'no frame' : f}</option>)}
-          </select>
+          <SelectMini
+            value={p.frame ?? 'none'}
+            onChange={(v) => setProps({ frame: v as ElementProps['frame'] })}
+            options={['none', 'polaroid', 'film', 'rounded', 'circle', 'heart', 'stamp'].map((f) => ({ value: f, label: f === 'none' ? 'no frame' : f }))}
+            aria-label="frame"
+          />
           {p.frame === 'polaroid' && (
             <input value={p.caption ?? ''} onChange={(e) => setProps({ caption: e.target.value }, `cap-${el.id}`)} placeholder="caption…" className="input-mini w-[120px] font-caveat" aria-label="caption" />
           )}
-          <select value={p.filter ?? 'none'} onChange={(e) => setProps({ filter: e.target.value as ElementProps['filter'] })} className="input-mini" aria-label="filter">
-            {['none', 'vintage', 'bw', 'rosy', 'dreamy'].map((f) => <option key={f} value={f}>{f === 'none' ? 'no filter' : f === 'bw' ? 'b&w' : f}</option>)}
-          </select>
+          <SelectMini
+            value={p.filter ?? 'none'}
+            onChange={(v) => setProps({ filter: v as ElementProps['filter'] })}
+            options={['none', 'vintage', 'bw', 'rosy', 'dreamy'].map((f) => ({ value: f, label: f === 'none' ? 'no filter' : f === 'bw' ? 'b&w' : f }))}
+            aria-label="filter"
+          />
           <ToolBtn onClick={onReplacePhoto} title="replace photo"><span className="flex items-center gap-1"><IcoCam />{el.content ? 'replace' : 'add photo'}</span></ToolBtn>
           <ToolBtn onClick={() => setProps({ flipX: !p.flipX })} active={p.flipX} title="flip">⇋</ToolBtn>
         </>
@@ -1521,18 +1601,24 @@ function SelectionBar({
 
       {el.type === 'tape' && (
         <>
-          <select value={p.pattern ?? 'grid'} onChange={(e) => setProps({ pattern: e.target.value })} className="input-mini" aria-label="tape pattern">
-            {TAPES.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
-          </select>
+          <SelectMini
+            value={p.pattern ?? 'grid'}
+            onChange={(v) => setProps({ pattern: v })}
+            options={TAPES.map((t) => ({ value: t.id, label: t.label }))}
+            aria-label="tape pattern"
+          />
           <ColorPick value={p.color ?? '#FFB6D9'} onChange={(c) => setProps({ color: c }, `color-${el.id}`)} label="tape colour" extra={TAPE_COLORS} />
         </>
       )}
 
       {el.type === 'shape' && (
         <>
-          <select value={p.shape ?? 'rect'} onChange={(e) => setProps({ shape: e.target.value as ElementProps['shape'] })} className="input-mini" aria-label="shape">
-            {['rect', 'circle', 'heart', 'star', 'speech', 'ticket', 'scallop', 'cloud'].map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <SelectMini
+            value={p.shape ?? 'rect'}
+            onChange={(v) => setProps({ shape: v as ElementProps['shape'] })}
+            options={['rect', 'circle', 'heart', 'star', 'speech', 'ticket', 'scallop', 'cloud'].map((s) => ({ value: s, label: s }))}
+            aria-label="shape"
+          />
           <ColorPick value={p.fill ?? '#FFFFFF'} onChange={(c) => setProps({ fill: c }, `fill-${el.id}`)} label="fill" />
           <ColorPick value={p.stroke ?? '#2B0A2E'} onChange={(c) => setProps({ stroke: c }, `stroke-${el.id}`)} label="outline" letter="◻" />
         </>
