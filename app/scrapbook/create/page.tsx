@@ -219,10 +219,8 @@ export default function CreateScrapbookPage() {
                         <button
                           className="btn-bevel text-xs !px-3 !py-1"
                           onClick={() => {
-                            if (window.confirm('Replace your pages with the new starter layout?')) {
-                              setPages(starterPages(coverId, templateId, title))
-                              setSeededFor(layoutKey)
-                            }
+                            setPages(starterPages(coverId, templateId, title))
+                            setSeededFor(layoutKey)
                           }}
                         >
                           use new layout

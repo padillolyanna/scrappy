@@ -110,19 +110,64 @@ export function CommentForm({ profileId, viewerId }: { profileId: string; viewer
 export function DeleteCommentButton({ commentId }: { commentId: string }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+
+  async function doDelete() {
+    setBusy(true)
+    setConfirming(false)
+    await createClient().from('profile_comments').delete().eq('id', commentId)
+    router.refresh()
+  }
+
   return (
-    <button
-      type="button"
-      onClick={async () => {
-        if (!window.confirm('Delete this comment?')) return
-        setBusy(true)
-        await createClient().from('profile_comments').delete().eq('id', commentId)
-        router.refresh()
-      }}
-      disabled={busy}
-      style={{ fontSize: 12, fontFamily: 'Verdana, sans-serif', textDecoration: 'underline', opacity: 0.7, background: 'none', border: 0, cursor: 'pointer', color: 'inherit' }}
-    >
-      {busy ? 'deleting…' : 'delete'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        disabled={busy}
+        style={{ fontSize: 12, fontFamily: 'Verdana, sans-serif', textDecoration: 'underline', opacity: 0.7, background: 'none', border: 0, cursor: 'pointer', color: 'inherit' }}
+      >
+        {busy ? 'deleting…' : 'delete'}
+      </button>
+
+      {confirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-[#3A0030]/60 backdrop-blur-sm" onClick={() => setConfirming(false)} />
+          <div className="relative z-10 w-full max-w-xs animate-bounce-in">
+            <div className="window-chrome overflow-hidden rounded-lg shadow-2xl">
+              <div className="window-title-bar">
+                <span>scrappy.exe — delete comment</span>
+                <div className="flex gap-1">
+                  <span className="window-btn">_</span>
+                  <span className="window-btn">□</span>
+                  <button className="window-btn" onClick={() => setConfirming(false)}>x</button>
+                </div>
+              </div>
+              <div className="bg-white p-6 text-center">
+                <div className="font-pixel text-2xl text-[#FF4FA3] mb-3">♡</div>
+                <p className="font-caveat text-lg text-[#3A0030] mb-5" style={{ fontFamily: 'Caveat, cursive' }}>
+                  delete this comment? this can&apos;t be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirming(false)}
+                    className="btn-outline-y2k flex-1 py-2 text-sm"
+                  >
+                    keep it
+                  </button>
+                  <button
+                    onClick={doDelete}
+                    className="btn-y2k flex-1 py-2 text-sm"
+                    style={{ background: '#D4006E' }}
+                  >
+                    delete ✦
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
