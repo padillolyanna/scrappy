@@ -54,7 +54,7 @@ function SelectMini({
         aria-label={ariaLabel}
         onClick={() => setOpen((o) => !o)}
         className="input-mini flex items-center gap-1 select-none"
-        style={{ minWidth: 72, ...style }}
+        style={{ minWidth: 72, backgroundImage: 'none', paddingRight: 8, ...style }}
       >
         <span className="truncate flex-1 text-left" style={selected.style}>{selected.label}</span>
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
@@ -1503,7 +1503,7 @@ function SelectionBar({
             <input
               type="number" value={Math.round(p.size ?? 24)} min={8} max={160}
               onChange={(e) => setProps({ size: Math.max(8, Math.min(160, Number(e.target.value) || 8)) }, `size-${el.id}`)}
-              className="input-mini w-12 text-center" aria-label="font size"
+              className="input-mini w-14 text-center" style={{ paddingRight: 4, paddingLeft: 4 }} aria-label="font size"
             />
             <ToolBtn onClick={() => setProps({ size: Math.min(160, (p.size ?? 24) + 2) }, `size-${el.id}`)} title="bigger">+</ToolBtn>
           </div>
