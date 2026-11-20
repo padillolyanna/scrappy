@@ -7,7 +7,7 @@ import { TEMPLATES } from '@/lib/types'
 import {
   FONTS, PAGE_H, PAGE_W, PAPERS, PAPER_COLORS, SPREAD_W, SWATCHES, TAPES, TAPE_COLORS,
   addTo, blankPage, compressImage, makeImage, makeQuestion, starterCover, makeShape, makeSticker, makeTape, makeText,
-  paperStyle, pageBackground,
+  paperStyle, pageBackground, SPIRAL_COLORS, hasTransparency,
   type ElementProps, type NbElement, type NbPage, type PaperId,
 } from '@/lib/notebook'
 import { BACKGROUNDS as ART_BACKGROUNDS } from '@/lib/photoboothArt'
@@ -130,6 +130,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [exporting, setExporting] = useState(false)
   const exportRef = useRef<HTMLDivElement>(null)
   const bgFileRef = useRef<HTMLInputElement>(null)
+  const stickerFileRef = useRef<HTMLInputElement>(null)
   const [libCat, setLibCat] = useState<StickerCategory | 'all'>('all')
   const [frameCat, setFrameCat] = useState<FrameCategory | 'all'>('all')
   const [bgTarget, setBgTarget] = useState<'left' | 'right' | 'both'>('both')
@@ -141,6 +142,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const clipboard = useRef<NbElement | null>(null)
 
   const hasCover = !!pages[0]?.cover
+  const spiral = hasCover ? pages[0].spiral : undefined
   const off = hasCover ? 1 : 0
   const spreads = Math.max(1, Math.ceil((pages.length - off) / 2))
   const onCover = hasCover && spreadState < 0
@@ -190,6 +192,48 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   }
 
   const bgIdxs = onCover ? [0] : bgTarget === 'left' ? [leftIdx] : bgTarget === 'right' ? [rightIdx] : [leftIdx, rightIdx]
+
+  const MAX_STICKER_MB = 5
+  async function handleStickerFiles(files: FileList | null) {
+    if (!files?.length) return
+    setBusy(true)
+    let warnedOpaque = false
+    for (const f of Array.from(files).slice(0, 8)) {
+      if (!/^image\/(png|webp|gif|jpeg)$/.test(f.type)) {
+        setNotice(`${f.name}: use a PNG, WebP, GIF or JPG image`)
+        continue
+      }
+      if (f.size > MAX_STICKER_MB * 1024 * 1024) {
+        setNotice(`${f.name} is ${(f.size / 1024 / 1024).toFixed(1)} MB — stickers can be up to ${MAX_STICKER_MB} MB`)
+        continue
+      }
+      try {
+        let url = await compressImage(f, 800, 0.9)
+        const transparent = await hasTransparency(url)
+        const dims = await new Promise<{ w: number; h: number }>((res) => {
+          const im = new Image()
+          im.onload = () => res({ w: im.width, h: im.height })
+          im.onerror = () => res({ w: 1, h: 1 })
+          im.src = url
+        })
+        if (uploadImage) {
+          try { url = await uploadImage(url) } catch { /* keep inline; uploads on save */ }
+        }
+        const aspect = dims.w / Math.max(1, dims.h)
+        const size = 130
+        add({ ...makeSticker(`url:${url}`), w: Math.round(aspect >= 1 ? size : size * aspect), h: Math.round(aspect >= 1 ? size / aspect : size), props: { shadow: transparent } })
+        if (!transparent && !warnedOpaque) {
+          warnedOpaque = true
+          setNotice('tip: that image has no transparent background, so it shows as a rectangle. A PNG cutout looks more like a real sticker ✦')
+        }
+      } catch {
+        setNotice(`couldn't read ${f.name}`)
+      }
+    }
+    setBusy(false)
+  }
+
+  const myStickers = Array.from(new Set(pages.flatMap((p) => p.elements.filter((e) => e.type === 'sticker' && e.content.startsWith('url:')).map((e) => e.content))))
 
   async function handleBgFile(files: FileList | null) {
     const f = files?.[0]
@@ -556,6 +600,10 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
     setActivePage(0)
     setSel(null)
   }
+  function setSpiral(hex: string, coalesce = false) {
+    if (!pagesRef.current[0]?.cover) return
+    commit(pagesRef.current.map((p, i) => (i === 0 ? { ...p, spiral: hex } : p)), coalesce ? 'spiral' : undefined)
+  }
   function removeCover() {
     if (!pagesRef.current[0]?.cover) return
     commit(pagesRef.current.slice(1))
@@ -809,6 +857,32 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
 
               {panel === 'stickers' && (
                 <div className="space-y-3">
+                  <input ref={stickerFileRef} type="file" accept="image/png,image/webp,image/gif,image/jpeg" multiple hidden onChange={(e) => { handleStickerFiles(e.target.files); e.target.value = '' }} />
+                  <button onClick={() => stickerFileRef.current?.click()} className="btn-bevel w-full text-sm" disabled={busy}>
+                    {busy ? 'uploading…' : '↑ upload your own sticker'}
+                  </button>
+                  <div className="rounded-lg border-2 border-dashed border-[#F59E0B]/60 bg-[#FFF8E6] px-2.5 py-2 font-nunito text-[13px] leading-snug text-[#5A3A10]">
+                    <b>sticker tips ✦</b>
+                    <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                      <li><b>PNG with a transparent background</b> (no background) looks best. JPGs show as a rectangle.</li>
+                      <li>Up to <b>{MAX_STICKER_MB} MB</b> each, up to 8 at a time.</li>
+                      <li>At least <b>300×300 px</b> so it stays sharp. Big images are shrunk to 800 px.</li>
+                      <li>PNG, WebP, GIF (first frame) or JPG.</li>
+                    </ul>
+                  </div>
+                  {myStickers.length > 0 && (
+                    <>
+                      <div className="font-silkscreen text-[12px] text-[#D4006E]">YOUR STICKERS</div>
+                      <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
+                        {myStickers.map((c) => (
+                          <button key={c.slice(-40)} onClick={() => add({ ...makeSticker(c), w: 110, h: 110 })} className="aspect-square rounded-lg p-1 bg-[repeating-conic-gradient(#f3eef8_0_25%,#fff_0_50%)] bg-[length:10px_10px] hover:scale-110 transition-transform" title="add again">
+                            <Sticker content={c} />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">DOODLES</div>
                   <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
                     {STICKERS.map((s) => (
                       <button key={s.id} onClick={() => add(makeSticker(`svg:${s.id}`))} title={s.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110 hover:-rotate-6">
@@ -874,6 +948,28 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
 
               {panel === 'backgrounds' && (
                 <div className="space-y-3">
+                  {hasCover && (
+                    <div>
+                      <div className="font-silkscreen text-[12px] text-[#0EA5E9] mb-1.5">SPIRAL COLOUR</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {SPIRAL_COLORS.map((c) => (
+                          <button
+                            key={c.id}
+                            onClick={() => setSpiral(c.hex)}
+                            title={c.label}
+                            aria-label={`${c.label} spiral`}
+                            aria-pressed={(spiral ?? '').toLowerCase() === c.hex.toLowerCase()}
+                            className={`w-8 h-8 rounded-full border-2 ${(spiral ?? '').toLowerCase() === c.hex.toLowerCase() ? 'border-[#FF2E93] ring-2 ring-[#FF2E93]/40' : 'border-[#0B1B4A]/40'}`}
+                            style={{ background: `radial-gradient(circle at 35% 30%, #fff 0 14%, ${c.hex} 50%, #1a1a1a 140%)` }}
+                          />
+                        ))}
+                        <label className="w-8 h-8 rounded-full border-2 border-dashed border-[#0B1B4A]/50 flex items-center justify-center cursor-pointer text-sm" title="custom colour">
+                          ＋
+                          <input type="color" className="sr-only" value={spiral ?? '#B9C0CC'} onChange={(e) => setSpiral(e.target.value, true)} aria-label="custom spiral colour" />
+                        </label>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex rounded-lg border-2 border-[#0B1B4A] overflow-hidden">
                     {(['left', 'right', 'both'] as const).map((t) => (
                       <button key={t} onClick={() => setBgTarget(t)} className={`flex-1 font-pixel text-base py-0.5 ${bgTarget === t ? 'bg-[#0EA5E9] text-white' : 'bg-white'}`}>
@@ -1046,7 +1142,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
               >
                 <div style={{ width: SPREAD_W * 0.085, height: PAGE_H * 0.085, overflow: 'hidden', pointerEvents: 'none' }}>
                   <div style={{ transform: 'scale(0.085)', transformOrigin: '0 0' }}>
-                    <StaticSpread left={pages[off + i * 2]} right={pages[off + i * 2 + 1]} />
+                    <StaticSpread left={pages[off + i * 2]} right={pages[off + i * 2 + 1]} spiral={spiral} />
                   </div>
                 </div>
                 <div className="font-pixel text-sm leading-none text-center">{i * 2 + 1}–{i * 2 + 2}</div>
@@ -1089,7 +1185,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
       {exporting && (
         <div style={{ position: 'fixed', left: -10000, top: 0, pointerEvents: 'none' }} aria-hidden>
           <div ref={exportRef} style={{ padding: 24, background: '#f7eaf1', display: 'inline-block' }}>
-            {onCover ? <StaticCover page={pages[0]} /> : <StaticSpread left={left} right={right} />}
+            {onCover ? <StaticCover page={pages[0]} /> : <StaticSpread left={left} right={right} spiral={spiral} />}
           </div>
         </div>
       )}

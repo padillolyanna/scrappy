@@ -336,7 +336,7 @@ function PublishStep({
                 {pages[0]?.cover ? (
                   <div style={{ marginLeft: PAGE_W / 2 }}><StaticCover page={pages[0]} /></div>
                 ) : (
-                  <StaticSpread left={pages[0]} right={pages[1]} />
+                  <StaticSpread left={pages[0]} right={pages[1]} spiral={pages[0]?.spiral} />
                 )}
               </div>
             </div>

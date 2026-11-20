@@ -65,6 +65,8 @@ export interface NbPage {
   id: string
   /** the notebook's front cover — always pages[0] when present, shown closed and on its own */
   cover?: boolean
+  /** cover only: colour of the plastic coil (used for the whole notebook) */
+  spiral?: string
   /** a PaperId, or 'art:<backgroundId>' for a drawn texture from lib/photoboothArt */
   paper: PaperId | `art:${string}`
   color: string
@@ -134,14 +136,15 @@ export function pageBackground(page: Pick<NbPage, 'paper' | 'color' | 'bgImage' 
 /** bg_texture column encoding: "[cover~]<paper>" or "[cover~]<paper>|img|<scale>|<url>" */
 export function encodePaper(p: NbPage) {
   const base = p.bgImage ? `${p.paper}|img|${p.bgScale ?? 1}|${p.bgImage}` : p.paper
-  return p.cover ? `cover~${base}` : base
+  if (!p.cover) return base
+  return p.spiral ? `cover:${p.spiral}~${base}` : `cover~${base}`
 }
-export function decodePaper(raw: string | null): Pick<NbPage, 'paper' | 'bgImage' | 'bgScale' | 'cover'> {
+export function decodePaper(raw: string | null): Pick<NbPage, 'paper' | 'bgImage' | 'bgScale' | 'cover' | 'spiral'> {
   if (!raw) return { paper: 'plain' }
-  const cover = raw.startsWith('cover~')
-  const body = cover ? raw.slice(6) : raw
+  const m = raw.match(/^cover(?::(#[0-9a-fA-F]{6}))?~/)
+  const body = m ? raw.slice(m[0].length) : raw
   const [paper, kind, scale, ...rest] = body.split('|')
-  const extra = cover ? { cover: true as const } : {}
+  const extra = m ? { cover: true as const, ...(m[1] ? { spiral: m[1] } : {}) } : {}
   if (kind === 'img' && rest.length) return { paper: paper as NbPage['paper'], bgScale: Number(scale) || 1, bgImage: rest.join('|'), ...extra }
   return { paper: paper as NbPage['paper'], ...extra }
 }
@@ -357,21 +360,42 @@ export function coverTheme(coverId: string) {
   return COVER_PAPER[coverId] ?? COVER_PAPER['pink-princess']
 }
 
-const COVER_ART: Record<string, { bg: string; ink: string; accent: string }> = {
-  'pink-princess': { bg: 'art:glitter-pink', ink: '#3B3BB8', accent: '#FFFFFF' },
-  'cyber-y2k': { bg: 'art:starburst-blue', ink: '#FFFFFF', accent: '#FF4FA3' },
-  'digital-diary': { bg: 'art:hearts', ink: '#3B3BB8', accent: '#FF2E93' },
-  'indie-sleaze': { bg: 'art:zebra', ink: '#FF2E93', accent: '#111111' },
-  'sweet-memories': { bg: 'art:daisies', ink: '#3B3BB8', accent: '#FF9B6A' },
-  'blue-dream': { bg: 'art:clouds', ink: '#3B3BB8', accent: '#FFFFFF' },
-  'retro-camera': { bg: 'art:leopard', ink: '#2B1408', accent: '#FF5FA2' },
-  'glitter-explosion': { bg: 'art:glitter-night', ink: '#FFD1E8', accent: '#FF4FA3' },
+export const SPIRAL_COLORS: { id: string; label: string; hex: string }[] = [
+  { id: 'grape', label: 'grape', hex: '#8A5CFF' },
+  { id: 'bubblegum', label: 'bubblegum', hex: '#FF5FB1' },
+  { id: 'sky', label: 'sky blue', hex: '#3B9BFF' },
+  { id: 'aqua', label: 'aqua', hex: '#20D3C2' },
+  { id: 'lime', label: 'lime', hex: '#8EE03A' },
+  { id: 'sunny', label: 'sunny', hex: '#FFC93C' },
+  { id: 'chrome', label: 'chrome', hex: '#B9C0CC' },
+  { id: 'gold', label: 'gold', hex: '#D4A437' },
+  { id: 'clear', label: 'clear', hex: '#EAF2FF' },
+  { id: 'black', label: 'black', hex: '#2A2730' },
+]
+
+const COVER_ART: Record<string, { bg: string; ink: string; accent: string; spiral: string }> = {
+  'pink-princess': { bg: 'art:glitter-pink', ink: '#3B3BB8', accent: '#FFFFFF', spiral: '#8A5CFF' },
+  'cyber-y2k': { bg: 'art:starburst-blue', ink: '#FFFFFF', accent: '#FF4FA3', spiral: '#B9C0CC' },
+  'digital-diary': { bg: 'art:hearts', ink: '#3B3BB8', accent: '#FF2E93', spiral: '#FF5FB1' },
+  'indie-sleaze': { bg: 'art:zebra', ink: '#FF2E93', accent: '#111111', spiral: '#2A2730' },
+  'sweet-memories': { bg: 'art:daisies', ink: '#3B3BB8', accent: '#FF9B6A', spiral: '#FFC93C' },
+  'blue-dream': { bg: 'art:clouds', ink: '#3B3BB8', accent: '#FFFFFF', spiral: '#3B9BFF' },
+  'retro-camera': { bg: 'art:leopard', ink: '#2B1408', accent: '#FF5FA2', spiral: '#D4A437' },
+  'glitter-explosion': { bg: 'art:glitter-night', ink: '#FFD1E8', accent: '#FF4FA3', spiral: '#20D3C2' },
 }
 
 /** A decorated front cover: glitter texture, heart photo window, title and doodles. */
 export function starterCover(coverId: string, title: string): NbPage {
+  if (coverId === 'blank') {
+    // start from scratch: a plain board with just the title
+    const blank: NbPage = { id: uid('pg'), cover: true, paper: 'plain', color: '#FFD1E8', spiral: '#B9C0CC', elements: [] }
+    return addTo(blank, {
+      type: 'text', x: 40, y: 80, w: 400, h: 60, rotation: 0, content: title || 'my scrapbook',
+      props: { font: 'pacifico', size: 40, color: '#3A0030', align: 'center' },
+    }).page
+  }
   const art = COVER_ART[coverId] ?? COVER_ART['pink-princess']
-  let cover: NbPage = { id: uid('pg'), cover: true, paper: art.bg as NbPage['paper'], color: '#FF9ECF', elements: [] }
+  let cover: NbPage = { id: uid('pg'), cover: true, paper: art.bg as NbPage['paper'], color: '#FF9ECF', spiral: art.spiral, elements: [] }
   const doodle = (content: string, x: number, y: number, rotation: number, size = 22, font = 'gochi') =>
     ({ type: 'text' as const, x, y, w: 200, h: 34, rotation, content, props: { font, size, color: art.ink, align: 'center' as const } })
   cover = addTo(cover, {
@@ -392,6 +416,9 @@ export function starterCover(coverId: string, title: string): NbPage {
 }
 
 export function starterPages(coverId: string, templateId: string, title: string): NbPage[] {
+  if (coverId === 'blank') {
+    return [starterCover('blank', title), blankPage('#FFFFFF', 'grid'), blankPage('#FFFFFF', 'grid')]
+  }
   return [starterCover(coverId, title), ...starterInner(coverId, templateId, title)]
 }
 
@@ -526,7 +553,8 @@ export function compressImage(file: File, maxSide = 1400, quality = 0.84): Promi
         const ctx = canvas.getContext('2d')
         if (!ctx) return reject(new Error('no canvas'))
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+        const keepAlpha = file.type === 'image/png' || file.type === 'image/webp' || file.type === 'image/gif'
+        const type = keepAlpha ? 'image/png' : 'image/jpeg'
         resolve(canvas.toDataURL(type, quality))
       }
       img.src = reader.result as string
@@ -550,4 +578,25 @@ export const IMAGE_FILTERS: Record<string, string> = {
   bw: 'grayscale(1) contrast(1.1)',
   rosy: 'sepia(.2) saturate(1.4) hue-rotate(-12deg) brightness(1.05)',
   dreamy: 'brightness(1.1) saturate(1.3) contrast(.92) blur(.3px)',
+}
+
+/** True when an image has any transparent pixels (sampled). */
+export function hasTransparency(dataUrl: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onerror = () => resolve(false)
+    img.onload = () => {
+      const w = Math.min(160, img.width), h = Math.max(1, Math.round((img.height / img.width) * w))
+      const c = document.createElement('canvas')
+      c.width = w
+      c.height = h
+      const ctx = c.getContext('2d')
+      if (!ctx) return resolve(false)
+      ctx.drawImage(img, 0, 0, w, h)
+      const d = ctx.getImageData(0, 0, w, h).data
+      for (let i = 3; i < d.length; i += 4) if (d[i] < 250) return resolve(true)
+      resolve(false)
+    }
+    img.src = dataUrl
+  })
 }

@@ -1,97 +1,85 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { motion } from 'framer-motion'
-import { SCRAPBOOK_COVERS, type ScrapbookCover } from '@/lib/types'
+import { SCRAPBOOK_COVERS } from '@/lib/types'
+import { starterCover, PAGE_W, PAGE_H, type NbPage } from '@/lib/notebook'
+import { StaticCover } from '@/components/notebook/Spread'
 
 interface Props {
   selected: string
   onSelect: (id: string) => void
 }
 
+const SCALE = 0.32
+const OPTIONS = [
+  ...SCRAPBOOK_COVERS.map((c) => ({ id: c.id, name: c.name, description: c.description })),
+  { id: 'blank', name: 'Blank cover', description: 'start from scratch and decorate it yourself' },
+]
+
+let coverCache: Record<string, NbPage> | null = null
+function getCovers() {
+  coverCache ??= Object.fromEntries(OPTIONS.map((o) => [o.id, starterCover(o.id, o.id === 'blank' ? 'my scrapbook' : o.name.toLowerCase())]))
+  return coverCache
+}
+const noop = () => () => {}
+
+/** Real, decorated starter covers (the same ones you get in the editor), plus a blank one. */
 export default function CoverSelector({ selected, onSelect }: Props) {
+  // covers use random ids/art, so build them in the browser only
+  const covers = useSyncExternalStore(noop, getCovers, () => null)
+
   return (
     <div>
       <div className="text-center mb-8">
-        <h2
-          className="font-pacifico text-4xl text-[#3A0030] mb-2"
-          style={{ fontFamily: 'Pacifico, cursive', fontSize: '36px' }}
-        >
+        <h2 className="font-pacifico text-[#3A0030] mb-2" style={{ fontFamily: 'Pacifico, cursive', fontSize: '36px' }}>
           pick your cover
         </h2>
-        <p className="font-caveat text-xl text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
-          choose the vibe for your scrapbook ✦
+        <p className="font-caveat text-xl text-[#666]" style={{ fontFamily: 'Caveat, cursive' }}>
+          every cover is fully editable later: stickers, photos, text and spiral colour ✦
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {SCRAPBOOK_COVERS.map((cover, i) => (
-          <CoverCard
-            key={cover.id}
-            cover={cover}
-            selected={selected === cover.id}
-            onSelect={onSelect}
-            delay={i * 0.05}
-          />
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
+        {OPTIONS.map((o, i) => {
+          const isSel = selected === o.id
+          return (
+            <motion.button
+              key={o.id}
+              type="button"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04, duration: 0.25 }}
+              whileHover={{ y: -4, rotate: i % 2 ? 0.8 : -0.8 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onSelect(o.id)}
+              aria-pressed={isSel}
+              className={`relative flex flex-col items-center rounded-2xl p-3 text-left transition-shadow ${
+                isSel ? 'bg-[#FFE3F2] shadow-xl ring-4 ring-[#FF4FA3]/40' : 'bg-white/80 shadow hover:shadow-lg'
+              }`}
+              style={{ border: isSel ? '3px solid #FF4FA3' : '2px solid rgba(58,0,48,.12)' }}
+            >
+              <div className="relative" style={{ width: PAGE_W * SCALE + 6, height: PAGE_H * SCALE + 6 }}>
+                <div className="pointer-events-none absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${SCALE})` }}>
+                  {covers ? <StaticCover page={covers[o.id]} /> : <div style={{ width: PAGE_W, height: PAGE_H, borderRadius: 18, background: '#f3e3ee' }} />}
+                </div>
+                {o.id === 'blank' && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="rounded-full bg-white/90 px-3 py-1 font-silkscreen text-[12px] text-[#D4006E] shadow">+ FROM SCRATCH</span>
+                  </div>
+                )}
+                {isSel && (
+                  <div className="absolute -top-2 -left-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#FF4FA3] text-sm font-bold text-white shadow">✓</div>
+                )}
+              </div>
+              <div className="mt-2 w-full">
+                <div className="font-nunito text-[15px] font-black leading-tight text-[#3A0030]">{o.name}</div>
+                <div className="mt-0.5 font-nunito text-[13px] leading-snug text-[#666]">{o.description}</div>
+              </div>
+            </motion.button>
+          )
+        })}
       </div>
     </div>
-  )
-}
-
-function CoverCard({
-  cover,
-  selected,
-  onSelect,
-  delay,
-}: {
-  cover: ScrapbookCover
-  selected: boolean
-  onSelect: (id: string) => void
-  delay: number
-}) {
-  return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, duration: 0.3 }}
-      whileHover={{ scale: 1.05, y: -4 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => onSelect(cover.id)}
-      className={`relative text-left rounded-xl overflow-hidden transition-all duration-200 ${
-        selected
-          ? 'ring-4 ring-[#FF4FA3]/30 shadow-xl'
-          : 'shadow hover:shadow-lg'
-      }`}
-      style={{ border: selected ? '3px solid #FF4FA3' : '2px solid transparent' }}
-    >
-      <div className={`h-32 bg-gradient-to-br ${cover.bg_gradient} flex items-center justify-center relative overflow-hidden`}>
-        <div className="text-5xl font-pixel text-[#3A0030]/30">{cover.preview_symbol}</div>
-
-        <div className="absolute top-2 right-2 text-xs opacity-60 space-y-0.5">
-          {cover.stickers.slice(0, 3).map((s, i) => (
-            <div key={i} style={{ fontSize: '12px' }} className="text-[#3A0030]/40">{s}</div>
-          ))}
-        </div>
-
-        {selected && (
-          <div className="absolute top-2 left-2 w-6 h-6 bg-[#FF4FA3] rounded-full flex items-center justify-center text-white text-xs font-bold shadow">
-            ✓
-          </div>
-        )}
-
-        <div className="absolute bottom-2 left-2 text-white/60 animate-sparkle" style={{ fontSize: '12px' }}>
-          ✦
-        </div>
-      </div>
-
-      <div className="bg-white p-3">
-        <div className="font-nunito font-black text-sm text-[#3A0030] leading-tight">
-          {cover.name}
-        </div>
-        <div className="font-caveat text-xs text-[#888] mt-0.5" style={{ fontFamily: 'Caveat, cursive', fontSize: '12px' }}>
-          {cover.description}
-        </div>
-      </div>
-    </motion.button>
   )
 }
