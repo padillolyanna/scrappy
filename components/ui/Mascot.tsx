@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 const TIPS = [
   'decorate your page! ✦',
-  'post a confession 🤫',
+  'post a confession!',
   'try the daily prompt! ★',
 ]
 
@@ -93,8 +93,8 @@ export default function Mascot() {
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2B0A2E' }} />
           </div>
           {/* Bow on top */}
-          <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', fontSize: 14 }}>
-            🎀
+          <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', lineHeight: 1 }}>
+            <svg width="18" height="12" viewBox="0 0 18 12" fill="none"><ellipse cx="4.5" cy="6" rx="4" ry="2.5" fill="#FF4FA3" stroke="#2B0A2E" strokeWidth="1" transform="rotate(-15,4.5,6)"/><ellipse cx="13.5" cy="6" rx="4" ry="2.5" fill="#FF4FA3" stroke="#2B0A2E" strokeWidth="1" transform="rotate(15,13.5,6)"/><circle cx="9" cy="6" r="2" fill="#FF9ECF" stroke="#2B0A2E" strokeWidth="1"/></svg>
           </div>
         </div>
 

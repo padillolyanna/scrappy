@@ -13,7 +13,7 @@ export default async function PhotoboothGalleryPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="font-pixel text-5xl text-[#FFB6D9] mb-4">📷</div>
+          <div className="flex justify-center mb-4"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FFB6D9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           <h2 className="font-pacifico text-2xl text-[#3A0030] mb-2" style={{ fontFamily: 'Pacifico, cursive' }}>
             sign in to see your strips
           </h2>
@@ -59,7 +59,7 @@ export default async function PhotoboothGalleryPage() {
 
           {!sessions || sessions.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border-2 border-[#FFB6D9]/30">
-              <div className="text-5xl mb-4">📷</div>
+              <div className="flex justify-center mb-4"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FFB6D9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
               <div className="font-pacifico text-xl text-[#3A0030] mb-2" style={{ fontFamily: 'Pacifico, cursive' }}>
                 no strips yet!
               </div>
@@ -80,7 +80,7 @@ export default async function PhotoboothGalleryPage() {
                     />
                   ) : (
                     <div className="h-32 bg-[#FFB6D9]/20 flex items-center justify-center">
-                      <span className="text-3xl">📷</span>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFB6D9" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     </div>
                   )}
                   <div className="p-3">

@@ -538,8 +538,8 @@ export default function PhotoboothPage() {
             {/* Decorations */}
             <div className="absolute top-6 left-8 text-3xl opacity-40 animate-sparkle">✦</div>
             <div className="absolute top-12 right-10 text-2xl opacity-30 animate-sparkle" style={{ animationDelay: '0.5s' }}>★</div>
-            <div className="absolute bottom-8 left-16 text-xl opacity-25">📷</div>
-            <div className="absolute bottom-6 right-12 text-2xl opacity-25">🌸</div>
+            <div className="absolute bottom-8 left-16 text-xl opacity-25">✦</div>
+            <div className="absolute bottom-6 right-12 text-2xl opacity-25">✿</div>
             <div className="absolute top-20 left-1/4 text-xl opacity-20">♡</div>
             <div className="absolute top-8 right-1/4 text-lg opacity-20">◆</div>
 
@@ -569,7 +569,7 @@ export default function PhotoboothPage() {
                 className="btn-y2k text-base px-8 py-3"
                 style={{ fontSize: '14px' }}
               >
-                📷 LET&apos;S TAKE PICTURES!
+                LET&apos;S TAKE PICTURES!
               </button>
               {user && (
                 <Link href="/photobooth/gallery" className="btn-outline-y2k px-8 py-3 text-sm bg-white/10 border-white/50 text-white hover:bg-white/20" style={{ fontSize: '13px' }}>
@@ -609,13 +609,13 @@ export default function PhotoboothPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                 {[
-                  { icon: '🖼️', label: 'Choose layout', n: '01' },
-                  { icon: '📷', label: 'Strike a pose', n: '02' },
-                  { icon: '🎨', label: 'Decorate', n: '03' },
-                  { icon: '💾', label: 'Save & share', n: '04' },
+                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>, label: 'Choose layout', n: '01' },
+                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>, label: 'Strike a pose', n: '02' },
+                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, label: 'Decorate', n: '03' },
+                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, label: 'Save & share', n: '04' },
                 ].map(s => (
                   <div key={s.n} className="flex flex-col items-center gap-1">
-                    <div className="text-3xl">{s.icon}</div>
+                    <div className="flex items-center justify-center">{s.icon}</div>
                     <div className="font-pixel text-[#FF4FA3]" style={{ fontSize: '9px' }}>{s.n}</div>
                     <div className="font-caveat text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive', fontSize: '15px' }}>{s.label}</div>
                   </div>
@@ -709,7 +709,7 @@ export default function PhotoboothPage() {
 
             {cameraError ? (
               <div className="bg-[#2B0A2E] rounded-2xl border-2 border-[#FF4FA3]/50 p-10 text-center">
-                <div className="text-5xl mb-4">📷</div>
+                <div className="flex justify-center mb-4"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
                 <h2 className="font-pacifico text-xl text-[#FFB6D9] mb-2" style={{ fontFamily: 'Pacifico, cursive' }}>
                   oops! camera trouble
                 </h2>
@@ -799,7 +799,7 @@ export default function PhotoboothPage() {
                     {isCapturing ? (
                       <span className="font-pixel text-white" style={{ fontSize: '10px' }}>...</span>
                     ) : (
-                      <span className="text-3xl">📷</span>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     )}
                   </button>
 
@@ -809,7 +809,7 @@ export default function PhotoboothPage() {
                     disabled={isCapturing}
                     className="w-10 h-10 rounded-full bg-[#2B0A2E] border border-[#FFB6D9]/30 text-[#FFB6D9] flex items-center justify-center hover:bg-[#3A0030] transition-colors disabled:opacity-40"
                   >
-                    🔄
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
                   </button>
                 </div>
 
@@ -824,7 +824,7 @@ export default function PhotoboothPage() {
                     }`}
                     style={{ fontSize: '10px' }}
                   >
-                    ⚡ FLASH {enableFlash ? 'ON' : 'OFF'}
+                    <svg className="inline mr-1" width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>FLASH {enableFlash ? 'ON' : 'OFF'}
                   </button>
                 </div>
 

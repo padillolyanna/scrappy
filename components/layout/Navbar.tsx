@@ -2,37 +2,49 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 
+// ─── Inline SVG icons ─────────────────────────────────────────────────────────
+
+const IcoBook = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+const IcoCamera = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+const IcoMail = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+const IcoExchange = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+const IcoUser = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+const IcoHome = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+const IcoSettings = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+const IcoLogOut = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+
 // ─── Menu data ────────────────────────────────────────────────────────────────
 
 const CREATE_ITEMS = [
-  { href: '/my-space', label: 'My Scrapbooks', desc: 'Manage your collection', icon: '📔' },
+  { href: '/my-space', label: 'My Scrapbooks', desc: 'Manage your collection', icon: <IcoBook /> },
   { href: '/scrapbook/create', label: 'Create Scrapbook', desc: 'Start a new digital journal', icon: '✦' },
-  { href: '/photobooth', label: 'Photobooth', desc: 'Take and customize photo strips', icon: '📷' },
+  { href: '/photobooth', label: 'Photobooth', desc: 'Take and customize photo strips', icon: <IcoCamera /> },
   { href: '/my-space', label: 'Saved Items', desc: 'Revisit your favorites', icon: '♡' },
 ]
 
 const COMMUNITY_ITEMS = [
   { href: '/highlights', label: 'Highlights', desc: 'Featured scrapbooks', icon: '★' },
-  { href: '/confessions', label: 'Confession Wall', desc: 'Anonymous confessions', icon: '💌' },
+  { href: '/confessions', label: 'Confession Wall', desc: 'Anonymous confessions', icon: <IcoMail /> },
   { href: '/prompts', label: 'Daily Prompt', desc: 'Answer the question of the day', icon: '◆' },
-  { href: '/exchange', label: 'Scrapbook Exchange', desc: 'Exchange notes with others', icon: '🔄' },
+  { href: '/exchange', label: 'Scrapbook Exchange', desc: 'Exchange notes with others', icon: <IcoExchange /> },
 ]
 
 const PROFILE_ITEMS = [
-  { href: '__PROFILE__', label: 'My Profile', icon: '👤' },
-  { href: '/my-space', label: 'My Space', icon: '🏠' },
+  { href: '__PROFILE__', label: 'My Profile', icon: <IcoUser /> },
+  { href: '/my-space', label: 'My Space', icon: <IcoHome /> },
   { href: '/my-space', label: 'Saved Scrapbooks', icon: '♡' },
-  { href: '/exchange', label: 'My Exchanges', icon: '🔄' },
-  { href: '__SETTINGS__', label: 'Account Settings', icon: '⚙️' },
+  { href: '/exchange', label: 'My Exchanges', icon: <IcoExchange /> },
+  { href: '__SETTINGS__', label: 'Account Settings', icon: <IcoSettings /> },
 ]
 
 // ─── Dropdown panel ───────────────────────────────────────────────────────────
 
-interface DropItem { href: string; label: string; desc?: string; icon: string }
+interface DropItem { href: string; label: string; desc?: string; icon: ReactNode }
 
 function DropPanel({
   items,
@@ -263,7 +275,7 @@ export default function Navbar() {
                           onClick={() => { closeAll(); handleLogout() }}
                           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors group"
                         >
-                          <span className="text-base">👋</span>
+                          <span className="flex-shrink-0 text-[#888] group-hover:text-red-400 transition-colors"><IcoLogOut /></span>
                           <span className="font-pixel text-[#888] group-hover:text-red-400 transition-colors" style={{ fontSize: '11px' }}>
                             Log Out
                           </span>
@@ -404,7 +416,7 @@ export default function Navbar() {
                   onClick={() => { closeAll(); handleLogout() }}
                   className="flex items-center gap-3 w-full py-2.5 px-3 rounded-xl hover:bg-red-50 transition-colors"
                 >
-                  <span className="text-base">👋</span>
+                  <span className="flex-shrink-0 text-[#888]"><IcoLogOut /></span>
                   <span className="font-pixel text-[#888]" style={{ fontSize: '11px' }}>Log Out</span>
                 </button>
               </div>

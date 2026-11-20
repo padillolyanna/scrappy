@@ -102,11 +102,11 @@ function StickerDecorations() {
   const stickers = [
     { symbol: '✦', top: 160, left: -14, rotate: '12deg', fontSize: 20, color: '#FF4FA3' },
     { symbol: '♡', top: 320, right: -12, rotate: '-8deg', fontSize: 18, color: '#C9A2FF' },
-    { symbol: '🌸', top: 480, left: -10, rotate: '0deg', fontSize: 16, color: undefined },
+    { symbol: '✿', top: 480, left: -10, rotate: '0deg', fontSize: 16, color: '#FFB6D9' },
     { symbol: '★', top: 600, right: -10, rotate: '15deg', fontSize: 20, color: '#FFF0A8' },
     { symbol: '✿', top: 800, left: -12, rotate: '-10deg', fontSize: 18, color: '#6FE3FF' },
     { symbol: '◆', top: 940, right: -8, rotate: '8deg', fontSize: 14, color: '#FF4FA3' },
-    { symbol: '💿', top: 1100, left: -10, rotate: '0deg', fontSize: 16, color: undefined },
+    { symbol: '◎', top: 1100, left: -10, rotate: '0deg', fontSize: 16, color: '#C9A2FF' },
   ]
 
   return (

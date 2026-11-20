@@ -6,9 +6,9 @@ import ThemeSwitcher from '@/components/ui/ThemeSwitcher'
 // ─── Recent Messages ─────────────────────────────────────────────
 const MESSAGES = [
   { user: 'stargazer', color: '#FF4FA3', text: 'omg the daily prompt today is so good!! loving it ✦' },
-  { user: 'neonlilacdream', color: '#7C4DDB', text: 'just finished my cyber dreams scrapbook 🎀' },
+  { user: 'neonlilacdream', color: '#7C4DDB', text: 'just finished my cyber dreams scrapbook ✦' },
   { user: 'analogdiary', color: '#FF6B00', text: 'the confession wall is so relatable i cried lol' },
-  { user: 'glittergirl', color: '#6FE3FF', text: 'can we get more templates pleaseee 🌸' },
+  { user: 'glittergirl', color: '#6FE3FF', text: 'can we get more templates pleaseee!' },
   { user: 'vintagevibes', color: '#28C840', text: 'scrapbook exchange matched me with @sunflower99!!' },
 ]
 

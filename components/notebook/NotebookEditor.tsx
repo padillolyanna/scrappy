@@ -17,9 +17,11 @@ import { EMOJI_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
 type Panel = 'text' | 'photos' | 'stickers' | 'tape' | 'shapes' | 'questions' | 'paper'
 type Sel = { page: number; id: string } | null
 
-const PANELS: { id: Panel; icon: string; label: string }[] = [
+const IcoCam = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+
+const PANELS: { id: Panel; icon: React.ReactNode; label: string }[] = [
   { id: 'text', icon: 'Aa', label: 'text' },
-  { id: 'photos', icon: '📷', label: 'photos' },
+  { id: 'photos', icon: <IcoCam />, label: 'photos' },
   { id: 'stickers', icon: '★', label: 'stickers' },
   { id: 'tape', icon: '▤', label: 'tape' },
   { id: 'shapes', icon: '◆', label: 'shapes' },
@@ -1061,7 +1063,7 @@ function SelectionBar({
           <select value={p.filter ?? 'none'} onChange={(e) => setProps({ filter: e.target.value as ElementProps['filter'] })} className="input-mini" aria-label="filter">
             {['none', 'vintage', 'bw', 'rosy', 'dreamy'].map((f) => <option key={f} value={f}>{f === 'none' ? 'no filter' : f === 'bw' ? 'b&w' : f}</option>)}
           </select>
-          <ToolBtn onClick={onReplacePhoto} title="replace photo">📷 {el.content ? 'replace' : 'add photo'}</ToolBtn>
+          <ToolBtn onClick={onReplacePhoto} title="replace photo"><span className="flex items-center gap-1"><IcoCam />{el.content ? 'replace' : 'add photo'}</span></ToolBtn>
           <ToolBtn onClick={() => setProps({ flipX: !p.flipX })} active={p.flipX} title="flip">⇋</ToolBtn>
         </>
       )}
