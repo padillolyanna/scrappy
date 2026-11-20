@@ -69,7 +69,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className="font-pixel px-3 py-2 rounded-full text-[#3A0030] hover:bg-[#FFB6D9] hover:text-white transition-all duration-200"
-                style={{ fontSize: '16px', letterSpacing: '0.06em' }}
+                style={{ fontSize: '13px', letterSpacing: '0.05em' }}
               >
                 {link.label}
               </Link>
@@ -135,15 +135,15 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/auth/login"
-                    className="btn-outline-y2k text-xs py-1.5 px-4"
-                    style={{ fontSize: '14px', padding: '6px 18px' }}
+                    className="btn-outline-y2k text-xs py-1.5 px-4 whitespace-nowrap"
+                    style={{ fontSize: '13px', padding: '6px 16px' }}
                   >
                     LOG IN
                   </Link>
                   <Link
                     href="/auth/signup"
-                    className="btn-y2k text-xs py-1.5 px-4"
-                    style={{ fontSize: '14px', padding: '6px 18px' }}
+                    className="btn-y2k text-xs py-1.5 px-4 whitespace-nowrap"
+                    style={{ fontSize: '13px', padding: '6px 16px' }}
                   >
                     JOIN SCRAPPY ✦
                   </Link>
