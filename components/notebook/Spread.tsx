@@ -7,6 +7,39 @@ import { StickerDefs } from './Stickers'
 
 const RING_GAP = 34
 
+// ─── coil colour helpers ──────────────────────────────────────────────────
+
+function mix(hex: string, to: string, t: number) {
+  const a = parseInt(hex.slice(1), 16), b = parseInt(to.slice(1), 16)
+  const c = (sh: number) => Math.round(((a >> sh) & 255) * (1 - t) + ((b >> sh) & 255) * t)
+  return `rgb(${c(16)}, ${c(8)}, ${c(0)})`
+}
+
+function CoilDefs({ id, color }: { id: string; color: string }) {
+  return (
+    <defs>
+      {/* front of the wire: lit from the top-left, round tube shading */}
+      <linearGradient id={`${id}-front`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor={mix(color, '#000000', 0.35)} />
+        <stop offset="0.22" stopColor={mix(color, '#ffffff', 0.55)} />
+        <stop offset="0.38" stopColor={mix(color, '#ffffff', 0.15)} />
+        <stop offset="0.75" stopColor={color} />
+        <stop offset="1" stopColor={mix(color, '#000000', 0.45)} />
+      </linearGradient>
+      {/* back of the wire, seen through the hole: darker */}
+      <linearGradient id={`${id}-back`} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor={mix(color, '#000000', 0.6)} />
+        <stop offset="1" stopColor={mix(color, '#000000', 0.3)} />
+      </linearGradient>
+      <filter id={`${id}-shadow`} x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="2.5" dy="3" stdDeviation="1.8" floodColor="#2B0A2E" floodOpacity="0.35" />
+      </filter>
+    </defs>
+  )
+}
+
+export const DEFAULT_SPIRAL = '#B9C0CC'
+
 /** Paper backgrounds + spiral binding for one spread. Children are placed in a
  *  SPREAD_W × PAGE_H layer on top, so elements can overhang the binding. */
 export function SpreadFrame({
@@ -15,12 +48,14 @@ export function SpreadFrame({
   children,
   onPageBgPointerDown,
   shadow = true,
+  spiral = DEFAULT_SPIRAL,
 }: {
   left?: NbPage
   right?: NbPage
   children?: React.ReactNode
   onPageBgPointerDown?: (e: React.PointerEvent, side: 0 | 1) => void
   shadow?: boolean
+  spiral?: string
 }) {
   const rings = Math.floor((PAGE_H - 40) / RING_GAP)
   return (
@@ -59,17 +94,18 @@ export function SpreadFrame({
       ))}
       {children && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{children}</div>}
       {/* spiral rings (drawn above paper, below nothing interactive) */}
-      <svg width={44} height={PAGE_H} style={{ position: 'absolute', left: PAGE_W - 22, top: 0, pointerEvents: 'none', zIndex: 0 }} aria-hidden>
-        <defs>
-          <linearGradient id="nb-ring" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#7d8290" />
-            <stop offset="0.45" stopColor="#f4f6fa" />
-            <stop offset="1" stopColor="#8a8f9c" />
-          </linearGradient>
-        </defs>
-        {Array.from({ length: rings }).map((_, r) => (
-          <path key={r} d={`M4 ${32 + r * RING_GAP} C 4 ${20 + r * RING_GAP}, 40 ${20 + r * RING_GAP}, 40 ${32 + r * RING_GAP}`} fill="none" stroke="url(#nb-ring)" strokeWidth={5} strokeLinecap="round" />
-        ))}
+      <svg width={48} height={PAGE_H} style={{ position: 'absolute', left: PAGE_W - 24, top: 0, pointerEvents: 'none', zIndex: 0, overflow: 'visible' }} aria-hidden>
+        <CoilDefs id="nb-ring" color={spiral} />
+        {Array.from({ length: rings }).map((_, r) => {
+          const y = 32 + r * RING_GAP
+          return (
+            <g key={r} filter="url(#nb-ring-shadow)">
+              <path d={`M6 ${y + 1} C 6 ${y + 8}, 42 ${y + 8}, 42 ${y + 1}`} fill="none" stroke="url(#nb-ring-back)" strokeWidth={4} strokeLinecap="round" opacity={0.85} />
+              <path d={`M6 ${y} C 6 ${y - 13}, 42 ${y - 13}, 42 ${y}`} fill="none" stroke="url(#nb-ring-front)" strokeWidth={5.5} strokeLinecap="round" />
+              <path d={`M11 ${y - 5} C 15 ${y - 10}, 24 ${y - 11}, 30 ${y - 9}`} fill="none" stroke="rgba(255,255,255,.8)" strokeWidth={1.4} strokeLinecap="round" />
+            </g>
+          )
+        })}
       </svg>
     </div>
   )
@@ -96,9 +132,9 @@ export function sortedSpreadElements(left?: NbPage, right?: NbPage) {
 }
 
 /** Read-only spread. */
-export default function StaticSpread({ left, right }: { left?: NbPage; right?: NbPage }) {
+export default function StaticSpread({ left, right, spiral }: { left?: NbPage; right?: NbPage; spiral?: string }) {
   return (
-    <SpreadFrame left={left} right={right}>
+    <SpreadFrame left={left} right={right} spiral={spiral}>
       {sortedSpreadElements(left, right).map(({ el, page }) => (
         <div key={el.id} style={placed(el, page)}>
           <ElementView el={el} />
@@ -146,25 +182,25 @@ export function CoverFrame({
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 62%, rgba(255,255,255,.18) 70%, rgba(255,255,255,0) 78%)', pointerEvents: 'none' }} />
         {/* punched holes */}
         {Array.from({ length: coils }).map((_, r) => (
-          <div key={r} style={{ position: 'absolute', top: 30 + r * COIL_GAP, left: 14, width: 13, height: 13, borderRadius: '50%', background: '#fff', boxShadow: 'inset 1px 2px 3px rgba(0,0,0,.45), 0 0 0 1.5px rgba(43,10,46,.35)' }} />
+          <div key={r} style={{ position: 'absolute', top: 29 + r * COIL_GAP, left: 14, width: 13, height: 13, borderRadius: '50%', background: '#fff', boxShadow: 'inset 1px 2px 3px rgba(0,0,0,.45), 0 0 0 1.5px rgba(43,10,46,.35)' }} />
         ))}
       </div>
       {children && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{children}</div>}
-      {/* translucent plastic coil */}
-      <svg width={44} height={PAGE_H} style={{ position: 'absolute', left: -20, top: 0, pointerEvents: 'none', overflow: 'visible' }} aria-hidden>
-        <defs>
-          <linearGradient id="nb-coil" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#D9C2FF" stopOpacity=".95" />
-            <stop offset="0.45" stopColor="#8A5CFF" stopOpacity=".85" />
-            <stop offset="1" stopColor="#5B2FD6" stopOpacity=".9" />
-          </linearGradient>
-        </defs>
+      {/* plastic coil: back half behind the board, front half wrapping over the edge */}
+      <svg width={52} height={PAGE_H} style={{ position: 'absolute', left: -24, top: 0, pointerEvents: 'none', overflow: 'visible' }} aria-hidden>
+        <CoilDefs id="nb-coil" color={page.spiral ?? DEFAULT_SPIRAL} />
         {Array.from({ length: coils }).map((_, r) => {
           const y = 36 + r * COIL_GAP
           return (
-            <g key={r}>
-              <path d={`M41 ${y} C 26 ${y - 22}, 2 ${y - 14}, 4 ${y + 2} C 6 ${y + 14}, 24 ${y + 12}, 34 ${y + 4}`} fill="none" stroke="url(#nb-coil)" strokeWidth={8} strokeLinecap="round" />
-              <path d={`M36 ${y - 6} C 24 ${y - 18}, 8 ${y - 12}, 8 ${y - 2}`} fill="none" stroke="rgba(255,255,255,.75)" strokeWidth={2.2} strokeLinecap="round" />
+            <g key={r} filter="url(#nb-coil-shadow)">
+              {/* back strand (darker, comes out of the hole) */}
+              <path d={`M44 ${y + 1} C 30 ${y + 14}, 6 ${y + 12}, 6 ${y + 2}`} fill="none" stroke="url(#nb-coil-back)" strokeWidth={6} strokeLinecap="round" opacity={0.9} />
+              {/* front strand */}
+              <path d={`M6 ${y + 2} C 4 ${y - 16}, 30 ${y - 20}, 44 ${y - 1}`} fill="none" stroke="url(#nb-coil-front)" strokeWidth={8} strokeLinecap="round" />
+              {/* specular highlight */}
+              <path d={`M10 ${y - 6} C 14 ${y - 14}, 26 ${y - 15}, 34 ${y - 9}`} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth={2} strokeLinecap="round" />
+              {/* end cap where the wire enters the hole */}
+              <circle cx={44} cy={y} r={3.6} fill={mix(page.spiral ?? DEFAULT_SPIRAL, '#000000', 0.5)} />
             </g>
           )
         })}

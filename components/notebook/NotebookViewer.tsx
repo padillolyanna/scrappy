@@ -81,7 +81,7 @@ export default function NotebookViewer({ pages: allPages }: { pages: NbPage[] })
                   </button>
                 ) : (
                   <div style={{ transform: single ? `translateX(${-side * PAGE_W}px)` : undefined }}>
-                    <StaticSpread left={pages[spread * 2]} right={pages[spread * 2 + 1]} />
+                    <StaticSpread left={pages[spread * 2]} right={pages[spread * 2 + 1]} spiral={cover?.spiral} />
                   </div>
                 )}
               </div>

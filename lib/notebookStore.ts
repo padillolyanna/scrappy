@@ -20,6 +20,16 @@ export async function uploadPendingImages(supabase: SupabaseClient, userId: stri
   for (const p of pages) {
     const elements = []
     for (const el of p.elements) {
+      const isDataSticker = el.type === 'sticker' && el.content.startsWith('url:data:')
+      if (isDataSticker) {
+        try {
+          const url = await uploadDataUrl(supabase, userId, el.content.slice(4))
+          elements.push({ ...el, content: `url:${url}` })
+        } catch {
+          elements.push(el)
+        }
+        continue
+      }
       if (el.type === 'image' && el.content.startsWith('data:')) {
         let url = cache.get(el.content)
         if (!url) {

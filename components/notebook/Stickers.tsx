@@ -409,6 +409,13 @@ function findSticker(id: string) {
 /** `standalone` renders a self-contained 256px SVG (own defs, no CSS) so it
  *  can be serialised and drawn onto a canvas. */
 export function Sticker({ content, color, standalone }: { content: string; color?: string; standalone?: boolean }) {
+  if (content.startsWith('url:')) {
+    // a sticker the user uploaded (transparent PNG recommended)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={content.slice(4)} alt="" draggable={false} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }} />
+    )
+  }
   if (content.startsWith('img:')) {
     // realistic photographed-style asset (see lib/assetLibrary)
     const id = content.slice(4)
@@ -448,7 +455,7 @@ export function Sticker({ content, color, standalone }: { content: string; color
 }
 
 export function stickerTintable(content: string) {
-  if (content.startsWith('img:')) return false
+  if (content.startsWith('img:') || content.startsWith('url:')) return false
   if (content.startsWith('txt:')) return true
   const def = findSticker(content.slice(4))
   return !!def?.tint
