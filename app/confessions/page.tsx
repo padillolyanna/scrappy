@@ -111,21 +111,23 @@ export default function ConfessionsPage() {
     }
   }
 
-  async function handleReact(confessionId: string, currentCount: number) {
+  async function handleReact(confessionId: string) {
     if (!user) {
       setShowAuthModal(true)
       return
     }
     const supabase = createClient()
-    await supabase
-      .from('confessions')
-      .update({ reaction_count: currentCount + 1 })
-      .eq('id', confessionId)
-    setConfessions((prev) =>
-      prev.map((c) =>
-        c.id === confessionId ? { ...c, reaction_count: c.reaction_count + 1 } : c
+    const { data: newCount } = await supabase.rpc('toggle_confession_reaction', {
+      p_confession_id: confessionId,
+      p_user_id: user.id,
+    })
+    if (typeof newCount === 'number') {
+      setConfessions((prev) =>
+        prev.map((c) =>
+          c.id === confessionId ? { ...c, reaction_count: newCount } : c
+        )
       )
-    )
+    }
   }
 
   return (
@@ -302,7 +304,7 @@ export default function ConfessionsPage() {
                       {c.category}
                     </span>
                     <button
-                      onClick={() => handleReact(c.id, c.reaction_count)}
+                      onClick={() => handleReact(c.id)}
                       className="flex items-center gap-1 font-nunito text-xs text-[#888] hover:scale-125 transition-transform"
                     >
                       <span>♡</span>

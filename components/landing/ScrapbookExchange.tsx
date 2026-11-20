@@ -4,6 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 
+interface ExchangeStats {
+  total: number
+  today: number
+}
+
+interface Props {
+  exchangeStats?: ExchangeStats | null
+}
+
 const STEPS = [
   'Choose a template and answer 10 community questions.',
   'Get matched with someone who answered the same set.',
@@ -11,7 +20,6 @@ const STEPS = [
   'Create a friendship scrapbook page from your exchange.',
 ]
 
-// CSS folded note component
 function FoldedNote() {
   const [unfolded, setUnfolded] = useState(false)
 
@@ -40,36 +48,26 @@ function FoldedNote() {
           maxWidth: 300,
         }}
       >
-        {/* Red margin line */}
         <div style={{
           position: 'absolute',
-          left: 28,
-          top: 0, bottom: 0,
+          left: 28, top: 0, bottom: 0,
           width: 1.5,
           background: 'rgba(255,100,100,0.5)',
         }} />
 
-        {/* Triangle fold in top-right corner */}
         <div style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: 0,
-          height: 0,
+          position: 'absolute', top: 0, right: 0,
+          width: 0, height: 0,
           borderTop: '28px solid #C8945A',
           borderLeft: '28px solid transparent',
         }} />
         <div style={{
-          position: 'absolute',
-          top: 2,
-          right: 2,
-          width: 0,
-          height: 0,
+          position: 'absolute', top: 2, right: 2,
+          width: 0, height: 0,
           borderTop: '24px solid #FFF8ED',
           borderLeft: '24px solid transparent',
         }} />
 
-        {/* Note label */}
         <div style={{
           fontFamily: "'Chango', 'Arial Black', sans-serif",
           fontSize: 10,
@@ -80,33 +78,25 @@ function FoldedNote() {
           PASS THIS NOTE ♡
         </div>
 
-        {/* Two answers side-by-side */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <div>
             <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
-              @stargirl404:
+              question 1:
             </div>
             <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#3A0030', lineHeight: 1.3 }}>
-              stargirl404
-            </div>
-            <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#3A0030' }}>
-              Mr. Brightside
+              your first online username?
             </div>
           </div>
           <div>
             <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#888', marginBottom: 4, fontWeight: 'bold' }}>
-              @sunflower99:
+              question 2:
             </div>
             <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#7C4DDB', lineHeight: 1.3 }}>
-              sunflower99
-            </div>
-            <div style={{ fontFamily: "'Caveat', cursive", fontSize: 13, color: '#7C4DDB' }}>
-              Toxic (Britney!)
+              song that defined you?
             </div>
           </div>
         </div>
 
-        {/* Match badge */}
         <div style={{
           background: '#E8F8F0',
           border: '1px solid #28C840',
@@ -117,21 +107,18 @@ function FoldedNote() {
           color: '#28C840',
           display: 'inline-block',
         }}>
-          MATCHED WITH @sunflower99
+          WAITING FOR YOUR MATCH ♡
         </div>
       </motion.div>
     </div>
   )
 }
 
-export default function ScrapbookExchange() {
+export default function ScrapbookExchange({ exchangeStats }: Props) {
   return (
     <section style={{ padding: '0 20px 20px' }}>
-      <div className="panel-header">
-        ✉ scrapbook exchange
-      </div>
+      <div className="panel-header">✉ scrapbook exchange</div>
       <div className="widget-box" style={{ padding: '16px' }}>
-        {/* NEW FEATURE badge */}
         <div
           className="animate-starburst"
           style={{
@@ -151,7 +138,6 @@ export default function ScrapbookExchange() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 items-start">
-          {/* LEFT: Folded note */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -159,7 +145,6 @@ export default function ScrapbookExchange() {
           >
             <FoldedNote />
 
-            {/* Doodle steps strip */}
             <div style={{ marginTop: 20 }}>
               <div style={{ fontFamily: "'VT323', monospace", fontSize: 12, color: '#888', marginBottom: 8 }}>
                 HOW IT WORKS:
@@ -168,17 +153,12 @@ export default function ScrapbookExchange() {
                 {STEPS.map((step, i) => (
                   <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <div style={{
-                      width: 22, height: 22,
-                      borderRadius: '50%',
-                      background: '#FF4FA3',
-                      color: 'white',
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: '#FF4FA3', color: 'white',
                       fontFamily: "'Chango', 'Arial Black', sans-serif",
                       fontSize: 11,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: '2px solid #2B0A2E',
-                      flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      border: '2px solid #2B0A2E', flexShrink: 0,
                     }}>
                       {i + 1}
                     </div>
@@ -191,7 +171,6 @@ export default function ScrapbookExchange() {
             </div>
           </motion.div>
 
-          {/* RIGHT: Description */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -207,25 +186,28 @@ export default function ScrapbookExchange() {
               Answer the same questions as a stranger or friend. Reveal your answers together and discover similarities, differences, and memories you never knew existed. It&apos;s like passing notes — but make it digital.
             </p>
 
-            {/* Sticker decoration */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-              {['✦ 1,247 exchanges done', '♡ 548 friendships made', '★ 23 exchanges today'].map((s, i) => (
-                <span
-                  key={i}
-                  style={{
-                    fontFamily: "'VT323', monospace",
-                    fontSize: 13,
-                    color: '#FF4FA3',
-                    background: '#FFF0F7',
-                    border: '1.5px solid #FFB6D9',
-                    borderRadius: 20,
-                    padding: '2px 10px',
-                  }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
+            {exchangeStats && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                {exchangeStats.total > 0 && (
+                  <span style={{
+                    fontFamily: "'VT323', monospace", fontSize: 13, color: '#FF4FA3',
+                    background: '#FFF0F7', border: '1.5px solid #FFB6D9',
+                    borderRadius: 20, padding: '2px 10px',
+                  }}>
+                    ✦ {exchangeStats.total.toLocaleString()} exchanges done
+                  </span>
+                )}
+                {exchangeStats.today > 0 && (
+                  <span style={{
+                    fontFamily: "'VT323', monospace", fontSize: 13, color: '#FF4FA3',
+                    background: '#FFF0F7', border: '1.5px solid #FFB6D9',
+                    borderRadius: 20, padding: '2px 10px',
+                  }}>
+                    ★ {exchangeStats.today} exchanges today
+                  </span>
+                )}
+              </div>
+            )}
 
             <Link href="/exchange" className="btn-bevel" style={{ fontSize: 14 }}>
               START AN EXCHANGE ♡

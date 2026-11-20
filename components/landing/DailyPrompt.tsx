@@ -103,7 +103,6 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
     loadPrompt()
   }, [initialPrompt])
 
-  // Check if user already answered
   useEffect(() => {
     if (!user || !prompt) return
     async function checkAnswered() {
@@ -136,7 +135,6 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
       is_anonymous: false,
     })
     if (!error) {
-      // Update answer count
       await supabase
         .from('daily_prompts')
         .update({ answer_count: (prompt.answer_count || 0) + 1 })
@@ -151,7 +149,7 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
     setSubmitting(false)
   }
 
-  const questionText = prompt?.question_text ?? 'Loading today\'s question...'
+  const questionText = prompt?.question_text ?? "loading today's question..."
   const totalAnswers = prompt?.answer_count ?? answers.length
 
   return (
@@ -159,7 +157,6 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
       <div className="panel-header">today&apos;s prompt ✎</div>
       <div className="widget-box" style={{ padding: 0 }}>
         <div className="grid md:grid-cols-[55%_45%]">
-          {/* LEFT: Notebook card */}
           <div
             style={{
               background: '#FFF8ED',
@@ -175,18 +172,14 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
               position: 'relative',
             }}
           >
-            {/* Red margin line */}
             <div
               style={{
                 position: 'absolute',
-                left: 36,
-                top: 0,
-                bottom: 0,
+                left: 36, top: 0, bottom: 0,
                 width: 2,
                 background: 'rgba(255,100,100,0.5)',
               }}
             />
-            {/* Spiral binding dots */}
             {Array.from({ length: 8 }).map((_, i) => (
               <div
                 key={i}
@@ -195,58 +188,43 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
                   position: 'absolute',
                   left: 10,
                   top: `${i * 36 + 18}px`,
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
+                  width: 10, height: 10, borderRadius: '50%',
                   background: '#C9A2FF',
                   border: '1.5px solid #2B0A2E',
                 }}
               />
             ))}
 
-            {/* Question */}
             {loadingPrompt ? (
-              <div
-                style={{
-                  fontFamily: "'Caveat', cursive",
-                  fontSize: 18,
-                  color: '#888',
-                  marginBottom: 14,
-                }}
-              >
+              <div style={{ fontFamily: "'Caveat', cursive", fontSize: 18, color: '#888', marginBottom: 14 }}>
                 loading today&apos;s prompt...
               </div>
             ) : (
-              <div
-                style={{
-                  fontFamily: "'Caveat', cursive",
-                  fontSize: 20,
-                  color: '#3A0030',
-                  lineHeight: 1.5,
-                  marginBottom: 14,
-                  display: 'inline',
-                }}
-              >
+              <div style={{
+                fontFamily: "'Caveat', cursive",
+                fontSize: 20,
+                color: '#3A0030',
+                lineHeight: 1.5,
+                marginBottom: 14,
+                display: 'inline',
+              }}>
                 <span style={{ background: 'rgba(255,200,0,0.4)', padding: '0 2px' }}>
                   &ldquo;{questionText}&rdquo;
                 </span>
               </div>
             )}
 
-            {/* Submit form */}
             {submitted || alreadyAnswered ? (
-              <div
-                style={{
-                  background: '#E8F8F0',
-                  border: '1.5px solid #28C840',
-                  borderRadius: 6,
-                  padding: '8px 12px',
-                  fontFamily: "'Caveat', cursive",
-                  fontSize: 15,
-                  color: '#28C840',
-                  marginBottom: 10,
-                }}
-              >
+              <div style={{
+                background: '#E8F8F0',
+                border: '1.5px solid #28C840',
+                borderRadius: 6,
+                padding: '8px 12px',
+                fontFamily: "'Caveat', cursive",
+                fontSize: 15,
+                color: '#28C840',
+                marginBottom: 10,
+              }}>
                 ✓ your answer is on the wall! ✦
               </div>
             ) : (
@@ -274,9 +252,7 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
                     marginBottom: 10,
                   }}
                 />
-                <div
-                  style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}
-                >
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
                   <button
                     onClick={handleSubmit}
                     disabled={submitting || !answer.trim()}
@@ -289,39 +265,20 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
               </>
             )}
 
-            <div
-              style={{
-                fontFamily: "'VT323', monospace",
-                fontSize: 13,
-                color: '#aaa',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: 13, color: '#aaa', display: 'flex', alignItems: 'center', gap: 8 }}>
               NEXT PROMPT IN: <Countdown />
             </div>
           </div>
 
-          {/* RIGHT: Recent answers */}
           <div style={{ padding: '14px', background: 'white' }}>
-            <div
-              style={{
-                fontFamily: "'VT323', monospace",
-                fontSize: 13,
-                color: '#888',
-                marginBottom: 8,
-              }}
-            >
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: 13, color: '#888', marginBottom: 8 }}>
               {totalAnswers > 0 ? `${totalAnswers.toLocaleString()} ANSWERS TODAY` : 'BE THE FIRST TO ANSWER!'}
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {answers.length > 0 ? (
                 answers.slice(0, 3).map((a, i) => {
-                  const username = a.is_anonymous
-                    ? 'anonymous'
-                    : (a.profiles?.username ?? 'scrappy user')
+                  const username = a.is_anonymous ? 'anonymous' : (a.profiles?.username ?? 'scrappy user')
                   return (
                     <div
                       key={i}
@@ -333,65 +290,27 @@ export default function DailyPrompt({ initialPrompt, initialAnswers }: Props) {
                         transform: `rotate(${[-1, 1, -0.5][i % 3]}deg)`,
                       }}
                     >
-                      <div
-                        style={{
-                          fontFamily: 'Verdana, sans-serif',
-                          fontSize: 11,
-                          fontWeight: 'bold',
-                          color: '#FF4FA3',
-                          marginBottom: 3,
-                        }}
-                      >
+                      <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 11, fontWeight: 'bold', color: '#FF4FA3', marginBottom: 3 }}>
                         @{username}
                       </div>
-                      <p
-                        style={{
-                          fontFamily: "'Caveat', cursive",
-                          fontSize: 14,
-                          color: '#3A0030',
-                          lineHeight: 1.4,
-                        }}
-                      >
+                      <p style={{ fontFamily: "'Caveat', cursive", fontSize: 14, color: '#3A0030', lineHeight: 1.4 }}>
                         {a.answer_text}
                       </p>
-                      <div
-                        style={{
-                          fontFamily: 'Verdana, sans-serif',
-                          fontSize: 10,
-                          color: '#aaa',
-                          marginTop: 4,
-                        }}
-                      >
+                      <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#aaa', marginTop: 4 }}>
                         ♡ {a.like_count || 0}
                       </div>
                     </div>
                   )
                 })
               ) : (
-                <div
-                  style={{
-                    fontFamily: "'Caveat', cursive",
-                    fontSize: 15,
-                    color: '#888',
-                    textAlign: 'center',
-                    padding: '16px 0',
-                  }}
-                >
+                <div style={{ fontFamily: "'Caveat', cursive", fontSize: 15, color: '#888', textAlign: 'center', padding: '16px 0' }}>
                   no answers yet ✦
                 </div>
               )}
             </div>
 
             <div style={{ marginTop: 10 }}>
-              <Link
-                href="/prompts"
-                style={{
-                  fontFamily: "'VT323', monospace",
-                  fontSize: 14,
-                  color: '#FF4FA3',
-                  textDecoration: 'underline',
-                }}
-              >
+              <Link href="/prompts" style={{ fontFamily: "'VT323', monospace", fontSize: 14, color: '#FF4FA3', textDecoration: 'underline' }}>
                 READ ALL ANSWERS →
               </Link>
             </div>

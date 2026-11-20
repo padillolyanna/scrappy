@@ -3,6 +3,7 @@ import "./globals.css";
 import NavbarWrapper from "@/components/layout/NavbarWrapper";
 import AppWindow from "@/components/layout/AppWindow";
 import CursorTrail from "@/components/ui/CursorTrail";
+import PresencePing from "@/components/ui/PresencePing";
 import SplashScreen from "@/components/landing/SplashScreen";
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col items-center py-4 px-2">
         <SplashScreen />
         <CursorTrail />
+        <PresencePing />
         {/* Navbar floats above the AppWindow */}
         <div className="w-full max-w-[960px]">
           <NavbarWrapper />
