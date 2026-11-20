@@ -57,7 +57,7 @@ export default function LoginPage() {
 
           <div className="bg-white p-8">
             <div className="text-center mb-6">
-              <div className="font-pacifico text-4xl text-glitter mb-1" style={{ fontFamily: 'Pacifico, cursive', fontSize: '36px' }}>
+              <div className="font-pacifico text-4xl text-glitter mb-1" style={{ fontFamily: 'Pacifico, cursive', fontSize: '36px', paddingBottom: '6px' }}>
                 SCRAPPY
               </div>
               <div className="font-caveat text-[#888] text-lg" style={{ fontFamily: 'Caveat, cursive' }}>

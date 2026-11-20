@@ -174,7 +174,7 @@ export default function Navbar() {
         <Link href={user ? '/my-space' : '/'} className="flex items-center gap-1.5 flex-shrink-0 group py-1">
           <span
             className="font-pacifico text-glitter"
-            style={{ fontFamily: 'Pacifico, cursive', fontSize: '20px', lineHeight: '1.6', display: 'block' }}
+            style={{ fontFamily: 'Pacifico, cursive', fontSize: '20px', lineHeight: '1.6', display: 'block', paddingBottom: '4px' }}
           >
             SCRAPPY
           </span>

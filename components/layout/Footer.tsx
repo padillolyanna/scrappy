@@ -32,7 +32,7 @@ export default function Footer() {
           <div>
             <div
               className="font-pacifico text-3xl text-glitter mb-2"
-              style={{ fontFamily: 'Pacifico, cursive' }}
+              style={{ fontFamily: 'Pacifico, cursive', paddingBottom: '6px' }}
             >
               SCRAPPY
             </div>
