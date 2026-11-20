@@ -7,10 +7,10 @@ import Footer from '@/components/layout/Footer'
 import CoverSelector from '@/components/scrapbook/CoverSelector'
 import TemplateSelector from '@/components/scrapbook/TemplateSelector'
 import NotebookEditor from '@/components/notebook/NotebookEditor'
-import StaticSpread from '@/components/notebook/Spread'
+import StaticSpread, { StaticCover } from '@/components/notebook/Spread'
 import AuthModal from '@/components/ui/AuthModal'
 import { slugify } from '@/lib/utils'
-import { PAGE_H, SPREAD_W, starterPages, type NbPage } from '@/lib/notebook'
+import { PAGE_H, PAGE_W, SPREAD_W, starterPages, type NbPage } from '@/lib/notebook'
 import { savePages, syncAnswers, uploadDataUrl } from '@/lib/notebookStore'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
@@ -335,7 +335,11 @@ function PublishStep({
           <div className="bg-[#f7eaf1] flex items-center justify-center py-4 overflow-hidden">
             <div style={{ width: SPREAD_W * 0.4, height: PAGE_H * 0.4 }}>
               <div style={{ transform: 'scale(0.4)', transformOrigin: '0 0' }}>
-                <StaticSpread left={pages[0]} right={pages[1]} />
+                {pages[0]?.cover ? (
+                  <div style={{ marginLeft: PAGE_W / 2 }}><StaticCover page={pages[0]} /></div>
+                ) : (
+                  <StaticSpread left={pages[0]} right={pages[1]} />
+                )}
               </div>
             </div>
           </div>
