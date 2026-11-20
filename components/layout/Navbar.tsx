@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useProfile } from '@/lib/useProfile'
 import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 
@@ -97,9 +98,11 @@ export default function Navbar() {
   const [mobileSection, setMobileSection] = useState<'create' | 'community' | null>(null)
   const navRef = useRef<HTMLElement>(null)
   const { user, loading } = useAuth()
+  const { profile } = useProfile()
   const router = useRouter()
-  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'you'
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
+  // Use the actual DB username so the profile link matches the real record
+  const username = profile?.username || user?.email?.split('@')[0] || 'you'
+  const avatarUrl = profile?.avatar_url ?? (user?.user_metadata?.avatar_url as string | undefined)
   const avatarInitial = username.charAt(0).toUpperCase()
 
   // Click outside & Escape

@@ -2,44 +2,23 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { SCRAPBOOK_COVERS } from '@/lib/types'
 
-const FEATURED = [
-  {
-    id: '1',
-    title: 'My Pink Princess Diary',
-    author: 'butterflymphie',
-    likes: 284,
-    views: '1.2k',
-    badge: 'FEATURED',
-    bg: 'from-pink-200 via-pink-100 to-purple-100',
-    symbol: '♡',
-    rotate: '-2deg',
-  },
-  {
-    id: '2',
-    title: 'Cyber Dreams',
-    author: 'neonlilacdream',
-    likes: 198,
-    views: '876',
-    badge: 'MOST CREATIVE',
-    bg: 'from-blue-200 via-cyan-100 to-teal-100',
-    symbol: '◎',
-    rotate: '1deg',
-  },
-  {
-    id: '3',
-    title: 'Memories from 2003',
-    author: 'retrodaydream',
-    likes: 341,
-    views: '2.1k',
-    badge: 'MOST NOSTALGIC',
-    bg: 'from-yellow-200 via-amber-100 to-orange-100',
-    symbol: '★',
-    rotate: '-1deg',
-  },
-]
+export interface LiveScrapbook {
+  id: string
+  title: string
+  cover_id: string
+  like_count: number
+  view_count: number
+  profiles: { username: string } | null
+}
 
-function ScrapCard({ s, i }: { s: typeof FEATURED[0]; i: number }) {
+const ROTATIONS = ['-2deg', '1deg', '-1deg']
+
+function LiveCard({ sb, i }: { sb: LiveScrapbook; i: number }) {
+  const cover = SCRAPBOOK_COVERS.find((c) => c.id === sb.cover_id)
+  const username = sb.profiles?.username ?? 'scrappy user'
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -48,19 +27,10 @@ function ScrapCard({ s, i }: { s: typeof FEATURED[0]; i: number }) {
       transition={{ duration: 0.5, delay: i * 0.1 }}
       whileHover={{ scale: 1.03, rotate: 0 }}
       className="scrap-card overflow-hidden cursor-pointer"
-      style={{ transform: `rotate(${s.rotate})` }}
+      style={{ transform: `rotate(${ROTATIONS[i % ROTATIONS.length]})` }}
     >
-      {/* Image area */}
-      <div className={`h-52 w-full bg-gradient-to-br ${s.bg} relative overflow-hidden flex items-center justify-center`}>
-        {/* Large decorative symbol */}
-        <span className="font-pixel text-7xl text-[#3A0030]/20">{s.symbol}</span>
-
-        {/* Badge */}
-        <div className="absolute top-3 left-3 bg-white/90 border border-[#FFB6D9] font-pixel text-[#D4006E] px-2 py-1 rounded-full" style={{ fontSize: '8px' }}>
-          {s.badge}
-        </div>
-
-        {/* Tape strip */}
+      <div className={`h-52 w-full bg-gradient-to-br ${cover?.bg_gradient ?? 'from-pink-200 to-pink-100'} relative overflow-hidden flex items-center justify-center`}>
+        <span className="font-pixel text-7xl text-[#3A0030]/20">{cover?.preview_symbol ?? '✦'}</span>
         <div
           className="absolute top-0 left-1/2 bg-yellow-100/70 px-5 py-0.5 border border-yellow-200/60"
           style={{ transform: 'translateX(-50%) rotate(-1deg)', fontFamily: 'Caveat, cursive', fontSize: '9px', color: '#8B6914' }}
@@ -68,36 +38,39 @@ function ScrapCard({ s, i }: { s: typeof FEATURED[0]; i: number }) {
           ✦
         </div>
       </div>
-
-      {/* Card body */}
       <div className="p-4">
         <div className="font-caveat text-xl text-[#3A0030] leading-tight mb-1" style={{ fontFamily: 'Caveat, cursive' }}>
-          {s.title}
+          {sb.title || 'untitled scrapbook'}
         </div>
         <div className="font-nunito text-xs text-[#888]">
-          by <span className="text-[#FF4FA3] font-bold">@{s.author}</span>
+          by <span className="text-[#FF4FA3] font-bold">@{username}</span>
         </div>
         <div className="flex justify-between items-center mt-3">
-          <span className="font-nunito text-xs text-[#888]">♡ {s.likes}</span>
-          <span className="font-nunito text-xs text-[#888]">◎ {s.views} views</span>
+          <span className="font-nunito text-xs text-[#888]">♡ {sb.like_count || 0}</span>
+          <span className="font-nunito text-xs text-[#888]">◎ {sb.view_count || 0} views</span>
         </div>
       </div>
     </motion.div>
   )
 }
 
-export default function FeaturedScrapbooks() {
+interface Props {
+  scrapbooks?: LiveScrapbook[]
+}
+
+export default function FeaturedScrapbooks({ scrapbooks }: Props) {
+  const hasLive = scrapbooks && scrapbooks.length > 0
+
   return (
     <section className="py-16 lg:py-20 bg-[#FFF0F7]">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
-        {/* Section header */}
         <div className="flex justify-between items-end mb-10">
           <div>
             <div className="font-pixel text-[#FF4FA3] tracking-widest mb-1" style={{ fontSize: '11px' }}>
-              TODAY'S PICKS
+              {hasLive ? 'COMMUNITY PICKS' : 'FEATURED'}
             </div>
             <h2 className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
-              Featured Scrapbooks
+              {hasLive ? 'Latest Scrapbooks' : 'Featured Scrapbooks'}
             </h2>
           </div>
           <Link href="/explore" className="font-pixel text-[#FF4FA3] hover:underline" style={{ fontSize: '11px' }}>
@@ -105,14 +78,24 @@ export default function FeaturedScrapbooks() {
           </Link>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {FEATURED.map((s, i) => (
-            <Link key={s.id} href={`/scrapbook/${s.id}`}>
-              <ScrapCard s={s} i={i} />
+        {hasLive ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {scrapbooks.slice(0, 3).map((sb, i) => (
+              <Link key={sb.id} href={`/scrapbook/${sb.id}`}>
+                <LiveCard sb={sb} i={i} />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="font-caveat text-xl text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
+              be the first to create a scrapbook! ✦
+            </div>
+            <Link href="/scrapbook/create" className="btn-y2k mt-4 inline-block">
+              create yours now
             </Link>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </section>
   )
