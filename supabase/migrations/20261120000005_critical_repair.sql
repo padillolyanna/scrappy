@@ -158,7 +158,7 @@ create policy "Users can delete their photobooth strips" on storage.objects
 -- PHOTOBOOTH SESSIONS TABLE
 -- ============================================================
 create table if not exists public.photobooth_sessions (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
   layout_id text not null default 'classic',
   strip_url text,
@@ -195,7 +195,7 @@ create policy "Users can delete their photobooth sessions" on public.photobooth_
 -- Replaces the insecure direct reaction_count increment
 -- ============================================================
 create table if not exists public.confession_reactions (
-  id uuid default uuid_generate_v4() primary key,
+  id uuid default gen_random_uuid() primary key,
   confession_id uuid references public.confessions(id) on delete cascade not null,
   user_id uuid references public.profiles(id) on delete cascade not null,
   created_at timestamptz default now(),

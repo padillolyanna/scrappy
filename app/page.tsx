@@ -202,8 +202,8 @@ export default async function Home() {
 
       <DailyPrompt initialPrompt={promptResult.data ?? null} initialAnswers={todayAnswers} />
       <ScrapbookExchange exchangeStats={exchangeStats} />
-      <FinalCTA isLoggedIn={!!currentUser} />
-      <Footer />
+      {!currentUser && <FinalCTA />}
+      {!currentUser && <Footer />}
     </div>
   )
 }
