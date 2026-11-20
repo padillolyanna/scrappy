@@ -159,7 +159,7 @@ function ProfileEditor() {
       })
       .eq('id', user.id)
     setBusy('')
-    if (updErr) return setError("Couldn't save your page. If this keeps happening, the profile database update may not be applied yet.")
+    if (updErr) return setError(`Save failed: ${updErr.message} (code: ${updErr.code})`)
     setAvatarUrl(newAvatar)
     setAvatarFile(null)
     setDirty(false)
