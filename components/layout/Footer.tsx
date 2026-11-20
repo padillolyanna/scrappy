@@ -9,108 +9,90 @@ const NAV_LINKS = [
   { label: 'Daily Prompt', href: '/prompts' },
 ]
 
+const SOCIAL = [
+  { label: 'IG', href: '#' },
+  { label: 'X', href: '#' },
+  { label: '@', href: '#' },
+]
+
 export default function Footer() {
   return (
-    <footer
-      style={{
-        background: '#2B0A2E',
-        margin: '0',
-        padding: '0',
-        borderTop: '2px solid #2B0A2E',
-        borderRadius: '0 0 12px 12px',
-      }}
-    >
-      <div style={{ padding: '16px 20px' }}>
+    <footer className="bg-[#3A0030] text-[#FFB6D9]">
+      {/* Gradient fade-in at top */}
+      <div
+        className="h-6 w-full"
+        style={{ background: 'linear-gradient(to bottom, transparent, #3A0030)', marginTop: '-1px' }}
+      />
 
-        {/* Row 1: Nav links */}
-        <div
-          style={{
-            fontFamily: 'Verdana, Tahoma, sans-serif',
-            fontSize: 11,
-            color: 'rgba(255,182,217,0.7)',
-            textAlign: 'center',
-            marginBottom: 8,
-          }}
-        >
-          {NAV_LINKS.map((link, i) => (
-            <span key={link.href}>
-              <Link
-                href={link.href}
-                style={{ color: 'rgba(255,182,217,0.7)', textDecoration: 'none' }}
-                className="hover:underline"
-              >
-                {link.label}
-              </Link>
-              {i < NAV_LINKS.length - 1 && (
-                <span style={{ margin: '0 6px', opacity: 0.4 }}>|</span>
-              )}
-            </span>
-          ))}
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+          {/* LEFT */}
+          <div>
+            <div
+              className="font-pacifico text-3xl text-glitter mb-2"
+              style={{ fontFamily: 'Pacifico, cursive' }}
+            >
+              SCRAPPY
+            </div>
+            <p className="font-caveat text-[#FFB6D9]/70 text-lg" style={{ fontFamily: 'Caveat, cursive' }}>
+              Your little corner of the internet. ✦
+            </p>
+            <div className="mt-3 font-pixel text-[#FFB6D9]/40" style={{ fontSize: '10px' }}>
+              &copy; 2026 SCRAPPY. ALL RIGHTS RESERVED.
+            </div>
+          </div>
+
+          {/* MIDDLE */}
+          <div>
+            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '10px' }}>
+              EXPLORE
+            </div>
+            <div className="flex flex-col gap-2">
+              {NAV_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="font-nunito text-sm text-[#FFB6D9]/70 hover:text-[#FFB6D9] transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT */}
+          <div>
+            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '10px' }}>
+              CONNECT
+            </div>
+            <p className="font-caveat text-[#FFB6D9]/60 text-base mb-4" style={{ fontFamily: 'Caveat, cursive' }}>
+              A digital scrapbook community for everyone who wants their little piece of the internet.
+            </p>
+            <div className="flex gap-2">
+              {SOCIAL.map((s) => (
+                <Link
+                  key={s.label}
+                  href={s.href}
+                  className="w-9 h-9 border border-[#FFB6D9]/30 rounded-lg flex items-center justify-center text-[#FFB6D9]/60 hover:border-[#FFB6D9] hover:text-[#FFB6D9] transition-colors font-pixel"
+                  style={{ fontSize: '10px' }}
+                >
+                  {s.label}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {/* Row 2: copyright */}
-        <div
-          style={{
-            fontFamily: 'Verdana, Tahoma, sans-serif',
-            fontSize: 10,
-            color: 'rgba(255,182,217,0.5)',
-            textAlign: 'center',
-            marginBottom: 10,
-          }}
-        >
-          &copy; 2026 SCRAPPY
-        </div>
-
-        {/* Row 3: Blinkies + guestbook link */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          {/* Blinkie 1: I ♡ SCRAPPY */}
+        {/* Bottom marquee strip */}
+        <div className="border-t border-[#FFB6D9]/20 pt-6 overflow-hidden">
           <div
-            className="blinkie"
-            style={{
-              background: 'linear-gradient(90deg, #FF4FA3, #D4006A)',
-              color: 'white',
-              borderColor: '#2B0A2E',
-            }}
+            className="font-pixel text-[#FFB6D9]/30 whitespace-nowrap"
+            style={{ fontSize: '10px', animation: 'marquee 30s linear infinite' }}
           >
-            I ♡ SCRAPPY
+            {Array(6)
+              .fill('✦ make memories ✦ collect answers ✦ decorate your pages ✦ leave a little piece of yourself ✦ ')
+              .join('')}
           </div>
-
-          {/* Blinkie 2: glitter power */}
-          <div
-            className="blinkie"
-            style={{
-              background: 'linear-gradient(90deg, #C9A2FF, #7C4DDB)',
-              color: 'white',
-              borderColor: '#2B0A2E',
-            }}
-          >
-            glitter power
-          </div>
-
-          {/* Blinkie 3: y2k forever */}
-          <div
-            className="blinkie"
-            style={{
-              background: 'linear-gradient(90deg, #6FE3FF, #0099CC)',
-              color: '#2B0A2E',
-              borderColor: '#2B0A2E',
-            }}
-          >
-            y2k forever
-          </div>
-
-          <Link
-            href="/confessions"
-            style={{
-              fontFamily: "'VT323', monospace",
-              fontSize: 13,
-              color: '#FFB6D9',
-              textDecoration: 'underline',
-              marginLeft: 4,
-            }}
-          >
-            sign my guestbook! →
-          </Link>
         </div>
       </div>
     </footer>
