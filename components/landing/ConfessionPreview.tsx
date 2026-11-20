@@ -5,30 +5,84 @@ import { useState } from 'react'
 import Link from 'next/link'
 import AuthModal from '@/components/ui/AuthModal'
 import { useAuth } from '@/lib/useAuth'
+import { DEMO_CONFESSIONS, SHOW_DEMO } from '@/lib/demoContent'
 
-type Category = 'ALL' | 'LOVE' | 'FRIENDSHIP' | 'LIFE' | 'RANDOM' | 'SECRETS'
+export interface ConfessionItem {
+  id: string
+  content: string
+  category: string
+  reaction_count: number
+}
 
-const CATEGORIES: Category[] = ['ALL', 'LOVE', 'FRIENDSHIP', 'LIFE', 'RANDOM', 'SECRETS']
+interface Props {
+  confessions?: ConfessionItem[]
+}
 
-const CONFESSIONS = [
-  { category: 'LOVE', text: 'I still look for him in every crowded place even though I know we\'re never going to meet again.', reactions: 234, color: 'bg-[#FFF0A8]', rotate: '-2deg' },
-  { category: 'LIFE', text: 'Sometimes I wonder if I\'m doing enough or if I\'m just pretending that everything is okay.', reactions: 189, color: 'bg-[#FFD6EC]', rotate: '1.5deg' },
-  { category: 'FRIENDSHIP', text: 'I miss the people I used to talk to every single day. I wonder if they ever think about me too.', reactions: 312, color: 'bg-[#D6EDFF]', rotate: '-1deg' },
-  { category: 'RANDOM', text: 'Sometimes the smallest things remind me of memories I didn\'t even know I still had.', reactions: 156, color: 'bg-[#E8D6FF]', rotate: '2deg' },
-  { category: 'SECRETS', text: 'I wish I could tell someone everything without worrying about being misunderstood.', reactions: 278, color: 'bg-[#FFF0A8]', rotate: '-1.5deg' },
-  { category: 'LOVE', text: 'I don\'t think I ever really stopped caring. I just learned how to stay quiet about it.', reactions: 445, color: 'bg-[#FFD6EC]', rotate: '1deg' },
-  { category: 'FRIENDSHIP', text: 'I hope my old friends are doing well, even if we don\'t talk anymore.', reactions: 388, color: 'bg-[#D6EDFF]', rotate: '-2deg' },
-  { category: 'LIFE', text: 'I just want to experience a version of life where I don\'t have to worry about everything.', reactions: 521, color: 'bg-[#E8D6FF]', rotate: '1.5deg' },
-]
+type CategoryFilter = 'ALL' | 'LOVE' | 'FRIENDSHIP' | 'LIFE' | 'RANDOM' | 'SECRETS'
 
-export default function ConfessionPreview() {
-  const [activeCategory, setActiveCategory] = useState<Category>('ALL')
+const CATEGORIES: CategoryFilter[] = ['ALL', 'LOVE', 'FRIENDSHIP', 'LIFE', 'RANDOM', 'SECRETS']
+
+const CAT_COLORS: Record<CategoryFilter, string> = {
+  ALL: '#FF4FA3',
+  LOVE: '#FF6B9D',
+  FRIENDSHIP: '#7C4DDB',
+  LIFE: '#FF6B00',
+  RANDOM: '#00BADD',
+  SECRETS: '#28C840',
+}
+
+const NOTE_COLORS: Record<string, string> = {
+  LOVE: '#FFF0A8',
+  LIFE: '#FFD6EC',
+  FRIENDSHIP: '#D6EDFF',
+  RANDOM: '#E8D6FF',
+  SECRETS: '#FFF0A8',
+  Music: '#FFD6EC',
+  Regrets: '#D6EDFF',
+  Feelings: '#E8D6FF',
+}
+
+const ROTATIONS = ['-2deg', '1.5deg', '-1deg', '2deg', '-1.5deg', '1deg', '-2deg', '1.5deg']
+const TACK_COLORS = ['#FF4FA3', '#7C4DDB', '#FF6B00', '#00BADD']
+
+function Thumbtack({ color }: { color: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        top: -8, left: '50%',
+        transform: 'translateX(-50%)',
+        width: 14, height: 14, borderRadius: '50%',
+        background: `radial-gradient(circle at 35% 35%, #fff 0%, ${color} 60%)`,
+        border: '1.5px solid #2B0A2E',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+        zIndex: 5,
+      }}
+    />
+  )
+}
+
+function normalizeCategory(cat: string): CategoryFilter {
+  const up = cat.toUpperCase() as CategoryFilter
+  return CATEGORIES.includes(up) ? up : 'RANDOM'
+}
+
+export default function ConfessionPreview({ confessions = [] }: Props) {
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>('ALL')
   const [showAuthModal, setShowAuthModal] = useState(false)
   const { user } = useAuth()
 
-  const filtered = activeCategory === 'ALL'
-    ? CONFESSIONS
-    : CONFESSIONS.filter((c) => c.category === activeCategory)
+  const isDemo = confessions.length === 0 && SHOW_DEMO
+
+  const sourceItems = isDemo
+    ? DEMO_CONFESSIONS.map((c) => ({ id: c.id, content: c.content, category: c.category, reaction_count: c.reaction_count }))
+    : confessions
+
+  const filtered = sourceItems.filter((c) => {
+    if (activeCategory === 'ALL') return true
+    return normalizeCategory(c.category) === activeCategory
+  })
 
   const handleSubmitClick = () => {
     if (user) {
@@ -39,35 +93,46 @@ export default function ConfessionPreview() {
   }
 
   return (
-    <section className="py-16 lg:py-20 bg-[#FFF8ED]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
-        {/* Section header */}
-        <div className="flex justify-between items-end mb-6">
-          <div>
-            <div className="font-pixel text-[#C9B6FF] tracking-widest mb-1" style={{ fontSize: '11px' }}>
-              ANONYMOUS THOUGHTS
-            </div>
-            <h2 className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
-              The Confession Wall
-            </h2>
-          </div>
-          <Link href="/confessions" className="font-pixel text-[#FF4FA3] hover:underline" style={{ fontSize: '11px' }}>
-            READ ALL →
-          </Link>
-        </div>
+    <section style={{ padding: '0 20px 20px' }}>
+      <div className="panel-header">✦ confession wall</div>
 
-        {/* Category filters */}
-        <div className="flex gap-2 flex-wrap mb-8">
+      <div
+        style={{
+          background: '#C8945A',
+          backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px)',
+          backgroundSize: '10px 10px',
+          border: '2px solid #2B0A2E',
+          borderTop: 'none',
+          borderRadius: '0 0 8px 8px',
+          padding: '12px',
+          opacity: isDemo ? 0.85 : 1,
+        }}
+      >
+        {isDemo && (
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: 11, color: '#fff8', marginBottom: 8 }}>
+            ✦ example — submit the first confession!
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', marginBottom: 12 }}>
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className="font-pixel px-3 py-1.5 rounded-full border-2 transition-colors"
               style={{
-                fontSize: '10px',
-                ...(activeCategory === cat
-                  ? { background: '#3A0030', borderColor: '#3A0030', color: 'white' }
-                  : { background: 'white', borderColor: '#FFB6D9', color: '#3A0030' }),
+                fontFamily: "'Chango', 'Arial Black', sans-serif",
+                fontSize: 10,
+                padding: '4px 10px',
+                border: '2px solid #2B0A2E',
+                borderBottom: activeCategory === cat ? 'none' : '2px solid #2B0A2E',
+                borderRadius: activeCategory === cat ? '4px 4px 0 0' : '4px',
+                cursor: 'pointer',
+                background: activeCategory === cat ? CAT_COLORS[cat] : 'rgba(255,255,255,0.7)',
+                color: activeCategory === cat ? 'white' : '#3A0030',
+                transform: activeCategory === cat ? 'translateY(2px)' : 'none',
+                position: 'relative',
+                zIndex: activeCategory === cat ? 5 : 1,
+                transition: 'all 0.1s',
               }}
             >
               {cat}
@@ -75,61 +140,76 @@ export default function ConfessionPreview() {
           ))}
         </div>
 
-        {/* Confession notes grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {filtered.map((c, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              whileHover={{ scale: 1.03, rotate: 0, zIndex: 10 }}
-              className={`${c.color} p-5 relative cursor-pointer`}
-              style={{
-                transform: `rotate(${c.rotate})`,
-                borderRadius: '2px',
-                boxShadow: '3px 3px 8px rgba(0,0,0,0.12)',
-              }}
-            >
-              {/* Pushpin */}
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-[#FF4FA3] shadow-md" />
-
-              {/* Category badge */}
-              <div className="absolute top-3 right-3 bg-white/50 font-pixel px-2 py-0.5 rounded-full" style={{ fontSize: '8px', color: '#888' }}>
-                {c.category}
-              </div>
-
-              {/* Text */}
-              <p
-                className="font-caveat text-lg text-[#3A0030] leading-snug mt-4 mb-3"
-                style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {filtered.map((c, i) => {
+            const catKey = normalizeCategory(c.category)
+            const bg = NOTE_COLORS[c.category] ?? NOTE_COLORS[catKey] ?? '#FFF0A8'
+            const rotate = ROTATIONS[i % ROTATIONS.length]
+            return (
+              <motion.div
+                key={c.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+                whileHover={{ scale: 1.04, rotate: 0, zIndex: 10 }}
+                className="sticky-note"
+                style={{
+                  background: bg,
+                  padding: '14px 10px 10px',
+                  borderRadius: 2,
+                  transform: `rotate(${rotate})`,
+                  boxShadow: '3px 3px 8px rgba(0,0,0,0.2)',
+                  cursor: 'pointer',
+                  position: 'relative',
+                }}
               >
-                {c.text}
-              </p>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between">
-                <span className="font-pixel text-[#888]" style={{ fontSize: '8px' }}>
-                  {c.category}
-                </span>
-                <span className="font-nunito text-xs text-[#888]">♡ {c.reactions}</span>
-              </div>
-            </motion.div>
-          ))}
+                <Thumbtack color={TACK_COLORS[i % TACK_COLORS.length]} />
+                <p style={{
+                  fontFamily: "'Caveat', cursive",
+                  fontSize: 14,
+                  color: '#3A0030',
+                  lineHeight: 1.4,
+                  marginTop: 6,
+                  marginBottom: 8,
+                }}>
+                  {c.content}
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{
+                    fontFamily: "'VT323', monospace",
+                    fontSize: 11,
+                    color: '#888',
+                    background: 'rgba(255,255,255,0.5)',
+                    padding: '1px 5px',
+                    borderRadius: 20,
+                  }}>
+                    {c.category}
+                  </span>
+                  <span style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#888' }}>
+                    ♡ {c.reaction_count || 0}
+                  </span>
+                </div>
+              </motion.div>
+            )
+          })}
         </div>
 
-        {/* CTA */}
-        <div className="flex justify-center mt-10">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
           {user ? (
-            <Link href="/confessions" className="btn-y2k">
+            <Link href="/confessions" className="btn-bevel" style={{ fontSize: 12 }}>
               + SUBMIT AN ANONYMOUS CONFESSION
             </Link>
           ) : (
-            <button onClick={handleSubmitClick} className="btn-y2k">
+            <button onClick={handleSubmitClick} className="btn-bevel" style={{ fontSize: 12 }}>
               + SUBMIT AN ANONYMOUS CONFESSION
             </button>
           )}
+          <Link
+            href="/confessions"
+            style={{ fontFamily: "'VT323', monospace", fontSize: 14, color: '#2B0A2E', textDecoration: 'underline', background: 'rgba(255,255,255,0.6)', padding: '2px 8px', borderRadius: 20 }}
+          >
+            READ ALL →
+          </Link>
         </div>
       </div>
 

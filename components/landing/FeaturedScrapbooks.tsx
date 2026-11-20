@@ -1,8 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { SCRAPBOOK_COVERS } from '@/lib/types'
+import { DEMO_SCRAPBOOKS, SHOW_DEMO } from '@/lib/demoContent'
 
 export interface LiveScrapbook {
   id: string
@@ -13,89 +14,183 @@ export interface LiveScrapbook {
   profiles: { username: string } | null
 }
 
+interface Props {
+  scrapbooks?: LiveScrapbook[]
+}
+
+const BADGE_CONFIGS = [
+  { badge: 'FEATURED', bg: '#FF4FA3' },
+  { badge: 'MOST CREATIVE', bg: '#7C4DDB' },
+  { badge: 'MOST NOSTALGIC', bg: '#FF6B00' },
+]
+
 const ROTATIONS = ['-2deg', '1deg', '-1deg']
 
-function LiveCard({ sb, i }: { sb: LiveScrapbook; i: number }) {
-  const cover = SCRAPBOOK_COVERS.find((c) => c.id === sb.cover_id)
-  const username = sb.profiles?.username ?? 'scrappy user'
+function AwardRibbon({ label, bg }: { label: string; bg: string }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: -8, right: -8,
+        background: bg,
+        color: 'white',
+        fontFamily: "'Chango', 'Arial Black', sans-serif",
+        fontSize: 9,
+        padding: '3px 8px',
+        border: '2px solid #2B0A2E',
+        borderRadius: 4,
+        boxShadow: '1px 1px 0 #2B0A2E',
+        lineHeight: 1.2,
+        zIndex: 5,
+        transform: 'rotate(4deg)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {label}
+    </div>
+  )
+}
+
+function DemoRibbon() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: -8, right: -8,
+        background: '#888',
+        color: 'white',
+        fontFamily: "'Chango', 'Arial Black', sans-serif",
+        fontSize: 9,
+        padding: '3px 8px',
+        border: '2px solid #2B0A2E',
+        borderRadius: 4,
+        boxShadow: '1px 1px 0 #2B0A2E',
+        lineHeight: 1.2,
+        zIndex: 5,
+        transform: 'rotate(4deg)',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      ✦ EXAMPLE
+    </div>
+  )
+}
+
+function ScrapbookCard({ item, index, isDemo }: { item: LiveScrapbook; index: number; isDemo: boolean }) {
+  const cover = SCRAPBOOK_COVERS.find((c) => c.id === item.cover_id)
+  const { badge, bg: badgeBg } = BADGE_CONFIGS[index % BADGE_CONFIGS.length]
+  const rotate = ROTATIONS[index % ROTATIONS.length]
+  const username = item.profiles?.username ?? 'anonymous'
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: i * 0.1 }}
-      whileHover={{ scale: 1.03, rotate: 0 }}
-      className="scrap-card overflow-hidden cursor-pointer"
-      style={{ transform: `rotate(${ROTATIONS[i % ROTATIONS.length]})` }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20, delay: index * 0.1 }}
+      whileHover={{ y: -4, rotate: 0, scale: 1.02 }}
+      className="polaroid relative cursor-pointer"
+      style={{ transform: `rotate(${rotate})`, opacity: isDemo ? 0.75 : 1 }}
     >
-      <div className={`h-52 w-full bg-gradient-to-br ${cover?.bg_gradient ?? 'from-pink-200 to-pink-100'} relative overflow-hidden flex items-center justify-center`}>
-        <span className="font-pixel text-7xl text-[#3A0030]/20">{cover?.preview_symbol ?? '✦'}</span>
-        <div
-          className="absolute top-0 left-1/2 bg-yellow-100/70 px-5 py-0.5 border border-yellow-200/60"
-          style={{ transform: 'translateX(-50%) rotate(-1deg)', fontFamily: 'Caveat, cursive', fontSize: '9px', color: '#8B6914' }}
-        >
-          ✦
+      {isDemo ? <DemoRibbon /> : <AwardRibbon label={badge} bg={badgeBg} />}
+
+      <div
+        style={{
+          width: '100%',
+          height: 160,
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 2,
+        }}
+        className={`bg-gradient-to-br ${cover?.bg_gradient ?? 'from-pink-200 to-pink-100'}`}
+      >
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span className="font-pixel text-[#3A0030]/30" style={{ fontSize: 48 }}>
+            {cover?.preview_symbol ?? '✦'}
+          </span>
         </div>
+        {cover?.stickers.slice(0, 3).map((sticker, si) => (
+          <div
+            key={si}
+            style={{
+              position: 'absolute',
+              top: si === 0 ? 8 : si === 1 ? undefined : 20,
+              bottom: si === 1 ? 10 : undefined,
+              right: si === 0 ? 8 : si === 2 ? 8 : undefined,
+              left: si === 1 ? 12 : undefined,
+              fontSize: si === 0 ? 22 : 16,
+              opacity: 0.75,
+            }}
+          >
+            {sticker}
+          </div>
+        ))}
       </div>
-      <div className="p-4">
-        <div className="font-caveat text-xl text-[#3A0030] leading-tight mb-1" style={{ fontFamily: 'Caveat, cursive' }}>
-          {sb.title || 'untitled scrapbook'}
+
+      <div style={{ padding: '4px 2px 0', textAlign: 'center' }}>
+        <div style={{
+          fontFamily: "'Caveat', cursive",
+          fontSize: 15,
+          color: '#3A0030',
+          fontWeight: 600,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {item.title || 'untitled'}
         </div>
-        <div className="font-nunito text-xs text-[#888]">
-          by <span className="text-[#FF4FA3] font-bold">@{username}</span>
+        <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 10, color: '#FF4FA3', fontWeight: 'bold' }}>
+          @{username}
         </div>
-        <div className="flex justify-between items-center mt-3">
-          <span className="font-nunito text-xs text-[#888]">♡ {sb.like_count || 0}</span>
-          <span className="font-nunito text-xs text-[#888]">◎ {sb.view_count || 0} views</span>
+        <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 9, color: '#aaa' }}>
+          ♡ {item.like_count || 0}
         </div>
       </div>
     </motion.div>
   )
 }
 
-interface Props {
-  scrapbooks?: LiveScrapbook[]
-}
-
 export default function FeaturedScrapbooks({ scrapbooks }: Props) {
-  const hasLive = scrapbooks && scrapbooks.length > 0
+  const hasReal = scrapbooks && scrapbooks.length > 0
+  const isDemo = !hasReal && SHOW_DEMO
+  const items: LiveScrapbook[] = hasReal
+    ? scrapbooks.slice(0, 3)
+    : DEMO_SCRAPBOOKS.map((d) => ({
+        id: d.id,
+        title: d.title,
+        cover_id: d.cover_id,
+        like_count: d.like_count,
+        view_count: d.view_count,
+        profiles: d.profiles,
+      }))
 
   return (
-    <section className="py-16 lg:py-20 bg-[#FFF0F7]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
-        <div className="flex justify-between items-end mb-10">
-          <div>
-            <div className="font-pixel text-[#FF4FA3] tracking-widest mb-1" style={{ fontSize: '11px' }}>
-              {hasLive ? 'COMMUNITY PICKS' : 'FEATURED'}
-            </div>
-            <h2 className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
-              {hasLive ? 'Latest Scrapbooks' : 'Featured Scrapbooks'}
-            </h2>
-          </div>
-          <Link href="/explore" className="font-pixel text-[#FF4FA3] hover:underline" style={{ fontSize: '11px' }}>
+    <section style={{ padding: '20px 20px' }}>
+      <div className="panel-header" style={{ marginBottom: 0 }}>
+        today&apos;s picks ✦
+      </div>
+      <div className="widget-box" style={{ padding: '16px' }}>
+        <div className="flex justify-between items-center mb-4">
+          <span style={{ fontFamily: "'VT323', monospace", fontSize: 13, color: '#888' }}>
+            {isDemo ? 'featured scrapbooks — coming soon' : 'featured scrapbooks — voted by the community'}
+          </span>
+          <Link href="/explore" style={{ fontFamily: "'VT323', monospace", fontSize: 14, color: '#FF4FA3', textDecoration: 'underline' }}>
             VIEW ALL →
           </Link>
         </div>
 
-        {hasLive ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {scrapbooks.slice(0, 3).map((sb, i) => (
-              <Link key={sb.id} href={`/scrapbook/${sb.id}`}>
-                <LiveCard sb={sb} i={i} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {items.map((item, i) =>
+            isDemo ? (
+              <Link key={item.id} href="/scrapbook/create">
+                <ScrapbookCard item={item} index={i} isDemo />
               </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="font-caveat text-xl text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
-              be the first to create a scrapbook! ✦
-            </div>
-            <Link href="/scrapbook/create" className="btn-y2k mt-4 inline-block">
-              create yours now
-            </Link>
-          </div>
-        )}
+            ) : (
+              <Link key={item.id} href={`/scrapbook/${item.id}`}>
+                <ScrapbookCard item={item} index={i} isDemo={false} />
+              </Link>
+            )
+          )}
+        </div>
       </div>
     </section>
   )
