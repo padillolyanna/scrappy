@@ -1,7 +1,6 @@
 export const instant = false
 
 import Footer from '@/components/layout/Footer'
-import DailyPrompt from '@/components/landing/DailyPrompt'
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 
@@ -76,7 +75,16 @@ export default async function PromptsPage() {
             </div>
           </div>
         ) : (
-          <DailyPrompt initialPrompt={todayPrompt} initialAnswers={todayAnswers} />
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white rounded-2xl border-2 border-[#FFB6D9] p-6 shadow-sm mb-6">
+              <p
+                className="font-caveat text-2xl text-[#3A0030] leading-snug"
+                style={{ fontFamily: 'Caveat, cursive' }}
+              >
+                "{todayPrompt.question_text}"
+              </p>
+            </div>
+          </div>
         )}
 
         {/* All answers section */}
