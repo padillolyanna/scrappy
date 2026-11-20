@@ -169,7 +169,7 @@ export default function Navbar() {
         <Link href={user ? '/my-space' : '/'} className="flex items-center gap-1.5 flex-shrink-0 group py-1">
           <span
             className="font-pacifico text-glitter"
-            style={{ fontFamily: 'Pacifico, cursive', fontSize: '28px', lineHeight: '1.3', display: 'block' }}
+            style={{ fontFamily: 'Pacifico, cursive', fontSize: '22px', lineHeight: '1.2', display: 'block' }}
           >
             SCRAPPY
           </span>
@@ -178,10 +178,10 @@ export default function Navbar() {
 
         {/* ── Desktop nav — centered ── */}
         <div className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-          <Link href={user ? '/my-space' : '/'} className={navLinkCls} style={{ fontSize: '13px' }}>
+          <Link href={user ? '/my-space' : '/'} className={navLinkCls} style={{ fontSize: '15px' }}>
             HOME
           </Link>
-          <Link href="/explore" className={navLinkCls} style={{ fontSize: '13px' }}>
+          <Link href="/explore" className={navLinkCls} style={{ fontSize: '15px' }}>
             EXPLORE
           </Link>
 
@@ -190,7 +190,7 @@ export default function Navbar() {
             <button
               onClick={() => toggle('create')}
               className={dropTriggerCls('create')}
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: '15px' }}
               aria-expanded={open === 'create'}
             >
               CREATE
@@ -206,7 +206,7 @@ export default function Navbar() {
             <button
               onClick={() => toggle('community')}
               className={dropTriggerCls('community')}
-              style={{ fontSize: '13px' }}
+              style={{ fontSize: '15px' }}
               aria-expanded={open === 'community'}
             >
               COMMUNITY
