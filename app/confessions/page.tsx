@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
+import { filterContent } from '@/lib/contentFilter'
 
 interface Confession {
   id: string
@@ -60,6 +61,7 @@ export default function ConfessionsPage() {
   const [filterCategory, setFilterCategory] = useState('All')
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [contentError, setContentError] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [confessions, setConfessions] = useState<Confession[]>([])
   const [loadingConfessions, setLoadingConfessions] = useState(true)
@@ -96,12 +98,18 @@ export default function ConfessionsPage() {
     }
     setSubmitting(true)
     const supabase = createClient()
+    const filtered = filterContent(confession.trim())
+    if (filtered.blocked) {
+      setSubmitting(false)
+      setContentError(filtered.reason ?? 'Your confession contains content that isn\'t allowed.')
+      return
+    }
     const { error } = await supabase.from('confessions').insert({
       content: confession.trim(),
       category,
       is_anonymous: true,
       user_id: user.id,
-      is_approved: true,
+      is_approved: false,
     })
     setSubmitting(false)
     if (!error) {
@@ -167,13 +175,13 @@ export default function ConfessionsPage() {
                 className="font-pacifico text-2xl text-[#3A0030]"
                 style={{ fontFamily: 'Pacifico, cursive' }}
               >
-                pinned to the wall!
+                received!
               </div>
               <div
                 className="font-caveat text-lg text-[#888]"
                 style={{ fontFamily: 'Caveat, cursive' }}
               >
-                your confession is now on the wall ✦
+                your confession is in the queue — it&apos;ll appear on the wall once reviewed ✦
               </div>
               <button
                 onClick={() => setSubmitted(false)}
@@ -192,7 +200,7 @@ export default function ConfessionsPage() {
               </div>
               <textarea
                 value={confession}
-                onChange={(e) => setConfession(e.target.value)}
+                onChange={(e) => { setConfession(e.target.value); setContentError('') }}
                 placeholder={
                   user
                     ? "write what's on your mind... no judgment here"
@@ -208,6 +216,11 @@ export default function ConfessionsPage() {
               {user && (
                 <div className="font-nunito text-xs text-[#888] mb-3 text-right">
                   {confession.length}/500
+                </div>
+              )}
+              {contentError && (
+                <div className="font-nunito text-xs text-red-500 mb-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {contentError}
                 </div>
               )}
               <div className="flex items-center justify-between flex-wrap gap-3">

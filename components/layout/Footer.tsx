@@ -13,6 +13,7 @@ const INFO_LINKS = [
   { label: 'About Scrappy', href: '/about' },
   { label: 'Contact', href: '/contact' },
   { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Terms of Service', href: '/tos' },
   { label: 'Photobooth', href: '/photobooth' },
   { label: 'Scrapbook Exchange', href: '/exchange' },
 ]

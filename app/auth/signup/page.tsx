@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [ageConfirmed, setAgeConfirmed] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -47,6 +48,10 @@ export default function SignupPage() {
     }
     if (usernameAvailable === false) {
       setError('that username is taken')
+      return
+    }
+    if (!ageConfirmed) {
+      setError('you must confirm you are 13 or older to sign up')
       return
     }
     setLoading(true)
@@ -192,9 +197,23 @@ export default function SignupPage() {
                   )}
                 </div>
               </div>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={ageConfirmed}
+                  onChange={(e) => setAgeConfirmed(e.target.checked)}
+                  className="mt-1 accent-[#FF4FA3] w-4 h-4 shrink-0"
+                />
+                <span className="font-nunito text-xs text-[#5A3A50] leading-relaxed">
+                  I confirm I am at least 13 years old and I agree to Scrappy&apos;s{' '}
+                  <Link href="/tos" target="_blank" className="text-[#FF4FA3] hover:underline">Terms of Service</Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" target="_blank" className="text-[#FF4FA3] hover:underline">Privacy Policy</Link>.
+                </span>
+              </label>
               <button
                 type="submit"
-                disabled={loading || usernameAvailable === false}
+                disabled={loading || usernameAvailable === false || !ageConfirmed}
                 className="btn-y2k w-full py-3 text-base disabled:opacity-50"
               >
                 {loading ? 'creating your account...' : 'CREATE MY ACCOUNT ✦'}

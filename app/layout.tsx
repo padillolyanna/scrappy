@@ -6,6 +6,7 @@ import AppWindow from "@/components/layout/AppWindow";
 import CursorTrail from "@/components/ui/CursorTrail";
 import PresencePing from "@/components/ui/PresencePing";
 import SplashScreen from "@/components/landing/SplashScreen";
+import CookieConsent from "@/components/ui/CookieConsent";
 
 export const metadata: Metadata = {
   title: "SCRAPPY",
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AppWindow>
           {children}
         </AppWindow>
+        <CookieConsent />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1565639314627238"
