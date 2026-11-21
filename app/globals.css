@@ -13,6 +13,16 @@
   --c-accent: #6FE3FF;
   --c-text: #2B0A2E;
 
+  /* Spacing scale */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 20px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+  --space-2xl: 56px;
+  --space-3xl: 96px;
+  --content-width: 1120px;
+
   /* legacy vars kept for backward compat */
   --baby-pink: #FFB6D9;
   --hot-pink: #FF4FA3;
@@ -951,3 +961,16 @@ input.input-mini, textarea.input-mini {
 
 /* never let decorations make the page scroll sideways on phones */
 html, body { overflow-x: clip; }
+
+/* ── Accessibility: respect prefers-reduced-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Mascot: prevent bottom-right overlap with content ── */
+body { padding-bottom: 80px; }

@@ -71,7 +71,7 @@ function DemoRibbon() {
         whiteSpace: 'nowrap',
       }}
     >
-      ✦ EXAMPLE
+      BY SCRAPPY TEAM
     </div>
   )
 }
@@ -181,7 +181,7 @@ export default function FeaturedScrapbooks({ scrapbooks }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {items.map((item, i) =>
             isDemo ? (
-              <Link key={item.id} href="/scrapbook/create">
+              <Link key={item.id} href="/explore">
                 <ScrapbookCard item={item} index={i} isDemo />
               </Link>
             ) : (

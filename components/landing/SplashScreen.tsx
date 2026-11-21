@@ -45,6 +45,8 @@ export default function SplashScreen() {
   const [exiting, setExiting] = useState(false)
 
   useEffect(() => {
+    // Never show for users who prefer reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     try {
       const seen = localStorage.getItem('scrappy_splash_seen')
       if (!seen) setVisible(true)
@@ -176,7 +178,7 @@ export default function SplashScreen() {
                 display: 'inline-block',
               }}
             >
-              no boys allowed... jk. but knock first! ✦
+              knock knock! come on in ✦
             </div>
 
             {/* Enter button */}

@@ -9,12 +9,18 @@ import SplashScreen from "@/components/landing/SplashScreen";
 import CookieConsent from "@/components/ui/CookieConsent";
 
 export const metadata: Metadata = {
-  title: "SCRAPPY",
-  description: "Your little corner of the internet.",
-openGraph: {
-    title: "SCRAPPY",
-    description: "Your little corner of the internet.",
+  title: "Scrappy — make Y2K scrapbook pages",
+  description: "Scrappy is a free digital scrapbook community inspired by the early-2000s internet. Decorate spiral-notebook pages with photos, washi tape, gems and doodles.",
+  openGraph: {
+    title: "Scrappy — make Y2K scrapbook pages",
+    description: "Decorate spiral-notebook pages with photos, washi tape, gems and doodles. Free, and all yours.",
     type: "website",
+    siteName: "Scrappy",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Scrappy — make Y2K scrapbook pages",
+    description: "A free digital scrapbook community inspired by the early-2000s internet.",
   },
   other: {
     "google-adsense-account": "ca-pub-1565639314627238",

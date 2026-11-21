@@ -185,9 +185,11 @@ export default function ConfessionPreview({ confessions = [] }: Props) {
                   }}>
                     {c.category}
                   </span>
-                  <span style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888' }}>
-                    ♡ {c.reaction_count || 0}
-                  </span>
+                  {!isDemo && (
+                    <span style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888' }}>
+                      ♡ {c.reaction_count || 0}
+                    </span>
+                  )}
                 </div>
               </motion.div>
             )

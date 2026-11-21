@@ -24,7 +24,7 @@ const USER_PALETTE = ['#FFB6D9', '#C9A2FF', '#FFF0A8', '#A8DFFF', '#FFD6EC', '#E
 const MSG_PALETTE = ['#FF4FA3', '#7C4DDB', '#FF6B00', '#6FE3FF', '#28C840']
 
 function MidnightCountdown() {
-  const [time, setTime] = useState({ h: 0, m: 0, s: 0 })
+  const [display, setDisplay] = useState<string | null>(null)
 
   useEffect(() => {
     function calc() {
@@ -32,22 +32,20 @@ function MidnightCountdown() {
       const tomorrow = new Date()
       tomorrow.setHours(24, 0, 0, 0)
       const diff = tomorrow.getTime() - now.getTime()
-      return {
-        h: Math.floor(diff / 3600000),
-        m: Math.floor((diff % 3600000) / 60000),
-        s: Math.floor((diff % 60000) / 1000),
-      }
+      const h = Math.floor(diff / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      const s = Math.floor((diff % 60000) / 1000)
+      const pad = (n: number) => String(n).padStart(2, '0')
+      setDisplay(`${pad(h)}:${pad(m)}:${pad(s)}`)
     }
-    setTime(calc())
-    const id = setInterval(() => setTime(calc()), 1000)
+    calc()
+    const id = setInterval(calc, 1000)
     return () => clearInterval(id)
   }, [])
 
-  const pad = (n: number) => String(n).padStart(2, '0')
-
   return (
     <div style={{ fontFamily: "'Silkscreen', monospace", fontSize: 18, color: '#00ff41', background: '#0a0a0a', padding: '4px 8px', borderRadius: 4, letterSpacing: '0.08em', display: 'inline-block', border: '1px solid #333' }}>
-      {pad(time.h)}:{pad(time.m)}:{pad(time.s)}
+      {display ?? '--:--:--'}
     </div>
   )
 }

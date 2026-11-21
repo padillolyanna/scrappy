@@ -94,6 +94,70 @@ function DropPanel({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+// ─── Compact theme switcher for nav ──────────────────────────────────────────
+
+type Theme = '' | 'cyber' | 'lilac'
+const NAV_THEMES: { id: Theme; label: string; color: string }[] = [
+  { id: '', label: 'Pink Princess', color: '#FF4FA3' },
+  { id: 'cyber', label: 'Cyber Y2K', color: '#00CFFF' },
+  { id: 'lilac', label: 'Lilac Dream', color: '#B87FFF' },
+]
+
+function NavThemeSwitcher() {
+  const [open, setOpen] = useState(false)
+  const [current, setCurrent] = useState<Theme>('')
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('scrappy_theme') as Theme | null
+      if (saved !== null) setCurrent(saved)
+    } catch { /* ignore */ }
+  }, [])
+
+  function apply(id: Theme) {
+    setCurrent(id)
+    if (id) document.documentElement.dataset.theme = id
+    else delete document.documentElement.dataset.theme
+    try { localStorage.setItem('scrappy_theme', id) } catch { /* ignore */ }
+    setOpen(false)
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        title="Change skin"
+        aria-label="Change colour skin"
+        aria-expanded={open}
+        className="w-8 h-8 rounded-full border-2 border-[#FFB6D9] flex items-center justify-center hover:border-[#FF4FA3] transition-colors"
+        style={{ background: NAV_THEMES.find(t => t.id === current)?.color ?? '#FF4FA3', flexShrink: 0 }}
+      />
+      {open && (
+        <div className="absolute right-0 top-[calc(100%+8px)] z-[200] bg-white rounded-xl border-2 border-[#FFB6D9]/70 shadow-xl py-2 px-3 min-w-[140px]">
+          <div className="font-pixel text-[#888] mb-2" style={{ fontSize: '11px' }}>CHANGE SKIN</div>
+          <div className="flex flex-col gap-2">
+            {NAV_THEMES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => apply(t.id)}
+                className="flex items-center gap-2 hover:bg-[#FFB6D9]/15 rounded-lg px-2 py-1 transition-colors"
+              >
+                <span
+                  style={{
+                    width: 16, height: 16, borderRadius: '50%', background: t.color, display: 'inline-block',
+                    border: current === t.id ? '2px solid #2B0A2E' : '2px solid transparent', flexShrink: 0,
+                  }}
+                />
+                <span className="font-nunito text-[#3A0030]" style={{ fontSize: '12px' }}>{t.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 type OpenMenu = 'create' | 'community' | 'profile' | null
 
 export default function Navbar() {
@@ -223,6 +287,11 @@ export default function Navbar() {
               <DropPanel items={COMMUNITY_ITEMS} onClose={closeAll} align="center" />
             )}
           </div>
+        </div>
+
+        {/* ── Theme switcher ── */}
+        <div className="hidden md:block flex-shrink-0">
+          <NavThemeSwitcher />
         </div>
 
         {/* ── Desktop auth ── */}
