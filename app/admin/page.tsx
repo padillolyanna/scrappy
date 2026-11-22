@@ -50,6 +50,9 @@ export default async function AdminDashboard() {
           <Link href="/admin/hangouts" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
             HANGOUTS
           </Link>
+          <Link href="/admin/hangouts/announcements" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
+            ANNOUNCEMENTS
+          </Link>
           <Link href="/" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '12px' }}>
             VIEW SITE
           </Link>

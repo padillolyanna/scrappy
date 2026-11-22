@@ -11,6 +11,8 @@ import HomepageCTA from '@/components/landing/HomepageCTA'
 import HomeDashboard from '@/components/landing/HomeDashboard'
 import type { DashScrapbook } from '@/components/landing/DashboardScrapbooks'
 import { createClient } from '@/lib/supabase-server'
+import { getLiveAnnouncements } from '@/lib/announcements'
+import AnnouncementBoard from '@/components/hangouts/AnnouncementBoard'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -21,6 +23,7 @@ export default async function Home() {
     promptResult,
     exchangeTotalResult,
     exchangeTodayResult,
+    announcements,
   ] = await Promise.all([
     supabase
       .from('scrapbooks')
@@ -32,6 +35,7 @@ export default async function Home() {
     supabase.from('daily_prompts').select('*').eq('date', today).maybeSingle(),
     supabase.from('exchanges').select('id', { count: 'exact', head: true }),
     supabase.from('exchanges').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00.000Z`),
+    getLiveAnnouncements({ limit: 3 }),
   ])
 
   // Current user
@@ -49,20 +53,29 @@ export default async function Home() {
   // Logged-in: fetch user's scrapbooks + latest
   let latestScrapbook: { id: string; title: string; cover_id: string } | null = null
   let userScrapbooks: DashScrapbook[] = []
+  let rsvpHangoutIds: string[] = []
 
   if (currentUser && authUser) {
-    const { data: sbData } = await supabase
-      .from('scrapbooks')
-      .select('id, title, cover_id, is_public')
-      .eq('user_id', authUser.id)
-      .order('updated_at', { ascending: false })
-      .limit(50)
+    const [sbResult, rsvpResult] = await Promise.all([
+      supabase
+        .from('scrapbooks')
+        .select('id, title, cover_id, is_public')
+        .eq('user_id', authUser.id)
+        .order('updated_at', { ascending: false })
+        .limit(50),
+      supabase
+        .from('hangout_rsvps')
+        .select('hangout_id')
+        .eq('user_id', authUser.id)
+        .eq('status', 'confirmed'),
+    ])
 
-    userScrapbooks = (sbData ?? []) as DashScrapbook[]
+    userScrapbooks = (sbResult.data ?? []) as DashScrapbook[]
     if (userScrapbooks.length > 0) {
       const first = userScrapbooks[0]
       latestScrapbook = { id: first.id, title: first.title, cover_id: first.cover_id }
     }
+    rsvpHangoutIds = (rsvpResult.data ?? []).map((r: { hangout_id: string }) => r.hangout_id)
   }
 
   // Marketing page: fresh public scrapbooks
@@ -77,6 +90,11 @@ export default async function Home() {
     }
   }) as FreshScrapbook[]
 
+  // Build server-side slot for the logged-in dashboard
+  const announcementsSlot = announcements.length > 0
+    ? <AnnouncementBoard announcements={announcements} variant="compact" rsvpHangoutIds={rsvpHangoutIds} />
+    : null
+
   return (
     <div className="relative overflow-x-clip">
       <TopMarquee />
@@ -88,6 +106,7 @@ export default async function Home() {
           prompt={promptResult.data ?? null}
           latestScrapbook={latestScrapbook}
           scrapbooks={userScrapbooks}
+          announcementsSlot={announcementsSlot}
         />
       ) : (
         /* ── Logged-out: marketing homepage ── */
@@ -95,6 +114,19 @@ export default async function Home() {
           <HomepageHero />
           <HomepageTemplates />
           <PhotoboothSection />
+          {announcements.length > 0 && (
+            <section style={{ padding: '0 20px clamp(40px, 6vw, 64px)', maxWidth: 1120, margin: '0 auto' }}>
+              <div className="text-center mb-8">
+                <div className="font-silkscreen tracking-widest mb-2" style={{ fontSize: '11px', color: 'var(--c-primary)' }}>
+                  JOURNAL HANGOUTS
+                </div>
+                <h2 className="font-pacifico" style={{ fontSize: 'clamp(26px, 4vw, 38px)', color: 'var(--c-text)', lineHeight: 1.1 }}>
+                  hangout board
+                </h2>
+              </div>
+              <AnnouncementBoard announcements={announcements} variant="compact" />
+            </section>
+          )}
           <WhatYouCanDo />
           <FreshScrapbooks scrapbooks={freshScrapbooks} />
           <HomepageCTA />

@@ -3,6 +3,8 @@ export const instant = false
 import { createClient } from '@/lib/supabase-server'
 import Footer from '@/components/layout/Footer'
 import Link from 'next/link'
+import { getLiveAnnouncements } from '@/lib/announcements'
+import AnnouncementBoard from '@/components/hangouts/AnnouncementBoard'
 
 interface Hangout {
   id: string
@@ -160,6 +162,8 @@ function HangoutCard({ hangout, featured = false }: { hangout: Hangout; featured
 export default async function HangoutsPage() {
   const supabase = await createClient()
 
+  const announcements = await getLiveAnnouncements({ limit: 12 })
+
   const { data: hangoutsRaw } = await supabase
     .from('hangouts')
     .select('id, title, description, category, host_id, start_at, end_at, event_type, max_participants, status, profiles(username)')
@@ -224,6 +228,8 @@ export default async function HangoutsPage() {
             gather &amp; create together ♡
           </p>
         </div>
+
+        <AnnouncementBoard announcements={announcements} variant="full" />
 
         {hangouts.length === 0 ? (
           <div className="window-chrome overflow-hidden rounded-lg shadow-xl">

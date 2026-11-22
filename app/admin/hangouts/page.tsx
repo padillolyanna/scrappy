@@ -23,6 +23,9 @@ export default async function AdminHangoutsPage() {
           <Link href="/admin" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
             DASHBOARD
           </Link>
+          <Link href="/admin/hangouts/announcements" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
+            ANNOUNCEMENTS
+          </Link>
           <Link href="/hangouts" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '12px' }}>
             VIEW HANGOUTS
           </Link>

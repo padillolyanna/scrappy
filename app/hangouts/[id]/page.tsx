@@ -5,6 +5,8 @@ import Footer from '@/components/layout/Footer'
 import RSVPButton from './RSVPButton'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import { getLiveAnnouncements } from '@/lib/announcements'
+import AnnouncementNote from '@/components/hangouts/AnnouncementNote'
 
 interface HangoutDetail {
   id: string
@@ -98,6 +100,8 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
       .maybeSingle()
     isConfirmed = rsvp?.status === 'confirmed'
   }
+
+  const hangoutAnnouncements = await getLiveAnnouncements({ hangoutId: id, limit: 10 })
 
   const catLabel = CATEGORY_LABELS[hangout.category] ?? hangout.category
   const rsvpCount = confirmedCount ?? 0
@@ -229,6 +233,18 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
                 </div>
               )}
             </div>
+
+            {/* Announcements for this hangout */}
+            {hangoutAnnouncements.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div className="panel-header mb-0">updates for this hangout ✦</div>
+                <div className="widget-box p-4" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {hangoutAnnouncements.map((a) => (
+                    <AnnouncementNote key={a.id} a={a} noTilt fullWidth />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* RSVP */}
             <div>
