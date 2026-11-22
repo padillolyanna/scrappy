@@ -188,6 +188,7 @@ export default function HighlightsPage() {
         .from('scrapbooks')
         .select('id, title, cover_id, like_count, view_count, user_id, profiles!inner(username)')
         .eq('is_public', true)
+        .not('profiles.username', 'in', '("testuser","test","demo","admin_test","scrappy_admin")')
         .order('like_count', { ascending: false })
         .limit(12)
 
