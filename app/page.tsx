@@ -4,12 +4,12 @@ import Footer from '@/components/layout/Footer'
 import LegalBar from '@/components/layout/LegalBar'
 import TopMarquee from '@/components/landing/TopMarquee'
 import HomepageHero from '@/components/landing/HomepageHero'
-import HomepageMakeCards from '@/components/landing/HomepageMakeCards'
 import HomepageTemplates from '@/components/landing/HomepageTemplates'
-import TodayOnScrappy from '@/components/landing/TodayOnScrappy'
-import HomepageJoinFAQ from '@/components/landing/HomepageJoinFAQ'
+import PhotoboothSection from '@/components/landing/PhotoboothSection'
+import WhatYouCanDo from '@/components/landing/WhatYouCanDo'
+import FreshScrapbooks, { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
+import HomepageCTA from '@/components/landing/HomepageCTA'
 import HomeDashboard from '@/components/landing/HomeDashboard'
-import FeaturedScrapbooks, { type LiveScrapbook } from '@/components/landing/FeaturedScrapbooks'
 import { createClient } from '@/lib/supabase-server'
 
 export default async function Home() {
@@ -17,20 +17,19 @@ export default async function Home() {
   const today = new Date().toISOString().split('T')[0]
 
   const [
-    featuredResult,
+    freshResult,
     promptResult,
     confessionsResult,
-    totalScrapbooksResult,
     exchangeTotalResult,
     exchangeTodayResult,
   ] = await Promise.all([
     supabase
       .from('scrapbooks')
-      .select('id, title, cover_id, like_count, view_count, profiles!inner(username)')
+      .select('id, title, cover_id, profiles!inner(username)')
       .eq('is_public', true)
       .not('profiles.username', 'in', '("testuser","test","demo","admin_test")')
-      .order('like_count', { ascending: false })
-      .limit(6),
+      .order('created_at', { ascending: false })
+      .limit(4),
     supabase.from('daily_prompts').select('*').eq('date', today).maybeSingle(),
     supabase
       .from('confessions')
@@ -38,7 +37,6 @@ export default async function Home() {
       .eq('is_approved', true)
       .order('created_at', { ascending: false })
       .limit(3),
-    supabase.from('scrapbooks').select('id', { count: 'exact', head: true }).eq('is_public', true),
     supabase.from('exchanges').select('id', { count: 'exact', head: true }),
     supabase.from('exchanges').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00.000Z`),
   ])
@@ -68,21 +66,16 @@ export default async function Home() {
     latestScrapbook = data ?? null
   }
 
-  // Shape featured scrapbooks
-  type FeaturedRow = { id: string; title: string; cover_id: string; like_count: number; view_count: number; profiles: { username: string } | { username: string }[] | null }
-  const featured = (featuredResult.data ?? []).map((sb) => {
-    const row = sb as unknown as FeaturedRow
+  type FreshRow = { id: string; title: string; cover_id: string; profiles: { username: string } | { username: string }[] | null }
+  const freshScrapbooks = (freshResult.data ?? []).map((sb) => {
+    const row = sb as unknown as FreshRow
     return {
       id: row.id,
       title: row.title,
       cover_id: row.cover_id,
-      like_count: row.like_count,
-      view_count: row.view_count,
       profiles: Array.isArray(row.profiles) ? (row.profiles[0] as { username: string }) : (row.profiles as { username: string } | null),
     }
-  }) as LiveScrapbook[]
-
-  const totalPublicScrapbooks = totalScrapbooksResult.count ?? 0
+  }) as FreshScrapbook[]
 
   const confessions = (confessionsResult.data ?? []) as Array<{ id: string; content: string; category: string }>
 
@@ -90,9 +83,6 @@ export default async function Home() {
     total: exchangeTotalResult.count ?? 0,
     today: exchangeTodayResult.count ?? 0,
   }
-
-  // Show real scrapbooks if 3+ exist
-  const showcaseScrapbooks = totalPublicScrapbooks >= 3 ? featured.slice(0, 3) : []
 
   return (
     <div className="relative overflow-x-clip">
@@ -114,19 +104,11 @@ export default async function Home() {
         /* ── Logged-out: marketing homepage ── */
         <>
           <HomepageHero />
-          <HomepageMakeCards />
           <HomepageTemplates />
-          <TodayOnScrappy
-            prompt={promptResult.data ?? null}
-            confessions={confessions}
-            exchangeStats={exchangeStats}
-          />
-
-          {showcaseScrapbooks.length > 0 && (
-            <FeaturedScrapbooks scrapbooks={showcaseScrapbooks} />
-          )}
-
-          <HomepageJoinFAQ />
+          <PhotoboothSection />
+          <WhatYouCanDo />
+          <FreshScrapbooks scrapbooks={freshScrapbooks} />
+          <HomepageCTA />
           <Footer />
         </>
       )}
