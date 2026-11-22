@@ -29,7 +29,7 @@ export default async function Home() {
       .from('scrapbooks')
       .select('id, title, cover_id, profiles!inner(username)')
       .eq('is_public', true)
-      .not('profiles.username', 'in', '("testuser","test","demo","admin_test")')
+      .not('profiles.username', 'in', '("testuser","test","demo","admin_test","scrappy_admin")')
       .order('created_at', { ascending: false })
       .limit(4),
     supabase.from('daily_prompts').select('*').eq('date', today).maybeSingle(),

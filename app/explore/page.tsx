@@ -77,6 +77,7 @@ export default function ExplorePage() {
       .from('scrapbooks')
       .select('id, title, cover_id, like_count, view_count, created_at, user_id, profiles!inner(username)')
       .eq('is_public', true)
+      .not('profiles.username', 'in', '("testuser","test","demo","admin_test","scrappy_admin")')
       .range(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE - 1)
 
     if (search.trim()) {
