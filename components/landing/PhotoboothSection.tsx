@@ -158,21 +158,6 @@ function BoothIllustration() {
         </div>
       </div>
 
-      {/* HF-07 label */}
-      <div
-        className="font-silkscreen absolute"
-        style={{ bottom: 4, left: '50%', transform: 'translateX(-82%)', fontSize: 9, color: '#aaa', letterSpacing: '0.08em' }}
-      >
-        HF-07 BOOTH
-      </div>
-
-      {/* HF-08 label */}
-      <div
-        className="font-silkscreen absolute"
-        style={{ bottom: 4, left: '50%', transform: 'translateX(32%)', fontSize: 9, color: '#aaa', letterSpacing: '0.08em' }}
-      >
-        HF-08 STRIP
-      </div>
     </div>
   )
 }
