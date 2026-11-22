@@ -118,6 +118,17 @@ export default function AnnouncementNote({ a, noTilt, fullWidth, rsvpHighlight }
         </div>
       )}
 
+      {/* Flyer image */}
+      {a.image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={a.image_url}
+          alt=""
+          aria-hidden="true"
+          style={{ width: '100%', borderRadius: 4, marginBottom: 8, display: 'block', border: '1.5px solid rgba(43,10,46,.1)' }}
+        />
+      )}
+
       {/* Title */}
       <h3 style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 900, fontSize: 17, color: '#2B0A2E', marginBottom: 6, lineHeight: 1.3 }}>
         {a.title}

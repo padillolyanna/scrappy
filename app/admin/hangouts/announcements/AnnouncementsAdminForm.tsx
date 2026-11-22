@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { createClient } from '@/lib/supabase-client'
 import { createAnnouncement, deleteAnnouncement, togglePin } from './actions'
 
 const NOTE_BG: Record<string, string> = {
@@ -53,8 +54,8 @@ function toLocalDatetime(iso: string): string {
   return `${y}-${mo}-${da}T${h}:${mi}`
 }
 
-function NotePreview({ title, body, kind, noteColor, isPinned }: {
-  title: string; body: string; kind: string; noteColor: string; isPinned: boolean
+function NotePreview({ title, body, kind, noteColor, isPinned, imagePreview }: {
+  title: string; body: string; kind: string; noteColor: string; isPinned: boolean; imagePreview?: string | null
 }) {
   const bg = NOTE_BG[noteColor] ?? NOTE_BG.pink
   const kindLabels: Record<string, string> = {
@@ -94,6 +95,10 @@ function NotePreview({ title, body, kind, noteColor, isPinned }: {
       <div style={{ fontFamily: "'Silkscreen', monospace", fontSize: 9, color: '#7C4DDB', marginBottom: 6 }}>
         {kindLabels[kind] ?? kind}
       </div>
+      {imagePreview && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imagePreview} alt="" style={{ width: '100%', borderRadius: 4, marginBottom: 8, display: 'block', border: '1.5px solid rgba(43,10,46,.1)' }} />
+      )}
       <div style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 900, fontSize: 16, color: '#2B0A2E', marginBottom: 6 }}>
         {title || 'your title here'}
       </div>
@@ -120,15 +125,51 @@ export default function AnnouncementsAdminForm({
   const [isPinned, setIsPinned] = useState(false)
   const [publishAt, setPublishAt] = useState(toLocalDatetime(new Date().toISOString()))
   const [expiresAt, setExpiresAt] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageUploading, setImageUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
 
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] ?? null
+    setImageFile(file)
+    if (file) {
+      const url = URL.createObjectURL(file)
+      setImagePreview(url)
+    } else {
+      setImagePreview(null)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setImageUploading(!!imageFile)
+
+    let uploadedImageUrl: string | null = null
+    if (imageFile) {
+      try {
+        const supabase = createClient()
+        const ext = imageFile.name.split('.').pop() ?? 'jpg'
+        const filename = `${Date.now()}-${imageFile.name.replace(/[^a-z0-9.]/gi, '_')}.${ext}`
+        const { error: uploadErr } = await supabase.storage
+          .from('announcements')
+          .upload(filename, imageFile, { contentType: imageFile.type, upsert: false })
+        if (uploadErr) throw uploadErr
+        const { data: { publicUrl } } = supabase.storage.from('announcements').getPublicUrl(filename)
+        uploadedImageUrl = publicUrl
+      } catch (err) {
+        setImageUploading(false)
+        setError(err instanceof Error ? err.message : 'Image upload failed.')
+        return
+      }
+    }
+    setImageUploading(false)
+
     startTransition(async () => {
       try {
         const fd = new FormData()
@@ -140,6 +181,7 @@ export default function AnnouncementsAdminForm({
         fd.set('is_pinned', String(isPinned))
         fd.set('publish_at', publishAt)
         fd.set('expires_at', expiresAt)
+        if (uploadedImageUrl) fd.set('image_url', uploadedImageUrl)
         await createAnnouncement(fd)
         setSuccess(true)
         setTitle('')
@@ -150,6 +192,8 @@ export default function AnnouncementsAdminForm({
         setIsPinned(false)
         setPublishAt(toLocalDatetime(new Date().toISOString()))
         setExpiresAt('')
+        setImageFile(null)
+        setImagePreview(null)
         setTimeout(() => setSuccess(false), 3000)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong.')
@@ -229,6 +273,30 @@ export default function AnnouncementsAdminForm({
                 className="input-y2k w-full"
                 placeholder="Share the announcement details..."
               />
+            </div>
+
+            <div>
+              <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>FLYER IMAGE (optional)</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="input-y2k w-full"
+                style={{ padding: '6px 10px', cursor: 'pointer' }}
+              />
+              {imagePreview && (
+                <div style={{ marginTop: 8, position: 'relative', display: 'inline-block' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="" style={{ maxHeight: 120, borderRadius: 4, border: '1.5px solid #FFB6D9', display: 'block' }} />
+                  <button
+                    type="button"
+                    onClick={() => { setImageFile(null); setImagePreview(null) }}
+                    style={{ position: 'absolute', top: 4, right: 4, background: '#D7263D', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -313,8 +381,8 @@ export default function AnnouncementsAdminForm({
               </div>
             </div>
 
-            <button type="submit" disabled={isPending} className="btn-y2k w-full py-3">
-              {isPending ? 'posting...' : 'post announcement ✦'}
+            <button type="submit" disabled={isPending || imageUploading} className="btn-y2k w-full py-3">
+              {imageUploading ? 'uploading image...' : isPending ? 'posting...' : 'post announcement ✦'}
             </button>
           </form>
         </div>
@@ -337,6 +405,7 @@ export default function AnnouncementsAdminForm({
               kind={kind}
               noteColor={noteColor}
               isPinned={isPinned}
+              imagePreview={imagePreview}
             />
           </div>
         </div>

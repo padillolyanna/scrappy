@@ -8,6 +8,7 @@ export type Announcement = {
   note_color: 'pink' | 'lilac' | 'blue' | 'yellow' | 'mint'
   is_pinned: boolean
   publish_at: string
+  image_url?: string | null
   hangout: { id: string; title: string; start_at: string; status: string } | null
 }
 
@@ -37,7 +38,7 @@ export async function getLiveAnnouncements({ limit = 12, hangoutId }: { limit?: 
 
   let query = supabase
     .from('hangout_announcements')
-    .select('id, title, body, kind, note_color, is_pinned, publish_at, hangouts(id, title, start_at, status)')
+    .select('id, title, body, kind, note_color, is_pinned, publish_at, image_url, hangouts(id, title, start_at, status)')
     .lte('publish_at', now)
     .or(`expires_at.is.null,expires_at.gt.${now}`)
     .order('is_pinned', { ascending: false })
@@ -62,6 +63,7 @@ export async function getLiveAnnouncements({ limit = 12, hangoutId }: { limit?: 
       note_color: a.note_color as Announcement['note_color'],
       is_pinned: a.is_pinned,
       publish_at: a.publish_at,
+      image_url: (a as typeof a & { image_url?: string | null }).image_url ?? null,
       hangout: hangout ? { id: hangout.id, title: hangout.title, start_at: hangout.start_at, status: hangout.status } : null,
       isNew: isNewAnnouncement(a.publish_at),
       when: formatDatePHT(a.publish_at),
@@ -75,7 +77,7 @@ export async function getAllAnnouncementsAdmin(): Promise<(AnnouncementWithMeta 
 
   const { data } = await supabase
     .from('hangout_announcements')
-    .select('id, title, body, kind, note_color, is_pinned, publish_at, expires_at, hangouts(id, title, start_at, status)')
+    .select('id, title, body, kind, note_color, is_pinned, publish_at, expires_at, image_url, hangouts(id, title, start_at, status)')
     .order('is_pinned', { ascending: false })
     .order('publish_at', { ascending: false })
 
@@ -94,6 +96,7 @@ export async function getAllAnnouncementsAdmin(): Promise<(AnnouncementWithMeta 
       is_pinned: a.is_pinned,
       publish_at: a.publish_at,
       expires_at: a.expires_at ?? null,
+      image_url: (a as typeof a & { image_url?: string | null }).image_url ?? null,
       hangout: hangout ? { id: hangout.id, title: hangout.title, start_at: hangout.start_at, status: hangout.status } : null,
       isNew: isNewAnnouncement(a.publish_at),
       when: formatDatePHT(a.publish_at),

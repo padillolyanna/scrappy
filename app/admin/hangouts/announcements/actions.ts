@@ -15,6 +15,7 @@ export async function createAnnouncement(formData: FormData) {
   const isPinned = formData.get('is_pinned') === 'true'
   const publishAt = formData.get('publish_at') as string
   const expiresAt = formData.get('expires_at') as string | null
+  const imageUrl = formData.get('image_url') as string | null
 
   const { error } = await supabase.from('hangout_announcements').insert({
     title,
@@ -25,6 +26,7 @@ export async function createAnnouncement(formData: FormData) {
     is_pinned: isPinned,
     publish_at: publishAt ? new Date(publishAt).toISOString() : new Date().toISOString(),
     expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+    image_url: imageUrl || null,
     created_by: user?.id ?? null,
   })
 
