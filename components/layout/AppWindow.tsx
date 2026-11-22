@@ -1,7 +1,6 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import Mascot from '@/components/ui/Mascot'
 
 interface Props {
   children: ReactNode
@@ -53,11 +52,6 @@ export default function AppWindow({ children }: Props) {
         }}
       >
         {children}
-
-        {/* Mascot in lower-right corner of the window */}
-        <div className="absolute right-1 lg:-right-5" style={{ bottom: '60px', zIndex: 2, pointerEvents: 'none' }}>
-          <Mascot />
-        </div>
       </div>
     </div>
   )

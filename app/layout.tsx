@@ -6,6 +6,7 @@ import AppWindow from "@/components/layout/AppWindow";
 import CursorTrail from "@/components/ui/CursorTrail";
 import PresencePing from "@/components/ui/PresencePing";
 import CookieConsent from "@/components/ui/CookieConsent";
+import Mascot from "@/components/ui/Mascot";
 
 export const metadata: Metadata = {
   title: "Scrappy — make Y2K scrapbook pages",
@@ -47,6 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AppWindow>
           {children}
         </AppWindow>
+        <Mascot />
         <CookieConsent />
         <Script
           async

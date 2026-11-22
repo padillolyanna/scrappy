@@ -1,4 +1,8 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase-client'
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
@@ -19,6 +23,16 @@ const INFO_LINKS = [
 ]
 
 export default function Footer() {
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data: { user } }) => {
+      setLoggedIn(!!user)
+    })
+  }, [])
+
+  if (loggedIn === null || loggedIn) return null
+
   return (
     <footer className="bg-[#3A0030] text-[#FFB6D9]">
       {/* Gradient fade-in at top */}
