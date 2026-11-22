@@ -1,76 +1,106 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import { HOME_ASSETS } from '@/lib/homeAssets'
 
 const FEATURES = [
   {
-    title: 'Scrapbook',
+    title: 'Make a scrapbook',
+    desc: 'Spiral notebooks with real covers, stickers, gems, tape and your own photos.',
     href: '/scrapbook/create',
-    color: '#E0007A',
-    icon: '✦',
-    text: 'Spiral-notebook pages you decorate with photos, frames, gems, washi tape and handwritten notes. Fully editable.',
+    bg: 'var(--pink-soft)',
+    icon: HOME_ASSETS.nbPink,
+    iconW: 90,
+    fallbackEmoji: '📒',
   },
   {
-    title: 'Photobooth',
+    title: 'Snap a purikura',
+    desc: 'Four-pose strips with frames, backgrounds and magazine covers.',
     href: '/photobooth',
-    color: '#1D9BF0',
-    icon: '◎',
-    text: 'Snap 1–6 photos and decorate them like a purikura machine with patterns, rhinestones and stamps.',
+    bg: 'var(--purple-soft)',
+    icon: HOME_ASSETS.booth,
+    iconW: 70,
+    fallbackEmoji: '📸',
   },
   {
-    title: 'Your profile',
+    title: 'Customize your space',
+    desc: 'A profile page you can theme like it\'s 2005: backgrounds, colours, blurbs.',
     href: '/my-space',
-    color: '#6A3FD0',
-    icon: '★',
-    text: 'A customizable profile page with glitter names, layouts, backgrounds, a Top 8 and a comment wall.',
+    bg: 'var(--blue-soft)',
+    icon: null,
+    iconW: 70,
+    fallbackEmoji: '✨',
   },
   {
-    title: 'Note exchange',
+    title: 'Swap with friends',
+    desc: 'Answer daily prompts and trade pages in the scrapbook exchange.',
     href: '/exchange',
-    color: '#14B8A6',
-    icon: '✉',
-    text: "Pass notes like it's 2004: answer the same questions as a friend and reveal them together.",
+    bg: 'var(--yellow)',
+    icon: null,
+    iconW: 70,
+    fallbackEmoji: '✉️',
   },
 ]
 
 export default function WhatYouCanDo() {
   return (
-    <section style={{ padding: '0 20px clamp(40px, 6vw, 64px)', maxWidth: 1120, margin: '0 auto' }}>
-      <div className="text-center mb-8">
-        <div
-          className="font-silkscreen tracking-widest mb-2"
-          style={{ fontSize: '11px', color: 'var(--c-primary)' }}
-        >
-          WHAT YOU CAN MAKE
+    <section
+      style={{
+        background: 'white',
+        borderTop: '3px solid var(--ink)',
+        borderBottom: '3px solid var(--ink)',
+        padding: '80px 24px',
+      }}
+    >
+      <div style={{ maxWidth: 'var(--content-width)', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 48 }}>
+          <h2 className="font-pacifico" style={{ fontSize: 'clamp(34px, 4.4vw, 56px)', color: 'var(--ink)', lineHeight: 1.1, marginBottom: 12 }}>
+            what you can do here
+          </h2>
+          <p className="font-nunito" style={{ fontSize: 18, color: 'var(--ink)', opacity: 0.65, maxWidth: 520, margin: '0 auto', lineHeight: 1.6 }}>
+            Four things, all free, all made to feel like the internet used to.
+          </p>
         </div>
-        <h2
-          className="font-pacifico"
-          style={{ fontSize: 'clamp(26px, 4vw, 38px)', color: 'var(--c-text)', lineHeight: 1.1 }}
-        >
-          things to do on scrappy <span aria-hidden="true">✦</span>
-        </h2>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {FEATURES.map((f) => (
-          <Link
-            key={f.title}
-            href={f.href}
-            className="group card-ink block overflow-hidden transition-transform hover:-translate-y-1"
-          >
-            <div
-              className="flex items-center gap-2 px-4 py-3 text-white font-nunito font-extrabold text-base"
-              style={{ background: f.color }}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+          {FEATURES.map((f) => (
+            <Link
+              key={f.href}
+              href={f.href}
+              style={{
+                display: 'block',
+                textDecoration: 'none',
+                background: 'white',
+                border: '2.5px solid var(--ink)',
+                borderRadius: 20,
+                boxShadow: '4px 6px 0 var(--ink)',
+                overflow: 'hidden',
+                transition: 'transform 0.15s, box-shadow 0.15s',
+              }}
+              onMouseEnter={(e) => { const t = e.currentTarget as HTMLElement; t.style.transform = 'translateY(-4px)'; t.style.boxShadow = '4px 10px 0 var(--ink)' }}
+              onMouseLeave={(e) => { const t = e.currentTarget as HTMLElement; t.style.transform = ''; t.style.boxShadow = '4px 6px 0 var(--ink)' }}
             >
-              <span aria-hidden="true">{f.icon}</span>
-              {f.title}
-            </div>
-            <p className="px-4 py-3 font-nunito text-[14px] leading-snug" style={{ color: 'var(--c-text)' }}>
-              {f.text}
-            </p>
-            <div className="px-4 pb-3 font-nunito font-bold text-sm group-hover:underline" style={{ color: f.color }}>
-              try it →
-            </div>
-          </Link>
-        ))}
+              {/* Icon area */}
+              <div style={{ height: 130, background: f.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '2.5px solid var(--ink)' }}>
+                {f.icon ? (
+                  <div style={{ position: 'relative', width: f.iconW, height: Math.round(f.iconW * f.icon.h / f.icon.w) }}>
+                    <Image src={f.icon.src} alt="" fill style={{ objectFit: 'contain' }} sizes={`${f.iconW}px`} />
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 56 }}>{f.fallbackEmoji}</span>
+                )}
+              </div>
+              {/* Text */}
+              <div style={{ padding: '18px 20px 20px' }}>
+                <h3 className="font-nunito font-black" style={{ fontSize: 22, color: 'var(--ink)', marginBottom: 8, lineHeight: 1.2 }}>
+                  {f.title}
+                </h3>
+                <p className="font-nunito" style={{ fontSize: 16, color: 'var(--ink)', opacity: 0.7, lineHeight: 1.5, margin: 0 }}>
+                  {f.desc}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   )

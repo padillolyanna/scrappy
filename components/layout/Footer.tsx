@@ -1,95 +1,63 @@
 import Link from 'next/link'
 
-const NAV_LINKS = [
-  { label: 'Home', href: '/' },
+const MAKE_LINKS = [
   { label: 'Scrapbook', href: '/scrapbook/create' },
+  { label: 'Photobooth', href: '/photobooth' },
   { label: 'Explore', href: '/explore' },
-  { label: 'Highlights', href: '/highlights' },
-  { label: 'Confessions', href: '/confessions' },
-  { label: 'Daily Prompt', href: '/prompts' },
 ]
 
 const INFO_LINKS = [
-  { label: 'About Scrappy', href: '/about' },
+  { label: 'About', href: '/about' },
   { label: 'Contact', href: '/contact' },
-  { label: 'Privacy Policy', href: '/privacy' },
-  { label: 'Terms of Service', href: '/tos' },
-  { label: 'Photobooth', href: '/photobooth' },
-  { label: 'Scrapbook Exchange', href: '/exchange' },
+  { label: 'Privacy', href: '/privacy' },
 ]
 
 export default function Footer() {
   return (
-    <footer className="bg-[#3A0030] text-[#FFB6D9]">
-      {/* Gradient fade-in at top */}
-      <div
-        className="h-6 w-full"
-        style={{ background: 'linear-gradient(to bottom, transparent, #3A0030)', marginTop: '-1px' }}
-      />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
-          {/* LEFT */}
-          <div>
-            <div
-              className="font-pacifico text-3xl text-glitter mb-2"
-              style={{ fontFamily: 'Pacifico, cursive', paddingBottom: '6px' }}
-            >
-              SCRAPPY
-            </div>
-            <p className="font-caveat text-[#FFB6D9]/70 text-lg" style={{ fontFamily: 'Caveat, cursive' }}>
-              Your little corner of the internet. ✦
-            </p>
-            <div className="mt-3 font-pixel text-[#FFB6D9]/40" style={{ fontSize: '12px' }}>
-              &copy; 2026 SCRAPPY. ALL RIGHTS RESERVED.
-            </div>
+    <footer style={{ background: '#2B0A2E', borderTop: '3px solid var(--ink)' }}>
+      <div style={{ maxWidth: 'var(--content-width)', margin: '0 auto', padding: '56px 24px 32px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 32 }}
+        className="[grid-template-columns:1fr] sm:[grid-template-columns:1fr_1fr_1fr]"
+      >
+        {/* Logo + tagline */}
+        <div>
+          <div className="font-pacifico" style={{ fontSize: 28, color: '#FFE9F4', marginBottom: 8 }}>
+            Scrappy
           </div>
+          <p className="font-nunito" style={{ fontSize: 16, color: 'rgba(255,233,244,.6)', lineHeight: 1.6 }}>
+            Your little corner of the internet ✦
+          </p>
+          <p className="font-silkscreen" style={{ fontSize: 11, color: 'rgba(255,233,244,.3)', marginTop: 12 }}>
+            &copy; 2026 SCRAPPY
+          </p>
+        </div>
 
-          {/* MIDDLE */}
-          <div>
-            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '12px' }}>
-              EXPLORE
-            </div>
-            <div className="flex flex-col gap-2">
-              {NAV_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="font-nunito text-sm text-[#FFB6D9]/85 hover:text-white transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div>
-            <div className="font-pixel text-[#FFB6D9]/50 tracking-widest mb-3" style={{ fontSize: '12px' }}>
-              INFO
-            </div>
-            <p className="font-caveat text-[#FFB6D9]/60 text-base mb-4" style={{ fontFamily: 'Caveat, cursive' }}>
-              A digital scrapbook community for everyone who wants their little piece of the internet.
-            </p>
-            <div className="flex flex-col gap-2">
-              {INFO_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className="font-nunito text-sm text-[#FFB6D9]/80 hover:text-[#FFB6D9] transition-colors">
-                  {link.label}
-                </Link>
-              ))}
-            </div>
+        {/* MAKE */}
+        <div>
+          <div className="font-silkscreen" style={{ fontSize: 11, color: 'rgba(255,233,244,.4)', letterSpacing: '0.08em', marginBottom: 16 }}>MAKE</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {MAKE_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="font-nunito font-bold" style={{ fontSize: 15, color: 'rgba(255,233,244,.75)', textDecoration: 'none', transition: 'color 0.15s' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#FFE9F4' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,233,244,.75)' }}
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Bottom marquee strip */}
-        <div className="border-t border-[#FFB6D9]/20 pt-6 overflow-hidden">
-          <div
-            className="font-pixel text-[#FFB6D9]/30 whitespace-nowrap"
-            style={{ fontSize: '12px', animation: 'marquee 30s linear infinite' }}
-          >
-            {Array(6)
-              .fill('✦ make memories ✦ collect answers ✦ decorate your pages ✦ leave a little piece of yourself ✦ ')
-              .join('')}
+        {/* INFO */}
+        <div>
+          <div className="font-silkscreen" style={{ fontSize: 11, color: 'rgba(255,233,244,.4)', letterSpacing: '0.08em', marginBottom: 16 }}>INFO</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {INFO_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="font-nunito font-bold" style={{ fontSize: 15, color: 'rgba(255,233,244,.75)', textDecoration: 'none', transition: 'color 0.15s' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#FFE9F4' }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,233,244,.75)' }}
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

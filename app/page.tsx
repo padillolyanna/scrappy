@@ -3,7 +3,6 @@ export const instant = false
 import Footer from '@/components/layout/Footer'
 import TopMarquee from '@/components/landing/TopMarquee'
 import HomepageHero from '@/components/landing/HomepageHero'
-import HomepageTemplates from '@/components/landing/HomepageTemplates'
 import PhotoboothSection from '@/components/landing/PhotoboothSection'
 import WhatYouCanDo from '@/components/landing/WhatYouCanDo'
 import FreshScrapbooks, { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
@@ -11,6 +10,8 @@ import HomepageCTA from '@/components/landing/HomepageCTA'
 import HomeDashboard from '@/components/landing/HomeDashboard'
 import type { DashScrapbook } from '@/components/landing/DashboardScrapbooks'
 import { createClient } from '@/lib/supabase-server'
+import { sanitizeStyle, sanitizeExtras } from '@/lib/profileStyle'
+import type { ProfileData } from '@/components/profile/ProfileLayout'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -19,8 +20,6 @@ export default async function Home() {
   const [
     freshResult,
     promptResult,
-    exchangeTotalResult,
-    exchangeTodayResult,
   ] = await Promise.all([
     supabase
       .from('scrapbooks')
@@ -30,8 +29,6 @@ export default async function Home() {
       .order('created_at', { ascending: false })
       .limit(4),
     supabase.from('daily_prompts').select('*').eq('date', today).maybeSingle(),
-    supabase.from('exchanges').select('id', { count: 'exact', head: true }),
-    supabase.from('exchanges').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00.000Z`),
   ])
 
   // Current user
@@ -46,23 +43,67 @@ export default async function Home() {
     currentUser = profile ? { username: profile.username, id: authUser.id } : null
   }
 
-  // Logged-in: fetch user's scrapbooks + latest
+  // Logged-in: fetch user's scrapbooks + profile data
   let latestScrapbook: { id: string; title: string; cover_id: string } | null = null
   let userScrapbooks: DashScrapbook[] = []
+  let profileData: ProfileData | null = null
+  let profileStyle = null
+  let profileExtras = null
+  let profilePublicScrapbooks: { id: string; title: string | null; cover_id: string; like_count: number | null }[] = []
+  let hasAnsweredToday = false
+  let favoritesCount = 0
+  let confessionsCount = 0
 
   if (currentUser && authUser) {
-    const { data: sbData } = await supabase
-      .from('scrapbooks')
-      .select('id, title, cover_id, is_public')
-      .eq('user_id', authUser.id)
-      .order('updated_at', { ascending: false })
-      .limit(50)
+    const [sbRes, fullProfileRes, promptAnswerRes, favRes, confRes] = await Promise.all([
+      supabase
+        .from('scrapbooks')
+        .select('id, title, cover_id, is_public')
+        .eq('user_id', authUser.id)
+        .order('updated_at', { ascending: false })
+        .limit(50),
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single(),
+      promptResult.data
+        ? supabase
+            .from('prompt_answers')
+            .select('id')
+            .eq('user_id', authUser.id)
+            .eq('prompt_id', promptResult.data.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.from('favorites').select('scrapbook_id', { count: 'exact', head: true }).eq('user_id', authUser.id),
+      supabase.from('confessions').select('id', { count: 'exact', head: true }).eq('user_id', authUser.id),
+    ])
 
-    userScrapbooks = (sbData ?? []) as DashScrapbook[]
+    userScrapbooks = (sbRes.data ?? []) as DashScrapbook[]
     if (userScrapbooks.length > 0) {
       const first = userScrapbooks[0]
       latestScrapbook = { id: first.id, title: first.title, cover_id: first.cover_id }
     }
+
+    if (fullProfileRes.data) {
+      profileData = fullProfileRes.data as ProfileData
+      profileStyle = sanitizeStyle(fullProfileRes.data.profile_style)
+      profileExtras = sanitizeExtras(fullProfileRes.data.profile_extras)
+    }
+
+    hasAnsweredToday = !!promptAnswerRes.data
+    favoritesCount = favRes.count ?? 0
+    confessionsCount = confRes.count ?? 0
+
+    // Public scrapbooks for profile preview
+    const { data: pubSbs } = await supabase
+      .from('scrapbooks')
+      .select('id, title, cover_id, like_count')
+      .eq('user_id', authUser.id)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false })
+      .limit(6)
+    profilePublicScrapbooks = pubSbs ?? []
   }
 
   // Marketing page: fresh public scrapbooks
@@ -79,21 +120,26 @@ export default async function Home() {
 
   return (
     <div className="relative overflow-x-clip">
-      <TopMarquee />
-
       {currentUser ? (
         /* ── Logged-in: dashboard ── */
         <HomeDashboard
           user={currentUser}
           prompt={promptResult.data ?? null}
+          hasAnsweredToday={hasAnsweredToday}
           latestScrapbook={latestScrapbook}
           scrapbooks={userScrapbooks}
+          favoritesCount={favoritesCount}
+          confessionsCount={confessionsCount}
+          profileData={profileData}
+          profileStyle={profileStyle}
+          profileExtras={profileExtras}
+          profilePublicScrapbooks={profilePublicScrapbooks}
         />
       ) : (
         /* ── Logged-out: marketing homepage ── */
         <>
           <HomepageHero />
-          <HomepageTemplates />
+          <TopMarquee />
           <PhotoboothSection />
           <WhatYouCanDo />
           <FreshScrapbooks scrapbooks={freshScrapbooks} />
