@@ -27,116 +27,76 @@ export default async function AdminDashboard() {
   ])
 
   const stats = [
-    { label: 'TOTAL USERS', value: totalUsers ?? 0, color: 'bg-[#FFB6D9]/30 border-[#FF4FA3]' },
-    { label: 'SCRAPBOOKS', value: totalScrapbooks ?? 0, color: 'bg-[#C9B6FF]/30 border-[#C9B6FF]' },
-    { label: 'CONFESSIONS', value: totalConfessions ?? 0, color: 'bg-[#A8DFFF]/30 border-[#A8DFFF]' },
-    { label: 'PENDING REVIEW', value: pendingConfessions ?? 0, color: 'bg-[#FFF0A8]/50 border-[#FFD700]', urgent: (pendingConfessions ?? 0) > 0 },
+    { label: 'Users', value: totalUsers ?? 0 },
+    { label: 'Scrapbooks', value: totalScrapbooks ?? 0 },
+    { label: 'Confessions', value: totalConfessions ?? 0 },
+    { label: 'Pending review', value: pendingConfessions ?? 0, urgent: (pendingConfessions ?? 0) > 0 },
   ]
 
   return (
-    <div className="min-h-screen bg-[#FFF0F7] font-nunito">
-      {/* Top bar */}
-      <div className="bg-[#3A0030] text-[#FFB6D9] px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="font-pacifico text-xl text-glitter" style={{ fontFamily: 'Pacifico, cursive' }}>
-            SCRAPPY
-          </Link>
-          <span className="font-pixel text-xs text-[#FFB6D9]/50" style={{ fontSize: '12px' }}>/ ADMIN</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <Link href="/admin/confessions" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
-            CONFESSIONS
-          </Link>
-          <Link href="/admin/hangouts" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
-            HANGOUTS
-          </Link>
-          <Link href="/admin/hangouts/announcements" className="font-pixel text-xs text-[#FFB6D9] hover:text-white transition-colors" style={{ fontSize: '12px' }}>
-            ANNOUNCEMENTS
-          </Link>
-          <Link href="/" className="font-pixel text-xs text-[#FFB6D9]/60 hover:text-[#FFB6D9] transition-colors" style={{ fontSize: '12px' }}>
-            VIEW SITE
-          </Link>
-        </div>
+    <div className="max-w-5xl mx-auto px-6 py-8">
+      <h1 className="text-lg font-semibold text-gray-900 mb-6">Dashboard</h1>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {stats.map((stat) => (
+          <div
+            key={stat.label}
+            className={`bg-white rounded border p-4 ${stat.urgent ? 'border-amber-300' : 'border-gray-200'}`}
+          >
+            <div className="text-xs text-gray-500 mb-1">{stat.label}</div>
+            <div className={`text-3xl font-bold ${stat.urgent ? 'text-amber-600' : 'text-gray-900'}`}>
+              {stat.value}
+            </div>
+            {stat.urgent && (
+              <div className="text-xs text-amber-600 mt-1">needs review</div>
+            )}
+          </div>
+        ))}
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <h1 className="font-pacifico text-3xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
-            admin dashboard
-          </h1>
-          <p className="font-caveat text-lg text-[#888] mt-1" style={{ fontFamily: 'Caveat, cursive' }}>
-            overview of SCRAPPY activity
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          {stats.map((stat) => (
-            <div
-              key={stat.label}
-              className={`${stat.color} border-2 rounded-xl p-5 ${stat.urgent ? 'animate-pulse-glow' : ''}`}
-            >
-              <div className="font-pixel text-xs text-[#888] mb-2" style={{ fontSize: '12px' }}>{stat.label}</div>
-              <div className="font-pacifico text-4xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>
-                {stat.value}
-              </div>
-              {stat.urgent && (
-                <div className="font-pixel text-xs text-[#D4006E] mt-1" style={{ fontSize: '12px' }}>needs review</div>
-              )}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded border border-gray-200 p-5">
+          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Recent signups</div>
+          {recentUsers?.length ? (
+            <div className="divide-y divide-gray-100">
+              {recentUsers.map((u) => (
+                <div key={u.username} className="flex items-center justify-between py-2">
+                  <span className="text-sm text-gray-900">@{u.username}</span>
+                  <span className="text-xs text-gray-400">
+                    {new Date(u.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
+          ) : (
+            <p className="text-sm text-gray-400">No users yet.</p>
+          )}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Recent users */}
-          <div className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5">
-            <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>RECENT SIGNUPS</div>
-            {recentUsers?.length ? (
-              <div className="space-y-2">
-                {recentUsers.map((u) => (
-                  <div key={u.username} className="flex items-center justify-between py-2 border-b border-[#FFB6D9]/20 last:border-0">
-                    <span className="font-nunito text-sm text-[#3A0030] font-bold">@{u.username}</span>
-                    <span className="font-nunito text-xs text-[#888]">
-                      {new Date(u.created_at).toLocaleDateString()}
+        <div className="bg-white rounded border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">Recent confessions</div>
+            <Link href="/admin/confessions" className="text-xs text-blue-600 hover:underline">
+              manage all →
+            </Link>
+          </div>
+          {recentConfessions?.length ? (
+            <div className="divide-y divide-gray-100">
+              {recentConfessions.map((c) => (
+                <div key={c.id} className="py-2">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs text-gray-500">{c.category}</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${c.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {c.is_approved ? 'approved' : 'pending'}
                     </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="font-caveat text-[#888] text-center py-4" style={{ fontFamily: 'Caveat, cursive' }}>
-                no users yet
-              </div>
-            )}
-          </div>
-
-          {/* Recent confessions */}
-          <div className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>RECENT CONFESSIONS</div>
-              <Link href="/admin/confessions" className="font-pixel text-xs text-[#FF4FA3] hover:underline" style={{ fontSize: '12px' }}>
-                manage all →
-              </Link>
+                  <p className="text-xs text-gray-600 line-clamp-2">{c.content}</p>
+                </div>
+              ))}
             </div>
-            {recentConfessions?.length ? (
-              <div className="space-y-3">
-                {recentConfessions.map((c) => (
-                  <div key={c.id} className="py-2 border-b border-[#FFB6D9]/20 last:border-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-pixel text-xs text-[#888]" style={{ fontSize: '12px' }}>{c.category}</span>
-                      <span className={`font-pixel text-xs px-2 py-0.5 rounded-full ${c.is_approved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`} style={{ fontSize: '12px' }}>
-                        {c.is_approved ? 'approved' : 'pending'}
-                      </span>
-                    </div>
-                    <p className="font-nunito text-xs text-[#666] line-clamp-2">{c.content}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="font-caveat text-[#888] text-center py-4" style={{ fontFamily: 'Caveat, cursive' }}>
-                no confessions yet
-              </div>
-            )}
-          </div>
+          ) : (
+            <p className="text-sm text-gray-400">No confessions yet.</p>
+          )}
         </div>
       </div>
     </div>

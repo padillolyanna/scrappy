@@ -21,6 +21,9 @@ const EVENT_TYPES = [
   { value: 'hybrid', label: 'Hybrid' },
 ]
 
+const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-1 focus:ring-gray-900'
+const labelCls = 'text-xs font-medium text-gray-700 block mb-1'
+
 export default function AdminHangoutForm() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -93,45 +96,38 @@ export default function AdminHangoutForm() {
 
   if (success) {
     return (
-      <div style={{
-        background: '#F0FFF4', border: '2px solid #28C840', borderRadius: 8,
-        padding: '20px 24px', textAlign: 'center',
-        fontFamily: 'Verdana, sans-serif', fontSize: 14, color: '#1A6E2B',
-      }}>
-        Hangout created! Redirecting... ♡
+      <div className="bg-green-50 border border-green-200 rounded p-4 text-sm text-green-700 text-center">
+        Hangout created! Redirecting...
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div style={{
-          background: '#FFF0F0', border: '1.5px solid #FF4FA3', borderRadius: 8,
-          padding: '12px 16px', fontFamily: 'Verdana, sans-serif', fontSize: 13, color: '#D4006E',
-        }}>
+        <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
       <div>
-        <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>TITLE *</label>
+        <label className={labelCls}>Title *</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          className="input-y2k w-full"
+          className={inputCls}
           placeholder="e.g. Scrapbook Night with the girls"
         />
       </div>
 
       <div>
-        <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>DESCRIPTION</label>
+        <label className={labelCls}>Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="input-y2k w-full"
+          className={inputCls}
           rows={4}
           placeholder="Tell people what to expect..."
         />
@@ -139,16 +135,16 @@ export default function AdminHangoutForm() {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>CATEGORY</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-y2k w-full">
+          <label className={labelCls}>Category</label>
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputCls}>
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>EVENT TYPE</label>
-          <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="input-y2k w-full">
+          <label className={labelCls}>Event type</label>
+          <select value={eventType} onChange={(e) => setEventType(e.target.value)} className={inputCls}>
             {EVENT_TYPES.map((t) => (
               <option key={t.value} value={t.value}>{t.label}</option>
             ))}
@@ -158,34 +154,34 @@ export default function AdminHangoutForm() {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>START DATE & TIME *</label>
+          <label className={labelCls}>Start date & time *</label>
           <input
             type="datetime-local"
             value={startAt}
             onChange={(e) => setStartAt(e.target.value)}
             required
-            className="input-y2k w-full"
+            className={inputCls}
           />
         </div>
         <div>
-          <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>END DATE & TIME</label>
+          <label className={labelCls}>End date & time</label>
           <input
             type="datetime-local"
             value={endAt}
             onChange={(e) => setEndAt(e.target.value)}
-            className="input-y2k w-full"
+            className={inputCls}
           />
         </div>
       </div>
 
       {(eventType === 'online' || eventType === 'hybrid') && (
         <div>
-          <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>MEETING URL</label>
+          <label className={labelCls}>Meeting URL</label>
           <input
             type="url"
             value={meetingUrl}
             onChange={(e) => setMeetingUrl(e.target.value)}
-            className="input-y2k w-full"
+            className={inputCls}
             placeholder="https://meet.google.com/..."
           />
         </div>
@@ -193,30 +189,30 @@ export default function AdminHangoutForm() {
 
       {(eventType === 'in-person' || eventType === 'hybrid') && (
         <div>
-          <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>LOCATION</label>
+          <label className={labelCls}>Location</label>
           <input
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="input-y2k w-full"
+            className={inputCls}
             placeholder="e.g. Poblacion, Makati"
           />
         </div>
       )}
 
       <div>
-        <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>MAX PARTICIPANTS</label>
+        <label className={labelCls}>Max participants</label>
         <input
           type="number"
           min={1}
           max={500}
           value={maxParticipants}
           onChange={(e) => setMaxParticipants(Number(e.target.value))}
-          className="input-y2k w-32"
+          className="border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 bg-white w-32 focus:outline-none focus:ring-1 focus:ring-gray-900"
         />
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <input
           type="checkbox"
           id="pin-note"
@@ -224,13 +220,17 @@ export default function AdminHangoutForm() {
           onChange={(e) => setPinNote(e.target.checked)}
           className="w-4 h-4"
         />
-        <label htmlFor="pin-note" className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
-          PIN A &ldquo;NEW HANGOUT&rdquo; NOTE ON THE BOARD
+        <label htmlFor="pin-note" className="text-xs text-gray-700">
+          Post a &ldquo;New Hangout&rdquo; note on the announcement board
         </label>
       </div>
 
-      <button type="submit" disabled={loading} className="btn-y2k w-full py-3">
-        {loading ? 'creating...' : 'create hangout ✦'}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-gray-900 text-white text-sm px-4 py-2.5 rounded hover:bg-gray-700 disabled:opacity-50 transition-colors"
+      >
+        {loading ? 'Creating...' : 'Create hangout'}
       </button>
     </form>
   )

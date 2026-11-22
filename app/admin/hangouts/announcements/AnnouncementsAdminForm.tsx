@@ -13,12 +13,12 @@ const NOTE_BG: Record<string, string> = {
 }
 
 const KIND_OPTIONS = [
-  { value: 'news', label: '★ News' },
-  { value: 'new-hangout', label: '✦ New Hangout' },
-  { value: 'reminder', label: '⏰ Reminder' },
-  { value: 'change', label: '✎ Change' },
-  { value: 'cancelled', label: '✕ Cancelled' },
-  { value: 'recap', label: '♡ Recap' },
+  { value: 'news', label: 'News' },
+  { value: 'new-hangout', label: 'New Hangout' },
+  { value: 'reminder', label: 'Reminder' },
+  { value: 'change', label: 'Change' },
+  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'recap', label: 'Recap' },
 ]
 
 const COLOR_OPTIONS = [
@@ -109,6 +109,9 @@ function NotePreview({ title, body, kind, noteColor, isPinned, imagePreview }: {
     </div>
   )
 }
+
+const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-1 focus:ring-gray-900'
+const labelCls = 'text-xs font-medium text-gray-700 block mb-1'
 
 export default function AnnouncementsAdminForm({
   hangouts,
@@ -230,25 +233,24 @@ export default function AnnouncementsAdminForm({
 
   return (
     <div>
-      {/* Two-column layout: form + preview */}
       <div className="grid lg:grid-cols-2 gap-8 mb-10">
         {/* Form */}
-        <div>
-          <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>CREATE ANNOUNCEMENT</div>
+        <div className="bg-white rounded border border-gray-200 p-6">
+          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">New announcement</div>
           {error && (
-            <div style={{ background: '#FFF0F0', border: '1.5px solid #FF4FA3', borderRadius: 8, padding: '12px 16px', fontFamily: 'Verdana, sans-serif', fontSize: 13, color: '#D4006E', marginBottom: 16 }}>
+            <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700 mb-4">
               {error}
             </div>
           )}
           {success && (
-            <div style={{ background: '#F0FFF4', border: '1.5px solid #28C840', borderRadius: 8, padding: '12px 16px', fontFamily: 'Verdana, sans-serif', fontSize: 13, color: '#1A6E2B', marginBottom: 16 }}>
+            <div className="bg-green-50 border border-green-200 rounded p-3 text-sm text-green-700 mb-4">
               Announcement created!
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>TITLE * <span style={{ color: '#888' }}>({title.length}/80)</span></label>
+              <label className={labelCls}>Title * <span className="text-gray-400 font-normal">({title.length}/80)</span></label>
               <input
                 type="text"
                 value={title}
@@ -256,13 +258,13 @@ export default function AnnouncementsAdminForm({
                 required
                 minLength={3}
                 maxLength={80}
-                className="input-y2k w-full"
+                className={inputCls}
                 placeholder="e.g. Scrapbook night is on this Friday!"
               />
             </div>
 
             <div>
-              <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>BODY * <span style={{ color: '#888' }}>({body.length}/600)</span></label>
+              <label className={labelCls}>Body * <span className="text-gray-400 font-normal">({body.length}/600)</span></label>
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value.slice(0, 600))}
@@ -270,28 +272,27 @@ export default function AnnouncementsAdminForm({
                 minLength={1}
                 maxLength={600}
                 rows={4}
-                className="input-y2k w-full"
+                className={inputCls}
                 placeholder="Share the announcement details..."
               />
             </div>
 
             <div>
-              <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>FLYER IMAGE (optional)</label>
+              <label className={labelCls}>Flyer image (optional)</label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
-                className="input-y2k w-full"
-                style={{ padding: '6px 10px', cursor: 'pointer' }}
+                className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-700 bg-white cursor-pointer"
               />
               {imagePreview && (
-                <div style={{ marginTop: 8, position: 'relative', display: 'inline-block' }}>
+                <div className="mt-2 relative inline-block">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="" style={{ maxHeight: 120, borderRadius: 4, border: '1.5px solid #FFB6D9', display: 'block' }} />
+                  <img src={imagePreview} alt="" className="max-h-28 rounded border border-gray-200 block" />
                   <button
                     type="button"
                     onClick={() => { setImageFile(null); setImagePreview(null) }}
-                    style={{ position: 'absolute', top: 4, right: 4, background: '#D7263D', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-700"
                   >
                     ✕
                   </button>
@@ -301,17 +302,16 @@ export default function AnnouncementsAdminForm({
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>KIND</label>
-                <select value={kind} onChange={(e) => setKind(e.target.value)} className="input-y2k w-full">
+                <label className={labelCls}>Kind</label>
+                <select value={kind} onChange={(e) => setKind(e.target.value)} className={inputCls}>
                   {KIND_OPTIONS.map((k) => (
                     <option key={k.value} value={k.value}>{k.label}</option>
                   ))}
                 </select>
               </div>
-
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>LINKED HANGOUT</label>
-                <select value={hangoutId} onChange={(e) => setHangoutId(e.target.value)} className="input-y2k w-full">
+                <label className={labelCls}>Linked hangout</label>
+                <select value={hangoutId} onChange={(e) => setHangoutId(e.target.value)} className={inputCls}>
                   <option value="">— none —</option>
                   {hangouts.map((h) => (
                     <option key={h.id} value={h.id}>{h.title}</option>
@@ -321,32 +321,29 @@ export default function AnnouncementsAdminForm({
             </div>
 
             <div>
-              <label className="font-pixel text-xs text-[#3A0030] block mb-2" style={{ fontSize: '12px' }}>NOTE COLOR</label>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <label className={labelCls}>Note color</label>
+              <div className="flex gap-3 mt-1">
                 {COLOR_OPTIONS.map((c) => (
-                  <label key={c.value} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
+                  <label key={c.value} className="flex flex-col items-center gap-1 cursor-pointer">
                     <input
                       type="radio"
                       name="note_color"
                       value={c.value}
                       checked={noteColor === c.value}
                       onChange={() => setNoteColor(c.value)}
-                      style={{ display: 'none' }}
+                      className="sr-only"
                     />
-                    <span style={{
-                      width: 28, height: 28, borderRadius: '50%',
-                      background: c.bg,
-                      border: noteColor === c.value ? '3px solid #2B0A2E' : '2px solid #ccc',
-                      boxShadow: noteColor === c.value ? '0 0 0 2px #FF4FA3' : 'none',
-                      display: 'block',
-                    }} />
-                    <span style={{ fontFamily: "'Silkscreen', monospace", fontSize: 8, color: '#888' }}>{c.label}</span>
+                    <span
+                      style={{ background: c.bg }}
+                      className={`w-7 h-7 rounded-full border-2 block ${noteColor === c.value ? 'border-gray-900 ring-2 ring-gray-400' : 'border-gray-300'}`}
+                    />
+                    <span className="text-xs text-gray-500">{c.label}</span>
                   </label>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="is-pinned"
@@ -354,42 +351,44 @@ export default function AnnouncementsAdminForm({
                 onChange={(e) => setIsPinned(e.target.checked)}
                 className="w-4 h-4"
               />
-              <label htmlFor="is-pinned" className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
-                PIN THIS ANNOUNCEMENT
-              </label>
+              <label htmlFor="is-pinned" className="text-xs text-gray-700">Pin this announcement</label>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>PUBLISH AT *</label>
+                <label className={labelCls}>Publish at *</label>
                 <input
                   type="datetime-local"
                   value={publishAt}
                   onChange={(e) => setPublishAt(e.target.value)}
                   required
-                  className="input-y2k w-full"
+                  className={inputCls}
                 />
               </div>
               <div>
-                <label className="font-pixel text-xs text-[#3A0030] block mb-1" style={{ fontSize: '12px' }}>EXPIRES AT (optional)</label>
+                <label className={labelCls}>Expires at (optional)</label>
                 <input
                   type="datetime-local"
                   value={expiresAt}
                   onChange={(e) => setExpiresAt(e.target.value)}
-                  className="input-y2k w-full"
+                  className={inputCls}
                 />
               </div>
             </div>
 
-            <button type="submit" disabled={isPending || imageUploading} className="btn-y2k w-full py-3">
-              {imageUploading ? 'uploading image...' : isPending ? 'posting...' : 'post announcement ✦'}
+            <button
+              type="submit"
+              disabled={isPending || imageUploading}
+              className="w-full bg-gray-900 text-white text-sm px-4 py-2.5 rounded hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            >
+              {imageUploading ? 'Uploading image...' : isPending ? 'Posting...' : 'Post announcement'}
             </button>
           </form>
         </div>
 
         {/* Live preview */}
         <div>
-          <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>LIVE PREVIEW</div>
+          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Live preview</div>
           <div style={{
             background: '#D9A86C',
             backgroundImage: 'radial-gradient(rgba(90,50,20,.25) 1px, transparent 1.5px), radial-gradient(rgba(255,255,255,.18) 1px, transparent 1.5px)',
@@ -412,91 +411,75 @@ export default function AnnouncementsAdminForm({
       </div>
 
       {/* Announcements table */}
-      <div>
-        <div className="font-pixel text-xs text-[#3A0030] mb-4" style={{ fontSize: '12px' }}>ALL ANNOUNCEMENTS ({announcements.length})</div>
+      <div className="bg-white rounded border border-gray-200">
+        <div className="px-5 py-3 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wider">
+          All announcements ({announcements.length})
+        </div>
         {announcements.length === 0 ? (
-          <div className="font-caveat text-[#888] text-center py-8" style={{ fontFamily: 'Caveat, cursive', fontSize: 20 }}>
+          <div className="text-sm text-gray-400 text-center py-10">
             No announcements yet. Create the first one!
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'Nunito, sans-serif', fontSize: 13 }}>
+            <table className="w-full text-sm border-collapse">
               <thead>
-                <tr style={{ background: '#3A0030', color: '#FFB6D9' }}>
-                  <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: "'Silkscreen', monospace", fontSize: 10 }}>TITLE</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: "'Silkscreen', monospace", fontSize: 10 }}>KIND</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: "'Silkscreen', monospace", fontSize: 10 }}>COLOR</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: "'Silkscreen', monospace", fontSize: 10 }}>STATUS</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'left', fontFamily: "'Silkscreen', monospace", fontSize: 10 }}>PUBLISHED</th>
-                  <th style={{ padding: '8px 12px', textAlign: 'center', fontFamily: "'Silkscreen', monospace", fontSize: 10 }}>ACTIONS</th>
+                <tr className="bg-gray-50 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3">Title</th>
+                  <th className="px-4 py-3">Kind</th>
+                  <th className="px-4 py-3">Color</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Published</th>
+                  <th className="px-4 py-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {announcements.map((a, i) => (
-                  <tr key={a.id} style={{ background: i % 2 === 0 ? '#fff' : '#FFF0F7', borderBottom: '1px solid #FFB6D9' }}>
-                    <td style={{ padding: '8px 12px', maxWidth: 240 }}>
-                      <div style={{ fontWeight: 700, color: '#2B0A2E', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.title}</div>
-                      {a.hangout && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>@ {a.hangout.title}</div>}
+              <tbody className="divide-y divide-gray-100">
+                {announcements.map((a) => (
+                  <tr key={a.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 max-w-[220px]">
+                      <div className="font-medium text-gray-900 truncate">{a.title}</div>
+                      {a.hangout && <div className="text-xs text-gray-400 mt-0.5">@ {a.hangout.title}</div>}
                     </td>
-                    <td style={{ padding: '8px 12px' }}>
-                      <span style={{ fontFamily: "'Silkscreen', monospace", fontSize: 9, color: '#7C4DDB' }}>{a.kind}</span>
+                    <td className="px-4 py-3 text-xs text-gray-500">{a.kind}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        style={{ background: NOTE_BG[a.note_color] ?? '#FFD6EA' }}
+                        className="inline-block w-4 h-4 rounded-full border border-gray-300 align-middle"
+                      />
                     </td>
-                    <td style={{ padding: '8px 12px' }}>
-                      <span style={{ display: 'inline-block', width: 16, height: 16, borderRadius: '50%', background: NOTE_BG[a.note_color] ?? '#FFD6EA', border: '1.5px solid #2B0A2E', verticalAlign: 'middle' }} />
-                    </td>
-                    <td style={{ padding: '8px 12px' }}>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1 flex-wrap">
                         {a.is_pinned && (
-                          <span style={{ background: '#FFE14D', border: '1px solid #2B0A2E', borderRadius: 3, padding: '1px 5px', fontFamily: "'Silkscreen', monospace", fontSize: 8, color: '#2B0A2E' }}>
-                            PINNED
-                          </span>
+                          <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">pinned</span>
                         )}
                         {a.scheduled && (
-                          <span style={{ background: '#E0E7FF', border: '1px solid #7C4DDB', borderRadius: 3, padding: '1px 5px', fontFamily: "'Silkscreen', monospace", fontSize: 8, color: '#7C4DDB' }}>
-                            SCHEDULED
-                          </span>
+                          <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">scheduled</span>
                         )}
                         {a.expired && (
-                          <span style={{ background: '#FFF0F0', border: '1px solid #FF4FA3', borderRadius: 3, padding: '1px 5px', fontFamily: "'Silkscreen', monospace", fontSize: 8, color: '#D7263D' }}>
-                            EXPIRED
-                          </span>
+                          <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">expired</span>
                         )}
                         {!a.scheduled && !a.expired && (
-                          <span style={{ background: '#D9F7E6', border: '1px solid #28C840', borderRadius: 3, padding: '1px 5px', fontFamily: "'Silkscreen', monospace", fontSize: 8, color: '#1A6E2B' }}>
-                            LIVE
-                          </span>
+                          <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded">live</span>
                         )}
                       </div>
                     </td>
-                    <td style={{ padding: '8px 12px', fontSize: 11, color: '#888', whiteSpace: 'nowrap' }}>
+                    <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                       {new Date(a.publish_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
-                    <td style={{ padding: '8px 12px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2 justify-center">
                         <button
                           onClick={() => handleTogglePin(a.id, a.is_pinned)}
                           disabled={togglingId === a.id}
-                          style={{
-                            fontFamily: "'Silkscreen', monospace", fontSize: 9,
-                            padding: '3px 7px', borderRadius: 3,
-                            background: a.is_pinned ? '#FFE14D' : '#f5f5f5',
-                            border: '1.5px solid #2B0A2E',
-                            cursor: 'pointer', color: '#2B0A2E',
-                          }}
+                          className={`text-xs px-2.5 py-1 rounded border transition-colors ${a.is_pinned ? 'bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200' : 'border-gray-300 text-gray-600 hover:bg-gray-100'}`}
                         >
-                          {a.is_pinned ? 'UNPIN' : 'PIN'}
+                          {a.is_pinned ? 'Unpin' : 'Pin'}
                         </button>
                         <button
                           onClick={() => handleDelete(a.id)}
                           disabled={deletingId === a.id}
-                          style={{
-                            fontFamily: "'Silkscreen', monospace", fontSize: 9,
-                            padding: '3px 7px', borderRadius: 3,
-                            background: '#FFF0F0', border: '1.5px solid #D7263D',
-                            cursor: 'pointer', color: '#D7263D',
-                          }}
+                          className="text-xs px-2.5 py-1 rounded border border-red-200 text-red-500 hover:bg-red-50 transition-colors"
                         >
-                          DEL
+                          Delete
                         </button>
                       </div>
                     </td>

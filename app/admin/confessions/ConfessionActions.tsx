@@ -41,20 +41,18 @@ export default function ConfessionActions({ id, isApproved }: Props) {
 
   if (showConfirmDelete) {
     return (
-      <div className="flex flex-col gap-2 items-end min-w-[120px]">
-        <div className="font-nunito text-xs text-[#888] text-right">are you sure?</div>
+      <div className="flex flex-col gap-1.5 items-end min-w-[110px]">
+        <div className="text-xs text-gray-500">are you sure?</div>
         <button
           onClick={handleDelete}
           disabled={loading}
-          className="font-pixel text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-colors w-full"
-          style={{ fontSize: '12px' }}
+          className="text-xs bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 disabled:opacity-50 transition-colors w-full"
         >
           {loading ? '...' : 'yes, delete'}
         </button>
         <button
           onClick={() => setShowConfirmDelete(false)}
-          className="font-pixel text-xs border border-[#FFB6D9] text-[#888] px-3 py-1.5 rounded-lg hover:border-[#FF4FA3] transition-colors w-full"
-          style={{ fontSize: '12px' }}
+          className="text-xs border border-gray-300 text-gray-600 px-3 py-1.5 rounded hover:bg-gray-50 transition-colors w-full"
         >
           cancel
         </button>
@@ -63,13 +61,12 @@ export default function ConfessionActions({ id, isApproved }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-2 items-end min-w-[120px]">
+    <div className="flex flex-col gap-1.5 items-end min-w-[110px]">
       {!isApproved ? (
         <button
           onClick={handleApprove}
           disabled={loading}
-          className="font-pixel text-xs bg-green-500 text-white px-3 py-1.5 rounded-lg hover:bg-green-600 transition-colors w-full"
-          style={{ fontSize: '12px' }}
+          className="text-xs bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 disabled:opacity-50 transition-colors w-full"
         >
           {loading ? '...' : 'approve'}
         </button>
@@ -77,8 +74,7 @@ export default function ConfessionActions({ id, isApproved }: Props) {
         <button
           onClick={handleReject}
           disabled={loading}
-          className="font-pixel text-xs bg-yellow-500 text-white px-3 py-1.5 rounded-lg hover:bg-yellow-600 transition-colors w-full"
-          style={{ fontSize: '12px' }}
+          className="text-xs bg-amber-500 text-white px-3 py-1.5 rounded hover:bg-amber-600 disabled:opacity-50 transition-colors w-full"
         >
           {loading ? '...' : 'unpublish'}
         </button>
@@ -86,8 +82,7 @@ export default function ConfessionActions({ id, isApproved }: Props) {
       <button
         onClick={() => setShowConfirmDelete(true)}
         disabled={loading}
-        className="font-pixel text-xs border-2 border-red-200 text-red-400 px-3 py-1.5 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors w-full"
-        style={{ fontSize: '12px' }}
+        className="text-xs border border-red-200 text-red-500 px-3 py-1.5 rounded hover:bg-red-50 hover:border-red-400 disabled:opacity-50 transition-colors w-full"
       >
         delete
       </button>
