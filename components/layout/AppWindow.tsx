@@ -55,7 +55,7 @@ export default function AppWindow({ children }: Props) {
         {children}
 
         {/* Mascot in lower-right corner of the window */}
-        <div className="absolute right-1 lg:-right-5" style={{ bottom: '60px', zIndex: 20 }}>
+        <div className="absolute right-1 lg:-right-5" style={{ bottom: '60px', zIndex: 2, pointerEvents: 'none' }}>
           <Mascot />
         </div>
       </div>

@@ -18,13 +18,12 @@ function mix(hex: string, to: string, t: number) {
 function CoilDefs({ id, color }: { id: string; color: string }) {
   return (
     <defs>
-      {/* front of the wire: lit from the top-left, round tube shading */}
+      {/* front of the wire: subtle tube shading, same colour family as the back */}
       <linearGradient id={`${id}-front`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor={mix(color, '#000000', 0.35)} />
-        <stop offset="0.22" stopColor={mix(color, '#ffffff', 0.55)} />
-        <stop offset="0.38" stopColor={mix(color, '#ffffff', 0.15)} />
-        <stop offset="0.75" stopColor={color} />
-        <stop offset="1" stopColor={mix(color, '#000000', 0.45)} />
+        <stop offset="0" stopColor={mix(color, '#000000', 0.2)} />
+        <stop offset="0.28" stopColor={mix(color, '#ffffff', 0.22)} />
+        <stop offset="0.55" stopColor={color} />
+        <stop offset="1" stopColor={mix(color, '#000000', 0.3)} />
       </linearGradient>
       {/* back of the wire, seen through the hole: darker */}
       <linearGradient id={`${id}-back`} x1="0" y1="0" x2="1" y2="0">
