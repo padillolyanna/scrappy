@@ -5,6 +5,7 @@ import LegalBar from '@/components/layout/LegalBar'
 import TopMarquee from '@/components/landing/TopMarquee'
 import HomepageHero from '@/components/landing/HomepageHero'
 import HomepageMakeCards from '@/components/landing/HomepageMakeCards'
+import HomepageTemplates from '@/components/landing/HomepageTemplates'
 import TodayOnScrappy from '@/components/landing/TodayOnScrappy'
 import HomepageJoinFAQ from '@/components/landing/HomepageJoinFAQ'
 import HomeDashboard from '@/components/landing/HomeDashboard'
@@ -90,8 +91,8 @@ export default async function Home() {
     today: exchangeTodayResult.count ?? 0,
   }
 
-  // Show real showcase only if 6+ public scrapbooks exist; otherwise FeaturedScrapbooks falls back to demo
-  const showcaseScrapbooks = totalPublicScrapbooks >= 6 ? featured.slice(0, 3) : []
+  // Show real scrapbooks if 3+ exist
+  const showcaseScrapbooks = totalPublicScrapbooks >= 3 ? featured.slice(0, 3) : []
 
   return (
     <div className="relative overflow-x-clip">
@@ -114,22 +115,16 @@ export default async function Home() {
         <>
           <HomepageHero />
           <HomepageMakeCards />
+          <HomepageTemplates />
           <TodayOnScrappy
             prompt={promptResult.data ?? null}
             confessions={confessions}
             exchangeStats={exchangeStats}
           />
 
-          {/* Showcase — always visible; FeaturedScrapbooks handles demo fallback */}
-          <section style={{ padding: '0 20px clamp(40px, 6vw, 64px)', maxWidth: 1120, margin: '0 auto' }}>
-            <div className="text-center mb-2">
-              <div className="font-pixel text-[#FF4FA3] tracking-widest" style={{ fontSize: '12px' }} aria-hidden="true">SHOWCASE</div>
-              <h2 className="font-pacifico text-3xl sm:text-4xl text-[#3A0030] mt-1">
-                scrapbooks <span aria-hidden="true">✦</span>
-              </h2>
-            </div>
+          {showcaseScrapbooks.length > 0 && (
             <FeaturedScrapbooks scrapbooks={showcaseScrapbooks} />
-          </section>
+          )}
 
           <HomepageJoinFAQ />
           <Footer />

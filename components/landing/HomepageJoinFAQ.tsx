@@ -87,9 +87,9 @@ export default function HomepageJoinFAQ() {
       {/* FAQ + About */}
       <section style={{ padding: '0 20px clamp(40px, 6vw, 64px)', maxWidth: 1120, margin: '0 auto' }}>
         <div className="mt-8 grid lg:grid-cols-[1fr_1.2fr] gap-5 items-start">
-          <div className="bg-white rounded-2xl border-2 border-[#2B0A2E] p-5" style={{ boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}>
-            <h3 className="font-pacifico text-2xl text-[#FF4FA3] mb-2">about scrappy</h3>
-            <p className="font-nunito text-[15px] text-[#3A2A35] leading-relaxed">
+          <div className="rounded-2xl border-2 p-5" style={{ background: 'var(--c-panel)', borderColor: 'var(--c-outline)', boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}>
+            <h3 className="font-pacifico text-2xl mb-2" style={{ color: 'var(--c-primary)' }}>about scrappy</h3>
+            <p className="font-nunito text-[15px] leading-relaxed" style={{ color: 'var(--c-text)' }}>
               Remember decorating your page and filling in quizzes for your best friends? Scrappy brings that cosy, creative internet back. Make a scrapbook, a photo strip, or a profile page that looks exactly how you want.
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -98,16 +98,16 @@ export default function HomepageJoinFAQ() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border-2 border-[#2B0A2E] p-5" style={{ boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}>
-            <h3 className="font-pacifico text-2xl text-[#7C4DDB] mb-2">questions <span aria-hidden="true">♡</span></h3>
+          <div className="rounded-2xl border-2 p-5" style={{ background: 'var(--c-panel)', borderColor: 'var(--c-outline)', boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}>
+            <h3 className="font-pacifico text-2xl mb-2" style={{ color: 'var(--c-secondary)' }}>questions <span aria-hidden="true">♡</span></h3>
             <div className="divide-y-2 divide-[#FFE4F0]">
               {FAQ.map((f) => (
                 <details key={f.q} className="py-2 group">
-                  <summary className="cursor-pointer list-none flex justify-between items-center gap-3 font-nunito font-extrabold text-base text-[#3A0030]">
+                  <summary className="cursor-pointer list-none flex justify-between items-center gap-3 font-nunito font-extrabold text-base" style={{ color: 'var(--c-text)' }}>
                     {f.q}
-                    <span aria-hidden="true" className="text-[#FF4FA3] transition-transform group-open:rotate-45 text-xl leading-none">+</span>
+                    <span aria-hidden="true" className="transition-transform group-open:rotate-45 text-xl leading-none" style={{ color: 'var(--c-primary)' }}>+</span>
                   </summary>
-                  <p className="font-nunito text-[15px] text-[#3A2A35] leading-relaxed mt-1">{f.a}</p>
+                  <p className="font-nunito text-[15px] leading-relaxed mt-1" style={{ color: 'var(--c-text)', opacity: 0.8 }}>{f.a}</p>
                 </details>
               ))}
             </div>

@@ -35,8 +35,8 @@ export default function TodayOnScrappy({ prompt, confessions = [], exchangeStats
   return (
     <section style={{ padding: '0 20px clamp(40px, 6vw, 64px)', maxWidth: 1120, margin: '0 auto' }}>
       <div className="text-center mb-6">
-        <div className="font-pixel text-[#FF4FA3] tracking-widest" style={{ fontSize: '12px' }} aria-hidden="true">COMMUNITY</div>
-        <h2 className="font-pacifico text-3xl sm:text-4xl text-[#3A0030] mt-1">
+        <div className="font-pixel tracking-widest" style={{ fontSize: '12px', color: 'var(--c-primary)' }} aria-hidden="true">COMMUNITY</div>
+        <h2 className="font-pacifico text-3xl sm:text-4xl mt-1" style={{ color: 'var(--c-text)' }}>
           today on scrappy <span aria-hidden="true">✦</span>
         </h2>
       </div>
@@ -45,8 +45,8 @@ export default function TodayOnScrappy({ prompt, confessions = [], exchangeStats
 
         {/* Daily Prompt card */}
         <div
-          className="bg-white rounded-2xl border-2 border-[#2B0A2E] overflow-hidden"
-          style={{ boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}
+          className="rounded-2xl border-2 overflow-hidden"
+          style={{ background: 'var(--c-panel)', borderColor: 'var(--c-outline)', boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}
         >
           <h3 className="panel-header" style={{ margin: 0, borderRadius: 0 }}>today&apos;s prompt ✎</h3>
           {prompt ? (
@@ -101,14 +101,14 @@ export default function TodayOnScrappy({ prompt, confessions = [], exchangeStats
 
         {/* Scrapbook Exchange card */}
         <div
-          className="bg-white rounded-2xl border-2 border-[#2B0A2E] overflow-hidden"
-          style={{ boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}
+          className="rounded-2xl border-2 overflow-hidden"
+          style={{ background: 'var(--c-panel)', borderColor: 'var(--c-outline)', boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}
         >
           <h3 className="panel-header" style={{ margin: 0, borderRadius: 0, background: 'linear-gradient(180deg, rgba(255,255,255,.35), #14B8A6 55%)' }}>
             <span aria-hidden="true">✉</span> scrapbook exchange
           </h3>
           <div style={{ padding: '14px 16px' }}>
-            <p style={{ fontFamily: "'Caveat', cursive", fontSize: 17, color: '#3A0030', lineHeight: 1.5, marginBottom: 10 }}>
+            <p style={{ fontFamily: "'Caveat', cursive", fontSize: 17, color: 'var(--c-text)', lineHeight: 1.5, marginBottom: 10 }}>
               Pass notes with a stranger. Answer the same questions, reveal together, find your people.
             </p>
             {exchangeStats && exchangeStats.total > 0 && (
@@ -190,8 +190,8 @@ export default function TodayOnScrappy({ prompt, confessions = [], exchangeStats
           </div>
         ) : (
           <div
-            className="bg-white rounded-2xl border-2 border-[#2B0A2E] overflow-hidden"
-            style={{ boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}
+            className="rounded-2xl border-2 overflow-hidden"
+            style={{ background: 'var(--c-panel)', borderColor: 'var(--c-outline)', boxShadow: '3px 4px 0 rgba(43,10,46,.18)' }}
           >
             <h3
               className="panel-header"

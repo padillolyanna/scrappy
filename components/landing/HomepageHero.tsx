@@ -47,7 +47,7 @@ export default function HomepageHero() {
             style={{
               fontFamily: "'Chango', 'Arial Black', sans-serif",
               fontSize: 'clamp(32px, 5vw, 52px)',
-              color: '#3A0030',
+              color: 'var(--c-text)',
               lineHeight: 1.15,
               marginBottom: 14,
             }}
@@ -58,7 +58,7 @@ export default function HomepageHero() {
             style={{
               fontFamily: "'Caveat', cursive",
               fontSize: 'clamp(18px, 2.5vw, 22px)',
-              color: '#5A3A50',
+              color: 'var(--c-text)',
               lineHeight: 1.5,
               marginBottom: 28,
               maxWidth: 460,
