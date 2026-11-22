@@ -6,12 +6,14 @@ import { starterCover, PAGE_W, PAGE_H, type NbPage } from '@/lib/notebook'
 import { StaticCover } from '@/components/notebook/Spread'
 import DashboardScrapbooks, { type DashScrapbook } from './DashboardScrapbooks'
 import type { TodayPrompt } from './TodayOnScrappy'
+import type { ReactNode } from 'react'
 
 export interface DashboardProps {
   user: { username: string; id: string }
   prompt?: TodayPrompt | null
   latestScrapbook?: { id: string; title: string; cover_id: string } | null
   scrapbooks: DashScrapbook[]
+  announcementsSlot?: ReactNode
 }
 
 const QUICK_TILES = [
@@ -83,7 +85,7 @@ function LatestScrapbookCard({ sb }: { sb: { id: string; title: string; cover_id
   )
 }
 
-export default function HomeDashboard({ user, prompt, latestScrapbook, scrapbooks }: DashboardProps) {
+export default function HomeDashboard({ user, prompt, latestScrapbook, scrapbooks, announcementsSlot }: DashboardProps) {
   const profileUrl = `https://scrappy.fun/profile/${user.username}`
 
   return (
@@ -188,6 +190,13 @@ export default function HomeDashboard({ user, prompt, latestScrapbook, scrapbook
           <Link href="/prompts" className="btn-pill flex-shrink-0" style={{ fontSize: 13, minHeight: 36, background: '#7C4DDB', color: 'white', borderColor: '#2B0A2E' }}>
             Answer →
           </Link>
+        </div>
+      )}
+
+      {/* ── Hangout announcements ── */}
+      {announcementsSlot && (
+        <div style={{ marginBottom: 20 }}>
+          {announcementsSlot}
         </div>
       )}
 

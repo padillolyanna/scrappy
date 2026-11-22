@@ -31,6 +31,7 @@ export default function AdminHangoutForm() {
   const [meetingUrl, setMeetingUrl] = useState('')
   const [location, setLocation] = useState('')
   const [maxParticipants, setMaxParticipants] = useState(20)
+  const [pinNote, setPinNote] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -46,7 +47,7 @@ export default function AdminHangoutForm() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
-      const { error: insertErr } = await supabase.from('hangouts').insert({
+      const { data: insertData, error: insertErr } = await supabase.from('hangouts').insert({
         title,
         description: description || null,
         category,
@@ -60,9 +61,25 @@ export default function AdminHangoutForm() {
         max_participants: maxParticipants,
         status: 'upcoming',
         visibility: 'public',
-      })
+      }).select('id').single()
 
       if (insertErr) throw insertErr
+
+      if (pinNote) {
+        const annoBody = description.trim().length > 0
+          ? description.trim().slice(0, 200)
+          : 'a new journal hangout is on the calendar ✦'
+
+        await supabase.from('hangout_announcements').insert({
+          title,
+          body: annoBody,
+          kind: 'new-hangout',
+          hangout_id: insertData?.id ?? null,
+          note_color: 'pink',
+          is_pinned: false,
+          created_by: user.id,
+        })
+      }
 
       setSuccess(true)
       setTimeout(() => router.push('/hangouts'), 1500)
@@ -197,6 +214,19 @@ export default function AdminHangoutForm() {
           onChange={(e) => setMaxParticipants(Number(e.target.value))}
           className="input-y2k w-32"
         />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          id="pin-note"
+          checked={pinNote}
+          onChange={(e) => setPinNote(e.target.checked)}
+          className="w-4 h-4"
+        />
+        <label htmlFor="pin-note" className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>
+          PIN A &ldquo;NEW HANGOUT&rdquo; NOTE ON THE BOARD
+        </label>
       </div>
 
       <button type="submit" disabled={loading} className="btn-y2k w-full py-3">
