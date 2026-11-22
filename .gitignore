@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# homepage asset source PNGs (pre-processed)
+/scripts/home-src/
