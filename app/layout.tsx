@@ -38,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col items-center py-4 px-2">
+      <body className="min-h-full flex flex-col items-center py-4 px-2 relative">
         <CursorTrail />
         <PresencePing />
         {/* Navbar floats above the AppWindow */}
