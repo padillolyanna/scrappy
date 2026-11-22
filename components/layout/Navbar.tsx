@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { useProfile } from '@/lib/useProfile'
 import { createClient } from '@/lib/supabase-client'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 
 const NAV_LINKS = [
   { href: '/explore',         label: 'Explore' },
@@ -22,9 +22,7 @@ export default function Navbar() {
   const { user, loading } = useAuth()
   const { profile } = useProfile()
   const router = useRouter()
-  const pathname = usePathname()
   const username = profile?.username || user?.email?.split('@')[0] || 'you'
-  const isHome = pathname === '/'
 
   useEffect(() => {
     if (!avatarMenuOpen) return
@@ -69,16 +67,15 @@ export default function Navbar() {
           {user && (
             <Link
               href="/"
-              aria-current={isHome ? 'page' : undefined}
               className="font-silkscreen"
               style={{
                 fontSize: 15,
                 textDecoration: 'none',
                 padding: '5px 14px',
                 borderRadius: 999,
-                background: isHome ? 'var(--ink)' : 'transparent',
-                color: isHome ? 'white' : 'var(--ink)',
-                border: isHome ? '2px solid var(--ink)' : '2px solid transparent',
+                background: 'transparent',
+                color: 'var(--ink)',
+                border: '2px solid transparent',
                 transition: 'background 0.15s',
               }}
             >
