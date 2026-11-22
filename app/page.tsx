@@ -3,7 +3,6 @@ export const instant = false
 import Footer from '@/components/layout/Footer'
 import TopMarquee from '@/components/landing/TopMarquee'
 import HomepageHero from '@/components/landing/HomepageHero'
-import HomepageTemplates from '@/components/landing/HomepageTemplates'
 import PhotoboothSection from '@/components/landing/PhotoboothSection'
 import WhatYouCanDo from '@/components/landing/WhatYouCanDo'
 import FreshScrapbooks, { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
@@ -79,8 +78,6 @@ export default async function Home() {
 
   return (
     <div className="relative overflow-x-clip">
-      <TopMarquee />
-
       {currentUser ? (
         /* ── Logged-in: dashboard ── */
         <HomeDashboard
@@ -93,7 +90,7 @@ export default async function Home() {
         /* ── Logged-out: marketing homepage ── */
         <>
           <HomepageHero />
-          <HomepageTemplates />
+          <TopMarquee />
           <PhotoboothSection />
           <WhatYouCanDo />
           <FreshScrapbooks scrapbooks={freshScrapbooks} />
