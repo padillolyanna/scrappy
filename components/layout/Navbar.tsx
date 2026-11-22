@@ -289,11 +289,6 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* ── Theme switcher ── */}
-        <div className="hidden md:block flex-shrink-0">
-          <NavThemeSwitcher />
-        </div>
-
         {/* ── Desktop auth ── */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           {!loading && (
@@ -346,7 +341,23 @@ export default function Navbar() {
                           </span>
                         </Link>
                       ))}
+                      {/* Theme switcher */}
                       <div className="mx-2 mt-1 pt-1 border-t border-[#FFB6D9]/30">
+                        <div className="px-3 py-1.5 font-pixel text-[#aaa]" style={{ fontSize: '11px' }}>CHANGE SKIN</div>
+                        <div className="flex gap-2 px-3 pb-2">
+                          {NAV_THEMES.map(t => (
+                            <button
+                              key={t.id}
+                              onClick={() => { const id = t.id; if (id) document.documentElement.dataset.theme = id; else delete document.documentElement.dataset.theme; try { localStorage.setItem('scrappy_theme', id) } catch { /* ignore */ } }}
+                              title={t.label}
+                              aria-label={t.label}
+                              className="w-5 h-5 rounded-full border-2 border-transparent hover:border-[#2B0A2E] transition-colors flex-shrink-0"
+                              style={{ background: t.color }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mx-2 pt-1 border-t border-[#FFB6D9]/30">
                         <button
                           onClick={() => { closeAll(); handleLogout() }}
                           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl hover:bg-red-50 transition-colors group"
