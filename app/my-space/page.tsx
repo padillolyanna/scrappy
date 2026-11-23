@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { SCRAPBOOK_COVERS } from '@/lib/types'
+import { decodePaper, rowToElement, type NbPage } from '@/lib/notebook'
 import MySpaceClient from '@/components/my-space/MySpaceClient'
 
 export default async function MySpacePage() {
@@ -45,6 +46,45 @@ export default async function MySpacePage() {
       .order('created_at', { ascending: false })
       .limit(12),
   ])
+
+  // Batch-fetch first page + elements for thumbnail previews
+  const sbIds = (scrapbooks ?? []).map((s) => s.id)
+  const firstPageMap: Record<string, NbPage> = {}
+  if (sbIds.length) {
+    const { data: pageRows } = await supabase
+      .from('scrapbook_pages')
+      .select('id, scrapbook_id, page_number, bg_color, bg_texture')
+      .in('scrapbook_id', sbIds)
+      .order('page_number', { ascending: true })
+
+    // First page per scrapbook
+    const firstPages: Record<string, { id: string; scrapbook_id: string; bg_color: string | null; bg_texture: string | null }> = {}
+    for (const p of (pageRows ?? [])) {
+      if (!firstPages[p.scrapbook_id]) firstPages[p.scrapbook_id] = p
+    }
+
+    const pageIds = Object.values(firstPages).map((p) => p.id)
+    if (pageIds.length) {
+      const { data: elRows } = await supabase
+        .from('scrapbook_elements')
+        .select('id, page_id, type, content, x, y, width, height, rotation, z_index, props')
+        .in('page_id', pageIds)
+
+      for (const [sbId, p] of Object.entries(firstPages)) {
+        const elements = (elRows ?? [])
+          .filter((r) => r.page_id === p.id)
+          .map(rowToElement)
+          .filter((e): e is NonNullable<typeof e> => !!e)
+          .sort((a, b) => a.z - b.z)
+        firstPageMap[sbId] = {
+          id: p.id,
+          ...decodePaper(p.bg_texture ?? null),
+          color: p.bg_color || '#FFF8ED',
+          elements,
+        }
+      }
+    }
+  }
 
   const displayName = profile?.username ?? user.email?.split('@')[0] ?? 'you'
 
@@ -165,6 +205,7 @@ export default async function MySpacePage() {
 
           <MySpaceClient
             userId={user.id}
+            firstPages={firstPageMap}
             scrapbooks={(scrapbooks ?? []).map((sb) => {
               const cover = SCRAPBOOK_COVERS.find((c) => c.id === sb.cover_id)
               return { ...sb, coverGradient: cover?.bg_gradient ?? 'from-pink-200 to-pink-100', coverSymbol: cover?.preview_symbol ?? '✦' }

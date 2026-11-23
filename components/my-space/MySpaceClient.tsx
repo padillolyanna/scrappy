@@ -4,6 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
+import type { NbPage } from '@/lib/notebook'
+import PageThumbnail from '@/components/notebook/PageThumbnail'
 
 interface Scrapbook {
   id: string
@@ -43,6 +45,7 @@ interface Props {
   confessions: Confession[]
   confessionCount: number
   favorites: FavScrapbook[]
+  firstPages?: Record<string, NbPage>
 }
 
 type Tab = 'scrapbooks' | 'favorites' | 'confessions'
@@ -54,6 +57,7 @@ export default function MySpaceClient({
   confessions,
   confessionCount,
   favorites,
+  firstPages = {},
 }: Props) {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('scrapbooks')
@@ -135,12 +139,14 @@ export default function MySpaceClient({
                   key={sb.id}
                   className="bg-white rounded-xl border-2 border-[#FFB6D9]/40 overflow-hidden"
                 >
-                  <Link href={`/scrapbook/${sb.id}`}>
-                    <div
-                      className={`h-24 bg-gradient-to-br ${sb.coverGradient} flex items-center justify-center`}
-                    >
-                      <span className="font-pixel text-2xl text-[#3A0030]/25">{sb.coverSymbol}</span>
-                    </div>
+                  <Link href={`/scrapbook/${sb.id}`} className="block overflow-hidden" style={{ height: 160 }}>
+                    {firstPages[sb.id] ? (
+                      <PageThumbnail page={firstPages[sb.id]} displayWidth={320} displayHeight={160} />
+                    ) : (
+                      <div className={`h-full bg-gradient-to-br ${sb.coverGradient} flex items-center justify-center`}>
+                        <span className="font-pixel text-2xl text-[#3A0030]/25">{sb.coverSymbol}</span>
+                      </div>
+                    )}
                   </Link>
                   <div className="p-3">
                     <div
