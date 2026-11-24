@@ -140,18 +140,15 @@ export default function DashboardScrapbooks({ scrapbooks: initial }: { scrapbook
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       {scrapbooks.map((sb) => (
-        <div
-          key={sb.id}
-          style={{ background: 'white', border: '2.5px solid #2B0A2E', borderRadius: 14, boxShadow: '4px 4px 0 #2B0A2E', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-        >
-          {/* Cover preview */}
+        <div key={sb.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          {/* Cover — no card box, just the cover floating */}
           <Link
             href={`/scrapbook/${sb.id}/edit`}
-            style={{ display: 'block', position: 'relative', width: '100%', paddingTop: `${(H / W) * 100}%`, overflow: 'hidden', flexShrink: 0 }}
+            style={{ display: 'block', position: 'relative', width: '100%', paddingTop: `${(H / W) * 100}%`, overflow: 'hidden', borderRadius: 6, boxShadow: '3px 3px 0 rgba(43,10,46,.35)', flexShrink: 0 }}
           >
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 6 }}>
               <div
                 className="pointer-events-none absolute left-0 top-0 origin-top-left"
                 style={{ transform: `scale(${SCALE})`, width: PAGE_W, height: PAGE_H }}
@@ -164,25 +161,25 @@ export default function DashboardScrapbooks({ scrapbooks: initial }: { scrapbook
             </div>
           </Link>
 
-          {/* Info + actions */}
-          <div style={{ padding: '10px 10px 10px' }}>
-            <div className="font-nunito font-extrabold truncate" style={{ fontSize: 13, color: 'var(--c-text)', marginBottom: 2 }} title={sb.title || 'untitled'}>
+          {/* Info + actions below the cover, no background */}
+          <div style={{ marginTop: 7, width: '100%' }}>
+            <div className="font-nunito font-extrabold truncate" style={{ fontSize: 12, color: 'var(--c-text)', marginBottom: 1 }} title={sb.title || 'untitled'}>
               {sb.title || 'untitled'}
             </div>
-            <div className="font-silkscreen" style={{ fontSize: 9, color: sb.is_public ? '#14B8A6' : '#aaa', marginBottom: 8, letterSpacing: '0.08em' }}>
+            <div className="font-silkscreen" style={{ fontSize: 9, color: sb.is_public ? '#14B8A6' : '#aaa', marginBottom: 6, letterSpacing: '0.08em' }}>
               {sb.is_public ? '● PUBLIC' : '○ PRIVATE'}
             </div>
             <div className="flex gap-1.5 items-center">
               <Link
                 href={`/scrapbook/${sb.id}/edit`}
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 34, border: '2px solid #2B0A2E', borderRadius: 8, background: '#E0007A', color: 'white', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 30, border: '2px solid #2B0A2E', borderRadius: 8, background: '#E0007A', color: 'white', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 12, textDecoration: 'none' }}
               >
                 Edit
               </Link>
               <Link
                 href={`/scrapbook/${sb.id}`}
                 target="_blank"
-                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 34, border: '2px solid #2B0A2E', borderRadius: 8, background: 'white', color: '#2B0A2E', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 30, border: '2px solid #2B0A2E', borderRadius: 8, background: 'white', color: '#2B0A2E', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 12, textDecoration: 'none' }}
               >
                 View
               </Link>
