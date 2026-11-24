@@ -531,69 +531,93 @@ export default function PhotoboothPage() {
   // STEP: LANDING
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'landing') {
-    const STEPS_HOW = [
-      { n: 1, sticker: 'gem-heart', title: 'Pick a layout', text: 'Strips, grids, a collage or a magazine cover.' },
-      { n: 2, sticker: 'y2k-camera', title: 'Strike a pose', text: 'A 3-2-1 countdown, then flash! One photo per frame.' },
-      { n: 3, sticker: 'cute-star', title: 'Decorate', text: 'Add filters, stamps, gems and doodles.' },
-      { n: 4, sticker: 'charm-bow', title: 'Save & share', text: 'Download it or stick it onto a scrapbook page.' },
-    ]
+    const HOW = [
+      { n: 1, title: 'Choose', text: 'Pick a strip, a grid, a collage or a magazine cover.', art: 'grid' },
+      { n: 2, title: 'Pose', text: 'Get a 3·2·1 countdown, then flash! One snap per frame.', art: 'count' },
+      { n: 3, title: 'Decorate', text: 'Add frames, gal stamps, kira sparkles and writing.', art: 'deco' },
+      { n: 4, title: 'Print', text: 'Download your strip or stick it in a scrapbook.', art: 'print' },
+    ] as const
     return (
-      <div className="pb-land">
-        {/* Hero */}
-        <section className="pb-hero">
-          <div className="pb-hero-text">
-            <p className="pb-kicker">✦ your little photo corner ✦</p>
-            <h1 className="pb-title">Scrappy Photobooth</h1>
-            <p className="pb-lead">Strike a pose. Make a memory. Keep it forever.</p>
-            <p className="pb-body">
-              Step inside our little digital photo booth and make nostalgic photo strips.
-              Bring your friends, make silly faces and decorate your pictures.
-            </p>
-            <div className="pb-cta">
-              <button onClick={() => setStep('layout')} className="y2kh-btn y2kh-btn--pink y2kh-btn--big">
-                📷 Let&apos;s take pictures!
-              </button>
-              {user && (
-                <Link href="/photobooth/gallery" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">My photo strips ✦</Link>
-              )}
+      <div className="pbm">
+        {/* ── the booth ── */}
+        <section className="pbm-booth" aria-labelledby="pbm-title">
+          <div className="pbm-sign">
+            <span className="pbm-bulbs" aria-hidden="true" />
+            <h1 id="pbm-title" className="pbm-sign-text">Scrappy <em>♡</em> Photobooth</h1>
+            <p className="pbm-sign-sub">purikura · photo strips · gal stamps</p>
+          </div>
+
+          <div className="pbm-body">
+            {/* machine front */}
+            <div className="pbm-front">
+              <div className="pbm-screen">
+                <div className="pbm-screen-in">
+                  <p className="pbm-demo-top">DEMO ♡</p>
+                  <div className="pbm-demo-strip" aria-hidden="true">
+                    {['cute-bunny', 'cute-kitten', 'cute-star'].map((id, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <span key={id} style={{ animationDelay: `${i * 0.6}s` }}><img src={assetThumb(id)} alt="" width={40} height={40} /></span>
+                    ))}
+                  </div>
+                  <p className="pbm-press">PRESS START</p>
+                </div>
+              </div>
+              <div className="pbm-panel">
+                <div className="pbm-lcd" aria-hidden="true"><span>FREE PLAY</span><b>♡ ♡ ♡</b></div>
+                <button onClick={() => setStep('layout')} className="pbm-start">
+                  <span>START</span>
+                  <small>let&apos;s take pictures!</small>
+                </button>
+                {user && <Link href="/photobooth/gallery" className="pbm-gallery">my photo strips ✦</Link>}
+              </div>
+              <div className="pbm-slot" aria-hidden="true">
+                <span className="pbm-slot-label">PRINT ▼</span>
+                <div className="pbm-slot-strip"><i /><i /><i /></div>
+              </div>
+            </div>
+
+            {/* curtain entrance */}
+            <div className="pbm-curtain" aria-hidden="true">
+              <div className="pbm-curtain-sign">ENTER ♡</div>
+              <div className="pbm-drape" />
+              <div className="pbm-feet"><i /><i /></div>
             </div>
           </div>
-          <div className="pb-hero-art" aria-hidden="true">
-            <div className="pb-hero-strip">
-              {['cute-bunny', 'cute-kitten', 'cute-star'].map((id) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <span key={id}><img src={assetThumb(id)} alt="" width={56} height={56} /></span>
-              ))}
-              <b>bff 4ever</b>
-            </div>
-          </div>
+          <p className="pbm-blurb">Step inside our little digital photo booth and make nostalgic photo strips with your friends. Silly faces encouraged ✦</p>
         </section>
 
-        {/* Layouts */}
-        <section className="pb-sec">
-          <h2 className="pb-h2">Choose a layout <span>{LAYOUTS.length} to pick from</span></h2>
-          <div className="pb-layouts">
-            {LAYOUTS.map(l => (
-              <button key={l.id} onClick={() => { setSelectedLayout(l.id); setStep('camera') }} className="pb-layout">
-                <span className="pb-layout-art"><LayoutPreview id={l.id} /></span>
+        {/* ── select mode screen ── */}
+        <section className="pbm-select" aria-labelledby="pbm-select-title">
+          <div className="pbm-select-bar">
+            <h2 id="pbm-select-title">SELECT ♡ MODE</h2>
+            <span>{LAYOUTS.length} layouts</span>
+          </div>
+          <div className="pbm-modes">
+            {LAYOUTS.map((l, i) => (
+              <button key={l.id} onClick={() => { setSelectedLayout(l.id); setStep('camera') }} className="pbm-mode" style={{ ['--mode' as string]: ['#FF4FA3', '#B07CFF', '#4FB3FF', '#FF9F43', '#22C59E', '#E0007A', '#7C4DDB'][i % 7] }}>
+                <span className="pbm-mode-art"><LayoutPreview id={l.id} /></span>
                 <b>{l.label.toLowerCase()}</b>
-                <small>{l.count} photo{l.count === 1 ? '' : 's'}</small>
+                <small>{l.count} shot{l.count === 1 ? '' : 's'}</small>
               </button>
             ))}
           </div>
         </section>
 
-        {/* How it works */}
-        <section className="pb-sec">
-          <h2 className="pb-h2">How it works</h2>
-          <ol className="pb-how">
-            {STEPS_HOW.map(s => (
-              <li key={s.n}>
-                <span className="pb-how-n">{s.n}</span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={assetThumb(s.sticker)} alt="" width={44} height={44} />
-                <b>{s.title}</b>
-                <span>{s.text}</span>
+        {/* ── how to play plate ── */}
+        <section className="pbm-how" aria-labelledby="pbm-how-title">
+          <h2 id="pbm-how-title" className="pbm-how-title">HOW TO PLAY</h2>
+          <ol>
+            {HOW.map(s => (
+              <li key={s.n} className={`pbm-step pbm-step--${s.n}`}>
+                <span className="pbm-step-n">{s.n}</span>
+                <div className={`pbm-art pbm-art--${s.art}`} aria-hidden="true">
+                  {s.art === 'grid' && <><i /><i /><i /><i /></>}
+                  {s.art === 'count' && <><b>3</b><b>2</b><b>1</b></>}
+                  {s.art === 'deco' && <><b>✧</b><b>♡</b><b>☆</b></>}
+                  {s.art === 'print' && <i />}
+                </div>
+                <b className="pbm-step-title">{s.title}</b>
+                <span className="pbm-step-text">{s.text}</span>
               </li>
             ))}
           </ol>
