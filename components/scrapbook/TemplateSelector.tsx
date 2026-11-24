@@ -31,20 +31,10 @@ export default function TemplateSelector({ selected, onSelect }: Props) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {TEMPLATES.map((template, i) => (
-          <TemplateCard
-            key={template.id}
-            template={template}
-            selected={selected === template.id}
-            onSelect={onSelect}
-            delay={i * 0.08}
-          />
-        ))}
-
         <motion.button
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: TEMPLATES.length * 0.08, duration: 0.3 }}
+          transition={{ delay: 0, duration: 0.3 }}
           whileHover={{ scale: 1.02, y: -2 }}
           onClick={() => onSelect('custom')}
           aria-pressed={selected === 'custom'}
@@ -65,6 +55,16 @@ export default function TemplateSelector({ selected, onSelect }: Props) {
             </div>
           )}
         </motion.button>
+
+        {TEMPLATES.map((template, i) => (
+          <TemplateCard
+            key={template.id}
+            template={template}
+            selected={selected === template.id}
+            onSelect={onSelect}
+            delay={(i + 1) * 0.08}
+          />
+        ))}
       </div>
     </div>
   )

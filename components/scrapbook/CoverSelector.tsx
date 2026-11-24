@@ -13,8 +13,8 @@ interface Props {
 
 const SCALE = 0.32
 const OPTIONS = [
-  ...SCRAPBOOK_COVERS.map((c) => ({ id: c.id, name: c.name, description: c.description })),
   { id: 'blank', name: 'Blank cover', description: 'start from scratch and decorate it yourself' },
+  ...SCRAPBOOK_COVERS.map((c) => ({ id: c.id, name: c.name, description: c.description })),
 ]
 
 let coverCache: Record<string, NbPage> | null = null
