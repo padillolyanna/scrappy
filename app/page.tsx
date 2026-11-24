@@ -2,8 +2,8 @@ export const instant = false
 
 import TopMarquee from '@/components/landing/TopMarquee'
 import { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
-import HomeDashboard from '@/components/landing/HomeDashboard'
-import Y2KHome from '@/components/landing/y2k/Y2KHome'
+import Y2KHome, { Y2KShell } from '@/components/landing/y2k/Y2KHome'
+import Y2KDashboard from '@/components/landing/y2k/Y2KDashboard'
 import type { DashScrapbook } from '@/components/landing/DashboardScrapbooks'
 import { createClient } from '@/lib/supabase-server'
 import { getLiveAnnouncements } from '@/lib/announcements'
@@ -90,23 +90,27 @@ export default async function Home() {
     ? <AnnouncementBoard announcements={announcements} variant="compact" rsvpHangoutIds={rsvpHangoutIds} />
     : null
 
+  const dateLabel = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())
+
   return (
     <div className="relative overflow-x-clip">
       <TopMarquee />
 
       {currentUser ? (
         /* ── Logged-in: dashboard ── */
-        <HomeDashboard
-          user={currentUser}
-          prompt={promptResult.data ?? null}
-          latestScrapbook={latestScrapbook}
-          scrapbooks={userScrapbooks}
-          announcementsSlot={announcementsSlot}
-        />
+        <Y2KShell dateLabel={dateLabel} user={currentUser}>
+          <Y2KDashboard
+            user={currentUser}
+            prompt={promptResult.data ?? null}
+            latestScrapbook={latestScrapbook}
+            scrapbooks={userScrapbooks}
+            announcementsSlot={announcementsSlot}
+          />
+        </Y2KShell>
       ) : (
         /* ── Logged-out: lo-fi Y2K homepage ── */
         <Y2KHome
-          dateLabel={new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())}
+          dateLabel={dateLabel}
           fresh={freshScrapbooks}
           hangoutBoard={announcements.length > 0 ? <AnnouncementBoard announcements={announcements} variant="compact" /> : null}
         />

@@ -6,6 +6,7 @@ import type { FreshScrapbook } from '@/components/landing/FreshScrapbooks'
 import CoverThumb from './CoverThumb'
 import Y2KTabs from './Y2KTabs'
 import Y2KTv from './Y2KTv'
+import { Gif, Px, Panel } from './Y2KPanel'
 
 /*
   Logged-out homepage, built like a 2005-2008 fan site: one bordered "site box",
@@ -42,41 +43,10 @@ const FOOT_LINKS = [
   { label: 'Privacy Policy', href: '/privacy' }, { label: 'Terms of Service', href: '/tos' },
 ]
 
-/** Animated GIF that swaps to a still frame for people who prefer reduced motion. */
-function Gif({ anim, still, alt = '', w, h, className }: { anim: string; still: string; alt?: string; w: number; h: number; className?: string }) {
-  return (
-    <picture className={className}>
-      <source srcSet={`/y2k/${still}`} media="(prefers-reduced-motion: reduce)" />
-      <img src={`/y2k/${anim}`} alt={alt} width={w} height={h} className="y2kh-px" />
-    </picture>
-  )
-}
-
-/* plain <img> on purpose: these are tiny GIFs that must not be re-encoded */
-function Px({ src, w, h, alt = '', className, style }: { src: string; w: number; h: number; alt?: string; className?: string; style?: React.CSSProperties }) {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={`/y2k/${src}`} width={w} height={h} alt={alt} className={`y2kh-px ${className ?? ''}`} style={style} />
-}
-
-function Panel({ title, tone = 'pink', id, children, winBtns = false }: { title: ReactNode; tone?: 'pink' | 'blue' | 'lilac' | 'orange' | 'lime'; id?: string; children: ReactNode; winBtns?: boolean }) {
-  return (
-    <section className="y2kh-panel" aria-labelledby={id}>
-      <h2 id={id} className={`y2kh-ttl y2kh-ttl--${tone}`}>
-        <span className="y2kh-ttl-text">{title}</span>
-        {winBtns && (
-          <span className="y2kh-winbtns" aria-hidden="true"><i>_</i><i>□</i><i>×</i></span>
-        )}
-      </h2>
-      {children}
-    </section>
-  )
-}
-
-export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel: string; fresh: FreshScrapbook[]; hangoutBoard: ReactNode }) {
+/** Shared Y2K page frame for the homepage: header, tab bar, tiled body and footer. */
+export function Y2KShell({ dateLabel, user, children }: { dateLabel: string; user?: { username: string } | null; children: ReactNode }) {
   return (
     <div className="y2kh">
-      {/* this page has its own tab bar, so hide the site navbar here (server-rendered: no flash) */}
-      <style>{'[data-site-nav]{display:none}'}</style>
       <div className="y2kh-box">
         {/* ───────────── header ───────────── */}
         <header className="y2kh-head">
@@ -90,23 +60,49 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel:
               <Gif anim="sparkle-anim.gif" still="sparkle-still.gif" w={16} h={16} className="y2kh-logo-spark" />
             </div>
             <p className="y2kh-date">
-              Today is {dateLabel} ✦ <Link href="/prompts">answer today&apos;s prompt</Link>
+              {user ? <>hi @{user.username} ✦ </> : null}Today is {dateLabel} ✦ <Link href="/prompts">answer today&apos;s prompt</Link>
             </p>
           </div>
 
           <div className="y2kh-headright">
             <Link href="/about" className="y2kh-bubble">click for <b>INFO</b><br />about Scrappy!</Link>
-            <div className="y2kh-auth">
-              <Link href="/auth/login" className="y2kh-btn y2kh-btn--chrome">log in</Link>
-              <Link href="/auth/signup" className="y2kh-btn y2kh-btn--pink">join free ✦</Link>
-            </div>
+            {user ? (
+              <div className="y2kh-auth">
+                <Link href="/my-space" className="y2kh-btn y2kh-btn--chrome">my space</Link>
+                <Link href={`/profile/${user.username}`} className="y2kh-btn y2kh-btn--pink">my page ✦</Link>
+              </div>
+            ) : (
+              <div className="y2kh-auth">
+                <Link href="/auth/login" className="y2kh-btn y2kh-btn--chrome">log in</Link>
+                <Link href="/auth/signup" className="y2kh-btn y2kh-btn--pink">join free ✦</Link>
+              </div>
+            )}
           </div>
         </header>
 
         {/* ───────────── tab bar (replaces the site navbar here) ───────────── */}
-        <Y2KTabs />
+        <Y2KTabs user={user} />
 
         <div className="y2kh-body">
+          {children}
+        </div>
+
+        {/* ───────────── footer ───────────── */}
+        <footer className="y2kh-foot">
+          <div className="y2kh-dots" aria-hidden="true" />
+          <nav aria-label="Footer" className="y2kh-foot-links">
+            {FOOT_LINKS.map((l) => <Link key={l.href} href={l.href}>{l.label}</Link>)}
+          </nav>
+          <p>Scrappy: your little corner of the internet ✦ © 2026 Scrappy. All rights reserved.</p>
+        </footer>
+      </div>
+    </div>
+  )
+}
+
+export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel: string; fresh: FreshScrapbook[]; hangoutBoard: ReactNode }) {
+  return (
+    <Y2KShell dateLabel={dateLabel}>
           {/* ───────────── hero: TV + welcome window ───────────── */}
           <div className="y2kh-grid y2kh-grid--hero">
             <Y2KTv />
@@ -230,17 +226,6 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel:
               <Link href="/explore" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">Explore Scrappy</Link>
             </div>
           </section>
-        </div>
-
-        {/* ───────────── footer ───────────── */}
-        <footer className="y2kh-foot">
-          <div className="y2kh-dots" aria-hidden="true" />
-          <nav aria-label="Footer" className="y2kh-foot-links">
-            {FOOT_LINKS.map((l) => <Link key={l.href} href={l.href}>{l.label}</Link>)}
-          </nav>
-          <p>Scrappy: your little corner of the internet ✦ © 2026 Scrappy. All rights reserved.</p>
-        </footer>
-      </div>
-    </div>
+    </Y2KShell>
   )
 }
