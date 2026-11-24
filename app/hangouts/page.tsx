@@ -237,29 +237,8 @@ export default async function HangoutsPage() {
 
         <AnnouncementBoard announcements={announcements} variant="full" />
 
-        {hangouts.length === 0 ? (
-          <div className="window-chrome overflow-hidden rounded-lg shadow-xl">
-            <div className="window-title-bar">
-              <span>hangouts.exe — community calendar</span>
-              <div className="flex gap-1">
-                <span className="window-btn">_</span>
-                <span className="window-btn">□</span>
-                <span className="window-btn">x</span>
-              </div>
-            </div>
-            <div className="bg-white p-10 text-center">
-              <div className="font-pixel text-4xl text-[#FFB6D9] mb-4">♡</div>
-              <div className="font-caveat text-2xl text-[#888]" style={{ fontFamily: 'Caveat, cursive' }}>
-                Nothing on the calendar just yet! Check back soon.
-              </div>
-              <div className="font-caveat text-xl text-[#aaa] mt-2" style={{ fontFamily: 'Caveat, cursive' }}>
-                We&apos;re planning something fun. ♡
-              </div>
-            </div>
-          </div>
-        ) : (
+        {hangouts.length > 0 && (
           <div className="space-y-8">
-            {/* Featured hangout */}
             {featured && (
               <div>
                 <div className="panel-header mb-0">next up ✦</div>
@@ -269,7 +248,6 @@ export default async function HangoutsPage() {
               </div>
             )}
 
-            {/* Rest grid */}
             {rest.length > 0 && (
               <div>
                 <div className="panel-header mb-0">coming up ✦</div>
