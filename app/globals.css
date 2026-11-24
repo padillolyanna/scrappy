@@ -2090,3 +2090,7 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
   .pk-tab[aria-selected='true'] { margin: 0 0 -3px; }
   .pk-board { border-radius: 14px; min-height: 0; }
 }
+/* booth sign: white letters with a dark outline so the name reads on the pink sign */
+.y2k-app:not(:has([data-y2k-off])) .pbm h1#pbm-title.pbm-sign-text { color: #fff !important; -webkit-text-fill-color: #fff !important; font-family: 'Cherry Bomb One', 'Arial Black', sans-serif !important;
+  text-shadow: 3px 0 #3A0030, -3px 0 #3A0030, 0 3px #3A0030, 0 -3px #3A0030, 2px 2px #3A0030, -2px -2px #3A0030, 2px -2px #3A0030, -2px 2px #3A0030, 5px 5px 0 #3A0030 !important; }
+.y2k-app:not(:has([data-y2k-off])) .pbm h1#pbm-title.pbm-sign-text em { color: #FFE14D !important; -webkit-text-fill-color: #FFE14D !important; }
