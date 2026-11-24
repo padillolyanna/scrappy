@@ -41,7 +41,7 @@ export default function AppWindow({ children }: Props) {
 
       {/* Main window body */}
       <div
-        className="relative"
+        className="relative y2k-app"
         style={{
           background: 'var(--c-bg, #FFF0F7)',
           border: '3px solid #2B0A2E',
