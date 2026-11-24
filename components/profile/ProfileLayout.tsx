@@ -36,6 +36,8 @@ interface Props {
   online: boolean
   /** buttons in the contact box (share, add to top 8, edit…) */
   contactSlot?: React.ReactNode
+  /** the owner's pet (only passed when it may be shown) */
+  petSlot?: React.ReactNode
   /** comment form */
   commentFormSlot?: React.ReactNode
   /** per-comment controls (delete) */
@@ -108,7 +110,7 @@ function Panel({
 }
 
 export default function ProfileLayout({
-  profile, style: s, extras: x, scrapbooks, top8, comments, commentCount, online,
+  profile, style: s, extras: x, scrapbooks, top8, comments, commentCount, online, petSlot,
   contactSlot, commentFormSlot, commentControls, preview,
 }: Props) {
   const name = profile.display_name || profile.username
@@ -164,6 +166,8 @@ export default function ProfileLayout({
           </div>
         </div>
       </div>
+
+      {petSlot && <Panel ctx={ctx} title={`${name}'s Little Pet ♡`}>{petSlot}</Panel>}
 
       {contactSlot && <Panel ctx={ctx} title={`Contacting ${name}`}><div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{contactSlot}</div></Panel>}
 

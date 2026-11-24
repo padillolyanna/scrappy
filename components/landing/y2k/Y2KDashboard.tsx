@@ -7,6 +7,8 @@ import DashboardScrapbooks, { type DashScrapbook } from '@/components/landing/Da
 import type { TodayPrompt } from '@/components/landing/TodayOnScrappy'
 import CoverThumb from './CoverThumb'
 import { Panel } from './Y2KPanel'
+import PetAvatar from '@/components/pet/PetAvatar'
+import { usePet } from '@/lib/pet/usePet'
 
 /* Logged-in homepage content in the same lo-fi Y2K windows as the logged-out page. */
 
@@ -40,6 +42,7 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
   announcementsSlot?: ReactNode
 }) {
   const profileUrl = `https://scrappy.fun/profile/${user.username}`
+  const { pet } = usePet({ claim: 'session' })
   return (
     <>
       <div className="y2kh-grid y2kh-grid--hero">
@@ -83,6 +86,13 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
         </Panel>
       </div>
 
+      <div className="y2kh-grid y2kh-grid--cols">
+      <Panel title="my little pet ♡" tone="pink" id="y2kd-pet">
+        <div className="y2kh-pad y2kd-pet">
+          <Link href="/pet" aria-label="Dress up your pet"><PetAvatar equipped={pet?.equipped ?? {}} size={104} title="Your pet" /></Link>
+          <Link href="/pet" className="y2kh-btn y2kh-btn--pink">dress me up ♡</Link>
+        </div>
+      </Panel>
       <Panel title="shortcuts" tone="blue" id="y2kd-shortcuts">
         <nav className="y2kd-icons" aria-label="Shortcuts">
           {SHORTCUTS.map((s) => (
@@ -94,6 +104,7 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
           ))}
         </nav>
       </Panel>
+      </div>
 
       {prompt && (
         <Panel title="♥ Scrappy asks:" tone="lime" id="y2kd-prompt">
