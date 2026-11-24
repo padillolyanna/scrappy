@@ -38,12 +38,30 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Preload the two fonts that appear above the fold on every page */}
+        <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Cherry+Bomb+One&display=swap"
+        />
         <link
-          href="https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600;700;800;900&family=Chango&family=Silkscreen&family=Gochi+Hand&family=Fredoka:wght@400;600&family=Cherry+Bomb+One&family=Special+Elite&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Cherry+Bomb+One&display=swap"
           rel="stylesheet"
         />
+        {/* Remaining decorative fonts load after paint so they don't block render */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600&family=Chango&family=Silkscreen&display=swap"
+          rel="stylesheet"
+          media="print"
+          // @ts-expect-error onLoad fires when print sheet loads, then we swap to all
+          onLoad="this.media='all'"
+        />
+        <noscript>
+          <link
+            href="https://fonts.googleapis.com/css2?family=Pacifico&family=VT323&family=Caveat:wght@400;600;700&family=Press+Start+2P&family=Nunito:wght@400;600&family=Chango&family=Silkscreen&display=swap"
+            rel="stylesheet"
+          />
+        </noscript>
       </head>
       <body className="min-h-full flex flex-col items-center py-4 px-2 relative">
         <script
