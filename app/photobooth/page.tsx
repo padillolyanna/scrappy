@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 import Footer from '@/components/layout/Footer'
+import { assetThumb } from '@/lib/assetLibrary'
 import {
   BACKGROUNDS, DEFAULT_MAG_LINES, FRAMES, ensureFonts, renderStrip,
   type LayoutId,
@@ -90,7 +91,7 @@ function newSticker(content: string, color?: string): StickerEl {
 // ─── Layout Preview SVG ───────────────────────────────────────────────────────
 
 function LayoutPreview({ id }: { id: LayoutId }) {
-  const base = 'fill-[#FFB6D9]/40 stroke-[#FF4FA3]/60 stroke-[0.5]'
+  const base = 'fill-[#FFD6EC] stroke-[#3A0030] stroke-[1.2]'
   if (id === 'cover') {
     return (
       <svg viewBox="0 0 44 60" className="w-full h-full">
@@ -523,100 +524,73 @@ export default function PhotoboothPage() {
   // STEP: LANDING
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'landing') {
+    const STEPS_HOW = [
+      { n: 1, sticker: 'gem-heart', title: 'Pick a layout', text: 'Strips, grids, a collage or a magazine cover.' },
+      { n: 2, sticker: 'y2k-camera', title: 'Strike a pose', text: 'A 3-2-1 countdown, then flash! One photo per frame.' },
+      { n: 3, sticker: 'cute-star', title: 'Decorate', text: 'Add filters, stamps, gems and doodles.' },
+      { n: 4, sticker: 'charm-bow', title: 'Save & share', text: 'Download it or stick it onto a scrapbook page.' },
+    ]
     return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1">
-          {/* Hero */}
-          <div className="bg-gradient-to-b from-[#2B0A2E] via-[#3A0030] to-[#FFB6D9] py-16 px-4 text-center relative overflow-hidden">
-            {/* Decorations */}
-            <div className="absolute top-6 left-8 text-3xl opacity-40 animate-sparkle">✦</div>
-            <div className="absolute top-12 right-10 text-2xl opacity-30 animate-sparkle" style={{ animationDelay: '0.5s' }}>★</div>
-            <div className="absolute bottom-8 left-16 text-xl opacity-25">✦</div>
-            <div className="absolute bottom-6 right-12 text-2xl opacity-25">✿</div>
-            <div className="absolute top-20 left-1/4 text-xl opacity-20">♡</div>
-            <div className="absolute top-8 right-1/4 text-lg opacity-20">◆</div>
-
-            <div className="font-pixel text-xs text-[#FF4FA3] mb-3 tracking-widest" style={{ fontSize: '12px' }}>
-              ✦ YOUR LITTLE PHOTO CORNER ✦
-            </div>
-            <h1
-              className="font-pacifico text-[#FFB6D9]"
-              style={{ fontFamily: 'Pacifico, cursive', fontSize: 'clamp(32px, 8vw, 60px)', textShadow: '0 2px 20px rgba(255,75,163,0.5)' }}
-            >
-              SCRAPPY PHOTOBOOTH
-            </h1>
-            <p className="font-pixel text-[#FFD6EC] mt-2" style={{ fontSize: '14px' }}>
-              Strike a pose. Make a memory. Keep it forever.
+      <div className="pb-land">
+        {/* Hero */}
+        <section className="pb-hero">
+          <div className="pb-hero-text">
+            <p className="pb-kicker">✦ your little photo corner ✦</p>
+            <h1 className="pb-title">Scrappy Photobooth</h1>
+            <p className="pb-lead">Strike a pose. Make a memory. Keep it forever.</p>
+            <p className="pb-body">
+              Step inside our little digital photo booth and make nostalgic photo strips.
+              Bring your friends, make silly faces and decorate your pictures.
             </p>
-            <p
-              className="font-caveat text-[#FFB6D9]/80 mt-3 max-w-md mx-auto"
-              style={{ fontFamily: 'Caveat, cursive', fontSize: '18px' }}
-            >
-              Step inside our little digital photo booth and create nostalgic photo strips.
-              Bring your friends, make silly faces, and decorate your pictures.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-              <button
-                onClick={() => setStep('layout')}
-                className="btn-y2k text-base px-8 py-3"
-                style={{ fontSize: '14px' }}
-              >
-                LET&apos;S TAKE PICTURES!
+            <div className="pb-cta">
+              <button onClick={() => setStep('layout')} className="y2kh-btn y2kh-btn--pink y2kh-btn--big">
+                📷 Let&apos;s take pictures!
               </button>
               {user && (
-                <Link href="/photobooth/gallery" className="btn-outline-y2k px-8 py-3 text-sm bg-white/10 border-white/50 text-white hover:bg-white/20" style={{ fontSize: '13px' }}>
-                  MY PHOTO STRIPS ✦
-                </Link>
+                <Link href="/photobooth/gallery" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">My photo strips ✦</Link>
               )}
             </div>
           </div>
-
-          {/* Strip style preview cards */}
-          <div className="max-w-4xl mx-auto px-4 py-10">
-            <div className="font-pixel text-xs text-center text-[#3A0030] mb-6 tracking-widest" style={{ fontSize: '12px' }}>
-              ✦ CHOOSE FROM 6 LAYOUTS ✦
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-              {LAYOUTS.map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => { setSelectedLayout(l.id); setStep('camera') }}
-                  className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-3 hover:border-[#FF4FA3] hover:shadow-md transition-all group"
-                >
-                  <div className="h-14 flex items-center justify-center">
-                    <div className="w-8 h-14 mx-auto">
-                      <LayoutPreview id={l.id} />
-                    </div>
-                  </div>
-                  <div className="font-pixel text-[#3A0030] mt-1" style={{ fontSize: '12px' }}>{l.label}</div>
-                  <div className="font-nunito text-[#888] mt-0.5" style={{ fontSize: '12px' }}>{l.count} photos</div>
-                </button>
+          <div className="pb-hero-art" aria-hidden="true">
+            <div className="pb-hero-strip">
+              {['cute-bunny', 'cute-kitten', 'cute-star'].map((id) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <span key={id}><img src={assetThumb(id)} alt="" width={56} height={56} /></span>
               ))}
-            </div>
-
-            {/* How it works */}
-            <div className="mt-10 bg-[#FFF8ED] rounded-2xl border-2 border-[#FFB6D9]/40 p-6">
-              <div className="font-pixel text-xs text-[#FF4FA3] mb-4 text-center" style={{ fontSize: '12px' }}>
-                ✦ HOW IT WORKS ✦
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                {[
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>, label: 'Choose layout', n: '01' },
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>, label: 'Strike a pose', n: '02' },
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, label: 'Decorate', n: '03' },
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, label: 'Save & share', n: '04' },
-                ].map(s => (
-                  <div key={s.n} className="flex flex-col items-center gap-1">
-                    <div className="flex items-center justify-center">{s.icon}</div>
-                    <div className="font-pixel text-[#FF4FA3]" style={{ fontSize: '12px' }}>{s.n}</div>
-                    <div className="font-caveat text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive', fontSize: '15px' }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
+              <b>bff 4ever</b>
             </div>
           </div>
-        </main>
+        </section>
+
+        {/* Layouts */}
+        <section className="pb-sec">
+          <h2 className="pb-h2">Choose a layout <span>{LAYOUTS.length} to pick from</span></h2>
+          <div className="pb-layouts">
+            {LAYOUTS.map(l => (
+              <button key={l.id} onClick={() => { setSelectedLayout(l.id); setStep('camera') }} className="pb-layout">
+                <span className="pb-layout-art"><LayoutPreview id={l.id} /></span>
+                <b>{l.label.toLowerCase()}</b>
+                <small>{l.count} photo{l.count === 1 ? '' : 's'}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="pb-sec">
+          <h2 className="pb-h2">How it works</h2>
+          <ol className="pb-how">
+            {STEPS_HOW.map(s => (
+              <li key={s.n}>
+                <span className="pb-how-n">{s.n}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={assetThumb(s.sticker)} alt="" width={44} height={44} />
+                <b>{s.title}</b>
+                <span>{s.text}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
         <Footer />
       </div>
     )

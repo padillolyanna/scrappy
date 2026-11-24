@@ -1854,3 +1854,56 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .tvt-keys i:nth-child(1) { background: #FF3030 } .tvt-keys i:nth-child(2) { background: #30D030 } .tvt-keys i:nth-child(3) { background: #FFE14D } .tvt-keys i:nth-child(4) { background: #30C8FF }
 @container (max-width: 330px) { .tvm-row span { display: none; } .tvt { font-size: 10px; } .tvt-banner { font-size: 13px; } .tvk-ico { width: 64px; } .tvk-win { left: 80px; } }
 @media (prefers-reduced-motion: reduce) { .tvi-spark, .tvi-rays, .tvm-sun { animation: none !important; } }
+
+/* ═══════════ No cursive on themed pages: Caveat / Pacifico → Verdana ═══════════
+   (the scrapbook editor, profiles and home opt out with data-y2k-off, so people's
+   handwriting fonts inside their own pages are untouched) */
+.y2k-app:not(:has([data-y2k-off])) :is(.font-caveat, .font-pacifico, [style*='Caveat'], [style*='Pacifico']):not(h1):not(h2) {
+  font-family: Verdana, Tahoma, Geneva, sans-serif !important; font-weight: 400; letter-spacing: 0 !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(.font-caveat, [style*='Caveat']):not(h1):not(h2) { font-size: 15px !important; line-height: 1.55 !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(h1, h2):is(.font-caveat, [style*='Caveat'], [style*='Pacifico']) {
+  font-family: 'Cherry Bomb One', 'Arial Black', sans-serif !important; letter-spacing: 0 !important; }
+
+/* ═══════════ Photobooth landing ═══════════ */
+.pb-land { font-family: Verdana, Tahoma, Geneva, sans-serif; color: #2B0A2E; }
+.pb-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: center; padding: 30px 26px; overflow: hidden;
+  background: #FFE3F2; border-bottom: 3px solid #3A0030; }
+.pb-hero::before { content: ''; position: absolute; inset: -50%; background: repeating-conic-gradient(rgba(255, 255, 255, .6) 0 9deg, transparent 9deg 18deg); }
+.pb-hero > * { position: relative; }
+@media (min-width: 760px) { .pb-hero { grid-template-columns: minmax(0, 1fr) 190px; padding: 40px 40px; } }
+.pb-kicker { margin: 0 0 6px; font: 13px 'Silkscreen', monospace; letter-spacing: .06em; color: #C2006B; text-transform: uppercase; }
+.pb-title { margin: 0; font: 400 clamp(36px, 6.5vw, 60px)/1 'Cherry Bomb One', 'Arial Black', sans-serif; color: #FF4FA3;
+  text-shadow: 2px 0 #3A0030, -2px 0 #3A0030, 0 2px #3A0030, 0 -2px #3A0030, 2px 2px #3A0030, -2px -2px #3A0030, 2px -2px #3A0030, -2px 2px #3A0030, 5px 5px 0 #FFE14D; }
+.pb-lead { margin: 14px 0 6px; font: bold 18px/1.4 Verdana, Tahoma, sans-serif; color: #3A0030; }
+.pb-body { margin: 0; max-width: 52ch; font-size: 16px; line-height: 1.65; color: #4A2446; }
+.pb-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.pb-hero-art { display: none; }
+@media (min-width: 760px) { .pb-hero-art { display: block; } }
+.pb-hero-strip { display: flex; flex-direction: column; gap: 7px; width: 112px; margin: 0 auto; padding: 9px 9px 6px; background: #fff; border: 3px solid #3A0030; box-shadow: 5px 5px 0 #3A0030; rotate: 6deg; }
+.pb-hero-strip span { display: grid; place-items: center; height: 82px; background: linear-gradient(160deg, #FFC2E2, #C9A6FF); border: 2px solid #3A0030; }
+.pb-hero-strip img { image-rendering: pixelated; }
+.pb-hero-strip b { font: bold 13px Verdana, sans-serif; color: #C2006B; text-align: center; }
+.pb-sec { padding: 26px 22px 6px; }
+.pb-sec:last-of-type { padding-bottom: 28px; }
+.pb-h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin: 0 0 14px; font: 400 28px/1.1 'Cherry Bomb One', 'Arial Black', sans-serif; color: #3A0030; }
+.pb-h2 span { font: 14px Verdana, sans-serif; color: #6B4A66; }
+.pb-layouts { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+.pb-layout { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 8px 12px; background: #fff; border: 3px solid #3A0030; box-shadow: 4px 4px 0 #3A0030;
+  cursor: pointer; font-family: Verdana, Tahoma, sans-serif; color: #2B0A2E; }
+.pb-layout:hover { background: #FFF3B0; }
+.pb-layout:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #3A0030; }
+.pb-layout:focus-visible { outline: 3px solid #E0007A; outline-offset: 2px; }
+.pb-layout-art { display: block; width: 40px; height: 64px; margin-bottom: 6px; }
+.pb-layout b { font-size: 15px; text-transform: capitalize; }
+.pb-layout small { font-size: 14px; color: #6B4A66; }
+.pb-how { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.pb-how li { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 16px 14px 14px; background: #FFFBEA; border: 3px solid #3A0030; box-shadow: 4px 4px 0 #3A0030; }
+.pb-how img { image-rendering: pixelated; }
+.pb-how b { font-size: 16px; color: #3A0030; }
+.pb-how li > span:last-child { font-size: 15px; line-height: 1.5; color: #4A2446; }
+.pb-how-n { position: absolute; right: 10px; top: 10px; display: grid; place-items: center; width: 28px; height: 28px; background: #FF4FA3; color: #fff; border: 2px solid #3A0030; font: bold 14px Verdana, sans-serif; }
+.y2k-app:not(:has([data-y2k-off])) .pb-land .y2k-footer { display: none; }
+/* readability on themed pages: no extra-wide tracking, no washed-out pastel text */
+.y2k-app:not(:has([data-y2k-off])) :is(.tracking-widest, .tracking-wider) { letter-spacing: .06em !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(.text-\[\#C9B6FF\], .text-\[\#FFB6D9\], .text-\[\#B8A0D0\], .text-\[\#bbb\], .text-\[\#aaa\]) { color: #7A3E8C !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(.text-\[\#888\], .text-\[\#999\]) { color: #6B4A66 !important; }
