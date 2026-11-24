@@ -11,16 +11,23 @@ import Mascot from "@/components/ui/Mascot";
 export const metadata: Metadata = {
   title: "Scrappy — make Y2K scrapbook pages",
   description: "Scrappy is a free digital scrapbook community inspired by the early-2000s internet. Decorate spiral-notebook pages with photos, washi tape, gems and doodles.",
+  metadataBase: new URL("https://www.scrappy.fun"),
   openGraph: {
     title: "Scrappy — make Y2K scrapbook pages",
     description: "Decorate spiral-notebook pages with photos, washi tape, gems and doodles. Free, and all yours.",
     type: "website",
     siteName: "Scrappy",
+    url: "https://www.scrappy.fun",
   },
   twitter: {
     card: "summary_large_image",
     title: "Scrappy — make Y2K scrapbook pages",
     description: "A free digital scrapbook community inspired by the early-2000s internet.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
   },
   other: {
     "google-adsense-account": "ca-pub-1565639314627238",
@@ -39,6 +46,26 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col items-center py-4 px-2 relative">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "Scrappy",
+              "url": "https://www.scrappy.fun",
+              "description": "A free digital scrapbook community inspired by the early-2000s internet.",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                  "@type": "EntryPoint",
+                  "urlTemplate": "https://www.scrappy.fun/explore?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
         <CursorTrail />
         <PresencePing />
         {/* Navbar floats above the AppWindow */}

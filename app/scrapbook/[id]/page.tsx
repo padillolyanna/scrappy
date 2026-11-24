@@ -1,5 +1,6 @@
 export const instant = false
 
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { SCRAPBOOK_COVERS } from '@/lib/types'
 import Footer from '@/components/layout/Footer'
@@ -8,6 +9,40 @@ import { notFound } from 'next/navigation'
 import ScrapbookActions from '@/components/scrapbook/ScrapbookActions'
 import NotebookViewer from '@/components/notebook/NotebookViewer'
 import { loadPages } from '@/lib/notebookStore'
+import { SITE_URL } from '@/lib/site'
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: sb } = await supabase
+    .from('scrapbooks')
+    .select('title, is_public, user_id, profiles!inner(username)')
+    .eq('id', id)
+    .single()
+
+  if (!sb || !sb.is_public) {
+    return { title: 'Scrapbook — Scrappy', robots: { index: false } }
+  }
+
+  const profileData = sb.profiles as { username: string } | { username: string }[] | null
+  const username = Array.isArray(profileData) ? profileData[0]?.username : profileData?.username
+
+  const title = `${sb.title} — by @${username ?? 'unknown'} on Scrappy`
+  const description = `A digital scrapbook by @${username ?? 'unknown'} on Scrappy — the Y2K-inspired community for memories and creativity.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      url: `${SITE_URL}/scrapbook/${id}`,
+      siteName: 'Scrappy',
+    },
+    alternates: { canonical: `${SITE_URL}/scrapbook/${id}` },
+  }
+}
 
 export default async function ScrapbookViewPage({ params }: PageProps<'/scrapbook/[id]'>) {
   const { id } = await params

@@ -1,5 +1,6 @@
 export const instant = false
 
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -7,6 +8,38 @@ import Footer from '@/components/layout/Footer'
 import ProfileLayout, { type CommentData, type MiniProfile } from '@/components/profile/ProfileLayout'
 import { AddToTop8Button, CommentForm, DeleteCommentButton, ShareProfileButton } from '@/components/profile/ProfileClient'
 import { sanitizeExtras, sanitizeStyle } from '@/lib/profileStyle'
+import { SITE_URL } from '@/lib/site'
+
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
+  const { username } = await params
+  const supabase = await createClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, display_name, bio')
+    .eq('username', username)
+    .single()
+
+  if (!profile) return { title: 'Profile — Scrappy' }
+
+  const name = profile.display_name || `@${profile.username}`
+  const title = `${name} — Scrappy`
+  const description = profile.bio
+    ? `${profile.bio.slice(0, 150)} — view ${name}'s scrapbooks on Scrappy.`
+    : `View @${profile.username}'s profile and scrapbooks on Scrappy, the Y2K-inspired digital scrapbook community.`
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'profile',
+      url: `${SITE_URL}/profile/${profile.username}`,
+      siteName: 'Scrappy',
+    },
+    alternates: { canonical: `${SITE_URL}/profile/${profile.username}` },
+  }
+}
 
 const ONLINE_WINDOW_MS = 5 * 60 * 1000
 

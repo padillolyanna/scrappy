@@ -6,20 +6,26 @@ import { createClient } from '@/lib/supabase-client'
 
 const NAV_LINKS = [
   { label: 'Home', href: '/' },
-  { label: 'Scrapbook', href: '/scrapbook/create' },
   { label: 'Explore', href: '/explore' },
+  { label: 'Create Scrapbook', href: '/scrapbook/create' },
+  { label: 'Photobooth', href: '/photobooth' },
   { label: 'Highlights', href: '/highlights' },
-  { label: 'Confessions', href: '/confessions' },
+  { label: 'Confession Wall', href: '/confessions' },
   { label: 'Daily Prompt', href: '/prompts' },
+  { label: 'Journal Hangouts', href: '/hangouts' },
+  { label: 'Scrapbook Exchange', href: '/exchange' },
+  { label: 'The Journal', href: '/journal' },
 ]
 
 const INFO_LINKS = [
   { label: 'About Scrappy', href: '/about' },
   { label: 'Contact', href: '/contact' },
+  { label: 'FAQ', href: '/faq' },
   { label: 'Privacy Policy', href: '/privacy' },
   { label: 'Terms of Service', href: '/tos' },
-  { label: 'Photobooth', href: '/photobooth' },
-  { label: 'Scrapbook Exchange', href: '/exchange' },
+  { label: 'Community Guidelines', href: '/community-guidelines' },
+  { label: 'Copyright', href: '/copyright' },
+  { label: 'Cookie Policy', href: '/cookie-policy' },
 ]
 
 export default function Footer() {

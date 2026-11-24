@@ -4,6 +4,12 @@ import { connection } from 'next/server'
 import { requireAdmin } from '@/lib/admin'
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Admin — Scrappy',
+  robots: { index: false, follow: false },
+}
 
 export default async function AdminDashboard() {
   await connection()
@@ -52,6 +58,12 @@ export default async function AdminDashboard() {
             )}
           </div>
         ))}
+      </div>
+
+      <div className="flex gap-3 mb-6">
+        <Link href="/admin/confessions" className="text-xs bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-700 hover:border-gray-400 transition-colors">Confession moderation →</Link>
+        <Link href="/admin/hangouts" className="text-xs bg-white border border-gray-200 rounded px-3 py-1.5 text-gray-700 hover:border-gray-400 transition-colors">Hangouts →</Link>
+        <Link href="/admin/monetization" className="text-xs bg-green-50 border border-green-200 rounded px-3 py-1.5 text-green-700 hover:border-green-400 transition-colors font-medium">AdSense Readiness →</Link>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

@@ -1,4 +1,10 @@
 export const instant = false
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Daily Prompt — Scrappy',
+  description: 'A new question every day. Answer it, read what others said, and discover what your community thinks. Free to join.',
+}
 
 import Footer from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase-server'

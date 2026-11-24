@@ -1,4 +1,10 @@
 export const instant = false
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Journal Hangouts — Scrappy',
+  description: 'Community journal events where people write, share prompts and scrapbook together. Browse upcoming hangouts and RSVP.',
+}
 
 import { createClient } from '@/lib/supabase-server'
 import Footer from '@/components/layout/Footer'
