@@ -52,6 +52,7 @@ function memberTabs(username: string): Tab[] {
       items: [
         { href: `/profile/${username}`, label: 'My Profile' },
         { href: '/my-space', label: 'My Space' },
+        { href: '/pet', label: 'My Little Pet ♡' },
         { href: '/exchange', label: 'My Exchanges' },
         { href: '/hangouts?my=1', label: 'My Hangouts' },
         { href: `/profile/${username}/edit`, label: 'Customize My Page' },

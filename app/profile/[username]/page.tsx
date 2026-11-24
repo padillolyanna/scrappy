@@ -9,6 +9,8 @@ import ProfileLayout, { type CommentData, type MiniProfile } from '@/components/
 import { AddToTop8Button, CommentForm, DeleteCommentButton, ShareProfileButton } from '@/components/profile/ProfileClient'
 import { sanitizeExtras, sanitizeStyle } from '@/lib/profileStyle'
 import { SITE_URL } from '@/lib/site'
+import PetAvatar from '@/components/pet/PetAvatar'
+import { cleanEquipped } from '@/lib/pet/catalog'
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
   const { username } = await params
@@ -62,7 +64,7 @@ export default async function ProfilePage({ params }: PageProps<'/profile/[usern
   const extras = sanitizeExtras(profile.profile_extras)
   const isOwner = viewer?.id === profile.id
 
-  const [{ data: scrapbooks }, { data: friends }, commentsRes] = await Promise.all([
+  const [{ data: scrapbooks }, { data: friends }, commentsRes, { data: petRow }] = await Promise.all([
     supabase
       .from('scrapbooks')
       .select('id, title, cover_id, like_count')
@@ -79,7 +81,16 @@ export default async function ProfilePage({ params }: PageProps<'/profile/[usern
       .eq('profile_id', profile.id)
       .order('created_at', { ascending: false })
       .limit(30),
+    // RLS only returns the pet if it's public, or if the viewer is the owner
+    supabase.from('user_pets').select('equipped, is_public').eq('user_id', profile.id).maybeSingle(),
   ])
+  const petSlot = petRow && (petRow.is_public || isOwner) ? (
+    <div style={{ textAlign: 'center' }}>
+      <PetAvatar equipped={cleanEquipped(petRow.equipped)} size={120} title={`${profile.username}'s pet`} />
+      {isOwner && !petRow.is_public && <div style={{ fontSize: 12, opacity: 0.8 }}>only you can see this: turn on &ldquo;show on my profile&rdquo; in <Link href="/pet">My Little Pet</Link></div>}
+      {isOwner && petRow.is_public && <div style={{ fontSize: 12 }}><Link href="/pet">dress up my pet ♡</Link></div>}
+    </div>
+  ) : null
 
   const top8 = extras.top8
     .map((id) => (friends ?? []).find((f) => f.id === id))
@@ -111,6 +122,7 @@ export default async function ProfilePage({ params }: PageProps<'/profile/[usern
           comments={comments}
           commentCount={commentsRes.count ?? comments.length}
           online={online || isOwner}
+          petSlot={petSlot}
           contactSlot={
             <>
               <a href="#comments" className="pf-btn">✎ leave a comment</a>

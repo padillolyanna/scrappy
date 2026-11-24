@@ -1,14 +1,15 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
+import PetAvatar, { type PetMood } from '@/components/pet/PetAvatar'
+import { usePet } from '@/lib/pet/usePet'
 
-const TIPS = [
-  'decorate your page! ✦',
-  'post a confession!',
-  'try the daily prompt! ★',
-]
+const TIPS = ['hi! ♡', "let's make something!", 'you look cute today!', 'ready to scrapbook?']
 
 export default function Mascot() {
+  const { user, guest, pet, newlyUnlocked } = usePet({ claim: 'session' })
+  const [mood, setMood] = useState<PetMood>('idle')
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null)
   const [dragging, setDragging] = useState(false)
   const [bubble, setBubble] = useState<string | null>(null)
@@ -31,10 +32,10 @@ export default function Mascot() {
         const p = JSON.parse(saved) as { x: number; y: number }
         syncPos({ x: Math.max(0, p.x), y: Math.max(0, p.y) })
       } catch {
-        syncPos({ x: window.innerWidth - 90, y: 80 })
+        syncPos({ x: window.innerWidth - 96, y: window.innerHeight - 150 })
       }
     } else {
-      syncPos({ x: window.innerWidth - 90, y: 80 })
+      syncPos({ x: window.innerWidth - 96, y: window.innerHeight - 150 })
     }
 
     if (!localStorage.getItem('mascot-hint')) {
@@ -109,22 +110,39 @@ export default function Mascot() {
     window.addEventListener('touchend', onTouchEnd)
   }
 
+  // sleepy after a minute without activity
+  useEffect(() => {
+    let t = window.setTimeout(() => setMood('sleepy'), 60000)
+    const wake = () => {
+      clearTimeout(t)
+      setMood((m) => (m === 'sleepy' ? 'idle' : m))
+      t = window.setTimeout(() => setMood('sleepy'), 60000)
+    }
+    const evs = ['pointerdown', 'keydown', 'scroll'] as const
+    evs.forEach((e) => window.addEventListener(e, wake, { passive: true }))
+    return () => { clearTimeout(t); evs.forEach((e) => window.removeEventListener(e, wake)) }
+  }, [])
+
   function handleClick() {
     if (didDrag.current) return
     setShowHint(false)
-    const tip = TIPS[Math.floor(Math.random() * TIPS.length)]
-    setBubble(tip)
+    setBubble(TIPS[Math.floor(Math.random() * TIPS.length)])
     setWaving(true)
-    setTimeout(() => setBubble(null), 3000)
-    setTimeout(() => setWaving(false), 800)
+    setMood('happy')
+    setTimeout(() => setBubble(null), 3500)
+    setTimeout(() => { setWaving(false); setMood('idle') }, 900)
   }
 
   if (!pos) return null
+  // signed-in users can switch the floating companion off in My Little Pet
+  if (user && pet && !pet.show_companion) return null
 
-  const activeBubble = bubble ?? (showHint ? 'sama mo ako! ✦' : null)
+  const unlockedNote = newlyUnlocked.length > 0 ? 'new accessories unlocked!' : null
+  const activeBubble = bubble ?? unlockedNote ?? (showHint ? 'sama mo ako! ✦' : null)
+  const shownMood: PetMood = unlockedNote && mood === 'idle' ? 'excited' : mood
 
   return (
-    <div
+    <div className="scrappy-companion"
       style={{
         // absolute = document coordinates, stays put when page scrolls
         position: 'absolute',
@@ -154,9 +172,14 @@ export default function Mascot() {
           color: '#2B0A2E',
           whiteSpace: 'nowrap',
           boxShadow: '2px 2px 0 #2B0A2E',
-          pointerEvents: 'none',
         }}>
           {activeBubble}
+          {(bubble || unlockedNote) && (
+            <Link href={guest ? '/auth/login?next=/pet' : '/pet'} onClick={(e) => e.stopPropagation()}
+              style={{ display: 'block', marginTop: 2, fontFamily: 'Verdana, sans-serif', fontSize: 12, fontWeight: 700, color: '#E0007A' }}>
+              {guest ? 'log in to dress me up ♡' : 'dress me up ♡'}
+            </Link>
+          )}
           <div style={{ position: 'absolute', bottom: -8, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '8px solid #2B0A2E' }} />
           <div style={{ position: 'absolute', bottom: -6, left: '50%', transform: 'translateX(-50%)', width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '7px solid white' }} />
         </div>
@@ -180,33 +203,8 @@ export default function Mascot() {
         </div>
       )}
 
-      <div
-        className="animate-mascot-idle"
-        style={{ width: 54, position: 'relative', cursor: dragging ? 'grabbing' : 'grab' }}
-      >
-        {/* Head */}
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #FFB6D9, #FF9ECF)', border: '2px solid #2B0A2E', margin: '0 auto', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', gap: 7, marginTop: 2 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2B0A2E' }} />
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2B0A2E' }} />
-          </div>
-          <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', lineHeight: 1 }}>
-            <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
-              <ellipse cx="4.5" cy="6" rx="4" ry="2.5" fill="#FF4FA3" stroke="#2B0A2E" strokeWidth="1" transform="rotate(-15,4.5,6)"/>
-              <ellipse cx="13.5" cy="6" rx="4" ry="2.5" fill="#FF4FA3" stroke="#2B0A2E" strokeWidth="1" transform="rotate(15,13.5,6)"/>
-              <circle cx="9" cy="6" r="2" fill="#FF9ECF" stroke="#2B0A2E" strokeWidth="1"/>
-            </svg>
-          </div>
-        </div>
-        {/* Body */}
-        <div style={{ width: 30, height: 32, margin: '2px auto 0', background: 'linear-gradient(180deg, #C9A2FF, #FF4FA3)', border: '2px solid #2B0A2E', borderRadius: '4px 4px 10px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ color: 'white', fontSize: 12, opacity: 0.8 }}>✦</span>
-        </div>
-        {/* Wand arm */}
-        <div style={{ position: 'absolute', bottom: 10, right: -4, transform: waving ? 'rotate(-25deg)' : 'rotate(-5deg)', transition: 'transform 0.3s ease', transformOrigin: 'bottom left' }}>
-          <div style={{ width: 4, height: 20, background: '#C9A2FF', border: '1px solid #2B0A2E', borderRadius: 2, margin: '0 auto' }} />
-          <div style={{ textAlign: 'center', fontSize: 12, marginTop: -2, lineHeight: 1 }}>✦</div>
-        </div>
+      <div style={{ position: 'relative', cursor: dragging ? 'grabbing' : 'grab', transform: waving ? 'translateY(-6px)' : 'none', transition: 'transform .2s' }}>
+        <PetAvatar equipped={pet?.equipped ?? {}} size={64} mood={shownMood} title={user ? 'Your Scrappy pet' : 'Scrappy pet'} />
       </div>
     </div>
   )
