@@ -1739,9 +1739,10 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .tvi-logo em { font-style: normal; font-size: .42em; margin: 0 0 6px 3px; color: #fff; transform: scale(0) rotate(-30deg);
   text-shadow: 2px 0 #E0007A, -2px 0 #E0007A, 0 2px #E0007A, 0 -2px #E0007A, 3px 3px 0 #3A0030; animation: tvi-stamp .4s cubic-bezier(.3, 1.9, .5, 1) 1.9s forwards; }
 @keyframes tvi-stamp { to { transform: rotate(-8deg) } }
-.tvi-tag { position: relative; opacity: 0; padding: 4px 8px; background: #fff; border: 2px solid #3A0030; box-shadow: 3px 3px 0 #3A0030; animation: tvi-fade .1s 2.5s forwards; }
-.tvi-tag span { display: block; width: 0; overflow: hidden; white-space: nowrap; font: min(11px, 3.2cqw)/1.2 'Silkscreen', monospace; color: #3A0030; animation: tvi-type 1.3s steps(33) 2.6s forwards; }
-@keyframes tvi-type { to { width: 33ch } }
+.tvi-tag { position: relative; opacity: 0; padding: 4px 10px; max-width: 94%; background: #fff; border: 2px solid #3A0030; box-shadow: 3px 3px 0 #3A0030; animation: tvi-fade .1s 2.5s forwards; }
+.tvi-tag span { display: block; width: max-content; white-space: nowrap; text-align: center; font: min(11px, 3.2cqw)/1.2 'Silkscreen', monospace; color: #3A0030;
+  clip-path: inset(0 100% 0 0); animation: tvi-type 1.3s steps(33) 2.6s forwards; }
+@keyframes tvi-type { to { clip-path: inset(0 0 0 0) } }
 .tvi-start { position: relative; font: 13px 'Silkscreen', monospace; color: #fff; text-shadow: 2px 2px 0 #3A0030; opacity: 0; animation: tvi-blink 1s steps(1) 4.1s infinite; }
 @keyframes tvi-blink { 0% { opacity: 1 } 50% { opacity: 0 } }
 .tvi-spark { position: absolute; font-style: normal; font-size: 20px; color: #fff; text-shadow: 0 0 6px #FF4FA3, 2px 2px 0 #3A0030; scale: 0; animation: tvi-twinkle 1.2s ease-in-out infinite; }
