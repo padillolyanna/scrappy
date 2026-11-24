@@ -1,14 +1,9 @@
 export const instant = false
 
-import Footer from '@/components/layout/Footer'
 import TopMarquee from '@/components/landing/TopMarquee'
-import HomepageHero from '@/components/landing/HomepageHero'
-import HomepageTemplates from '@/components/landing/HomepageTemplates'
-import PhotoboothSection from '@/components/landing/PhotoboothSection'
-import WhatYouCanDo from '@/components/landing/WhatYouCanDo'
-import FreshScrapbooks, { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
-import HomepageCTA from '@/components/landing/HomepageCTA'
+import { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
 import HomeDashboard from '@/components/landing/HomeDashboard'
+import Y2KHome from '@/components/landing/y2k/Y2KHome'
 import type { DashScrapbook } from '@/components/landing/DashboardScrapbooks'
 import { createClient } from '@/lib/supabase-server'
 import { getLiveAnnouncements } from '@/lib/announcements'
@@ -109,29 +104,12 @@ export default async function Home() {
           announcementsSlot={announcementsSlot}
         />
       ) : (
-        /* ── Logged-out: marketing homepage ── */
-        <>
-          <HomepageHero />
-          <HomepageTemplates />
-          <PhotoboothSection />
-          {announcements.length > 0 && (
-            <section style={{ padding: '0 20px clamp(40px, 6vw, 64px)', maxWidth: 1120, margin: '0 auto' }}>
-              <div className="text-center mb-8">
-                <div className="font-silkscreen tracking-widest mb-2" style={{ fontSize: '11px', color: 'var(--c-primary)' }}>
-                  JOURNAL HANGOUTS
-                </div>
-                <h2 className="font-pacifico" style={{ fontSize: 'clamp(26px, 4vw, 38px)', color: 'var(--c-text)', lineHeight: 1.1 }}>
-                  hangout board
-                </h2>
-              </div>
-              <AnnouncementBoard announcements={announcements} variant="compact" />
-            </section>
-          )}
-          <WhatYouCanDo />
-          <FreshScrapbooks scrapbooks={freshScrapbooks} />
-          <HomepageCTA />
-          <Footer />
-        </>
+        /* ── Logged-out: lo-fi Y2K homepage ── */
+        <Y2KHome
+          dateLabel={new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'long', day: 'numeric' }).format(new Date())}
+          fresh={freshScrapbooks}
+          hangoutBoard={announcements.length > 0 ? <AnnouncementBoard announcements={announcements} variant="compact" /> : null}
+        />
       )}
     </div>
   )

@@ -12,7 +12,7 @@ const STRIP_FRAMES = [
   'linear-gradient(135deg, #FFF0A8 0%, #FFD580 100%)',
 ]
 
-function BoothIllustration() {
+export function BoothIllustration() {
   return (
     <div className="relative flex justify-center" style={{ height: 400 }}>
       {/* Main booth body */}
