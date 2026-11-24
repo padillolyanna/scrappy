@@ -69,7 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <CursorTrail />
         <PresencePing />
         {/* Navbar floats above the AppWindow */}
-        <div className="w-full max-w-[960px]">
+        <div className="w-full max-w-[960px]" data-site-nav>
           <NavbarWrapper />
         </div>
         <AppWindow>

@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { SCRAPBOOK_COVERS } from '@/lib/types'
-import FloatingScrapbooks from '@/components/landing/FloatingScrapbooks'
 import { BoothIllustration } from '@/components/landing/PhotoboothSection'
 import type { FreshScrapbook } from '@/components/landing/FreshScrapbooks'
 import CoverThumb from './CoverThumb'
+import Y2KTabs from './Y2KTabs'
+import Y2KTv from './Y2KTv'
 
 /*
   Logged-out homepage, built like a 2005-2008 fan site: one bordered "site box",
@@ -12,15 +13,6 @@ import CoverThumb from './CoverThumb'
   88x31 badges and tiny GIF animations. All decorative images live in /public/y2k
   (about 30 KB total, palette-reduced GIFs). Content is the same as before.
 */
-
-const TABS = [
-  { label: 'Scrapbook', href: '/scrapbook/create' },
-  { label: 'Photobooth', href: '/photobooth' },
-  { label: 'Explore', href: '/explore' },
-  { label: 'Prompts', href: '/prompts' },
-  { label: 'Hangouts', href: '/hangouts' },
-  { label: 'Notes', href: '/exchange' },
-]
 
 const FEATURES = [
   { title: 'Scrapbook', href: '/scrapbook/create', text: 'Spiral-notebook pages you decorate with photos, frames, gems, washi tape and handwritten notes. Fully editable.' },
@@ -83,6 +75,8 @@ function Panel({ title, tone = 'pink', id, children, winBtns = false }: { title:
 export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel: string; fresh: FreshScrapbook[]; hangoutBoard: ReactNode }) {
   return (
     <div className="y2kh">
+      {/* this page has its own tab bar, so hide the site navbar here (server-rendered: no flash) */}
+      <style>{'[data-site-nav]{display:none}'}</style>
       <div className="y2kh-box">
         {/* ───────────── header ───────────── */}
         <header className="y2kh-head">
@@ -109,29 +103,13 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel:
           </div>
         </header>
 
-        {/* ───────────── tab bar ───────────── */}
-        <nav className="y2kh-tabs" aria-label="Scrappy sections">
-          {TABS.map((t) => (
-            <Link key={t.href} href={t.href}>{t.label}</Link>
-          ))}
-        </nav>
+        {/* ───────────── tab bar (replaces the site navbar here) ───────────── */}
+        <Y2KTabs />
 
         <div className="y2kh-body">
           {/* ───────────── hero: TV + welcome window ───────────── */}
           <div className="y2kh-grid y2kh-grid--hero">
-            <div className="y2kh-tv">
-              <div className="y2kh-tv-top" aria-hidden="true">
-                <span className="y2kh-tv-label">SCRAPPY TV</span>
-                <span className="y2kh-tv-live"><Gif anim="new-blinkie.gif" still="new-still.gif" w={34} h={14} /></span>
-              </div>
-              <Link href="/scrapbook/create" className="y2kh-tv-screen" aria-label="Start a scrapbook">
-                <FloatingScrapbooks compact />
-              </Link>
-              <div className="y2kh-tv-ctrls" aria-hidden="true">
-                <span className="y2kh-tv-btns"><i>◀◀</i><i>▶</i><i>▶▶</i></span>
-                <span className="y2kh-tv-eq"><i /><i /><i /><i /><i /></span>
-              </div>
-            </div>
+            <Y2KTv />
 
             <section className="y2kh-panel y2kh-welcome" aria-labelledby="y2kh-h1">
               <h2 className="y2kh-ttl y2kh-ttl--pink" aria-hidden="true">
