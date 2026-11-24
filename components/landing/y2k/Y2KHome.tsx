@@ -5,6 +5,7 @@ import { BoothIllustration } from '@/components/landing/PhotoboothSection'
 import type { FreshScrapbook } from '@/components/landing/FreshScrapbooks'
 import CoverThumb from './CoverThumb'
 import Y2KTabs from './Y2KTabs'
+import Y2KHeader from './Y2KHeader'
 import Y2KTv from './Y2KTv'
 import { Gif, Px, Panel } from './Y2KPanel'
 
@@ -48,40 +49,10 @@ export function Y2KShell({ dateLabel, user, children }: { dateLabel: string; use
   return (
     <div className="y2kh">
       <div className="y2kh-box">
-        {/* ───────────── header ───────────── */}
-        <header className="y2kh-head">
-          <Px src="star-40.gif" w={40} h={40} className="y2kh-deco" style={{ left: '46%', top: 8 }} />
-          <Px src="star-24.gif" w={24} h={24} className="y2kh-deco" style={{ left: '58%', top: 52 }} />
-          <Px src="star-yellow-24.gif" w={24} h={24} className="y2kh-deco" style={{ right: 18, bottom: 10 }} />
-
-          <div className="y2kh-brand">
-            <div className="y2kh-logo" aria-hidden="true">
-              scrappy<span>.fun</span>
-              <Gif anim="sparkle-anim.gif" still="sparkle-still.gif" w={16} h={16} className="y2kh-logo-spark" />
-            </div>
-            <p className="y2kh-date">
-              {user ? <>hi @{user.username} ✦ </> : null}Today is {dateLabel} ✦ <Link href="/prompts">answer today&apos;s prompt</Link>
-            </p>
-          </div>
-
-          <div className="y2kh-headright">
-            <Link href="/about" className="y2kh-bubble">click for <b>INFO</b><br />about Scrappy!</Link>
-            {user ? (
-              <div className="y2kh-auth">
-                <Link href="/my-space" className="y2kh-btn y2kh-btn--chrome">my space</Link>
-                <Link href={`/profile/${user.username}`} className="y2kh-btn y2kh-btn--pink">my page ✦</Link>
-              </div>
-            ) : (
-              <div className="y2kh-auth">
-                <Link href="/auth/login" className="y2kh-btn y2kh-btn--chrome">log in</Link>
-                <Link href="/auth/signup" className="y2kh-btn y2kh-btn--pink">join free ✦</Link>
-              </div>
-            )}
-          </div>
-        </header>
+        <Y2KHeader user={user} dateLabel={dateLabel} />
 
         {/* ───────────── tab bar (replaces the site navbar here) ───────────── */}
-        <Y2KTabs user={user} />
+        <Y2KTabs user={user} pathname="/" />
 
         <div className="y2kh-body">
           {children}

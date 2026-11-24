@@ -1445,3 +1445,12 @@ body { padding-bottom: 80px; }
 .y2kd-icon:hover span { background: #E0007A; }
 .y2kd-prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; background: #FFFBE6 repeating-linear-gradient(transparent 0 27px, rgba(100, 160, 220, .2) 27px 28px); }
 .y2kd-prompt p { flex: 1 1 260px; margin: 0; font: bold 17px/1.5 Verdana, Tahoma, sans-serif; color: #3A0030; }
+
+/* ── Y2K site-wide top bar (all pages except the homepage, which draws its own) ── */
+.y2kh--site { padding: 0 0 12px; }
+.y2kh--site .y2kh-box { max-width: none; }
+.y2kh--site .y2kh-head { padding: 12px 16px 10px; }
+.y2kh--site .y2kh-logo { font-size: clamp(34px, 5.5vw, 48px); text-decoration: none; }
+.y2kh-logo:focus-visible { outline: 3px solid #FFE14D; outline-offset: 3px; }
+.y2kh .y2kh-logo, .y2kh .y2kh-logo:hover { color: #fff; text-decoration: none; }
+.y2kh-tab-dd.is-current > button { background: #FFE14D; color: #3A0030; text-shadow: none; }

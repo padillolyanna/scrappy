@@ -61,8 +61,14 @@ function memberTabs(username: string): Tab[] {
   ]
 }
 
-export default function Y2KTabs({ user }: { user?: { username: string } | null }) {
+const matches = (pathname: string, href: string) => {
+  const path = href.split(/[?#]/)[0]
+  return path === '/' ? pathname === '/' : pathname === path || pathname.startsWith(path + '/')
+}
+
+export default function Y2KTabs({ user, pathname = '' }: { user?: { username: string } | null; pathname?: string }) {
   const TABS = user ? memberTabs(user.username) : GUEST_TABS
+  const directHit = TABS.some((t) => t.href && matches(pathname, t.href))
   const router = useRouter()
   const [open, setOpen] = useState<string | null>(null)
   const logout = async () => {
@@ -86,7 +92,7 @@ export default function Y2KTabs({ user }: { user?: { username: string } | null }
     <nav ref={navRef} className="y2kh-tabs" aria-label="Main">
       {TABS.map((t) =>
         t.items ? (
-          <div key={t.label} className="y2kh-tab-dd">
+          <div key={t.label} className={`y2kh-tab-dd ${!directHit && t.items.some((it) => !it.logout && matches(pathname, it.href)) ? 'is-current' : ''}`}>
             <button type="button" aria-expanded={open === t.label} aria-controls={`y2kh-dd-${t.label.replace('@', '')}`}
               onClick={() => setOpen((o) => (o === t.label ? null : t.label))}>
               {t.label} <span aria-hidden="true">{open === t.label ? '▴' : '▾'}</span>
@@ -109,7 +115,7 @@ export default function Y2KTabs({ user }: { user?: { username: string } | null }
             )}
           </div>
         ) : (
-          <Link key={t.label} href={t.href!} aria-current={t.href === '/' ? 'page' : undefined}>{t.label}</Link>
+          <Link key={t.label} href={t.href!} aria-current={matches(pathname, t.href!) ? 'page' : undefined}>{t.label}</Link>
         ),
       )}
     </nav>
