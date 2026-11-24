@@ -1,6 +1,6 @@
-"""Scrappy object shelf: 45 lo-fi Y2K clip-art stickers drawn in code.
-Flat 2D, thick plum outlines, flat fills + one white highlight, white die-cut border,
-palette-reduced (32 colours) with 1-bit alpha, like 2005 web clip-art.
+"""Scrappy object shelf: 45 Y2K pixel-art stickers drawn in code.
+Each is drawn as flat 2D clip-art, then turned into a ~36 px sprite: colours snapped to
+the sticker's own flat fills, 1 px plum outline, white die-cut, hard-edged upscale.
 
   python3 draw_stickers.py <repo>/public/assets/scrappy
 Writes full/<id>.webp (≤256 px) and thumbs/<id>.webp (≤128 px) and prints a JSON manifest."""
@@ -392,29 +392,52 @@ ITEMS = [
 ]
 
 
-def finish(img, size, colors):
-    """downscale, add white die-cut border, quantize, 1-bit alpha"""
-    bbox = img.getbbox(); img = img.crop(bbox)
-    pad = 8 * S; canvas = Image.new('RGBA', (img.width + pad * 2, img.height + pad * 2), (0, 0, 0, 0)); canvas.paste(img, (pad, pad))
-    canvas.thumbnail((size - 8, size - 8), Image.Resampling.LANCZOS)
-    a = np.asarray(canvas.getchannel('A')) > 100
+GRID = 36                  # pixel-art resolution: longest side, in "pixels"
+
+
+def own_palette(img, n=18):
+    """the sticker's own flat colours (plus plum + white), so pixels snap to real fills"""
+    small = img.resize((256, 256), Image.Resampling.BOX)
+    a = np.asarray(small)
+    opaque = a[..., 3] > 250
+    rgb = Image.fromarray(a[..., :3].astype(np.uint8))
+    q = rgb.quantize(colors=n, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    pal = np.array(q.getpalette()[:n * 3], float).reshape(-1, 3)
+    used = np.unique(np.asarray(q)[opaque])
+    return np.vstack([pal[used], [PLUM, W]])
+
+
+def finish(img, size):
+    """Y2K pixel art: shrink to a GRID-pixel sprite, snap every pixel to the sticker's own
+    flat colours, add a 1px plum outline and a white die-cut, then scale up with hard
+    nearest-neighbour edges (whole-number zoom so pixels stay square)."""
     from scipy import ndimage
-    cut = ndimage.binary_dilation(a, iterations=max(2, size // 64))
-    out = Image.new('RGBA', canvas.size, (0, 0, 0, 0))
-    out.paste(Image.new('RGBA', canvas.size, (255, 255, 255, 255)), mask=Image.fromarray((cut * 255).astype(np.uint8)))
-    out.alpha_composite(canvas)
-    out = out.crop(out.getbbox())
-    alpha = np.asarray(out.getchannel('A')) >= 128
-    rgb = Image.new('RGB', out.size, (255, 255, 255)); rgb.paste(out, mask=out.getchannel('A'))
-    q = rgb.quantize(colors=colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert('RGBA')
-    q.putalpha(Image.fromarray((alpha * 255).astype(np.uint8)))
-    return q
+    img = img.crop(img.getbbox())
+    pal = own_palette(img)
+    w, h = img.size; k = GRID / max(w, h)
+    small = img.resize((max(1, round(w * k)), max(1, round(h * k))), Image.Resampling.BOX)
+    a = np.asarray(small).astype(float)
+    alpha = a[..., 3] >= 110
+    al = a[..., 3:4] / 255
+    rgb = np.clip(np.where(al > 0, a[..., :3] / np.maximum(al, 1e-3), 0), 0, 255)
+    q = pal[((rgb[..., None, :] - pal[None, None]) ** 2).sum(-1).argmin(-1)]
+    pad = 3
+    A = np.pad(alpha, pad); Q = np.pad(q, ((pad, pad), (pad, pad), (0, 0)))
+    ring1 = ndimage.binary_dilation(A, np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])) & ~A
+    ring2 = ndimage.binary_dilation(A | ring1, np.ones((3, 3))) & ~(A | ring1)
+    out = np.zeros(A.shape + (4,), np.uint8)
+    out[A, :3] = Q[A]; out[A, 3] = 255
+    out[ring1, :3] = PLUM; out[ring1, 3] = 255
+    out[ring2, :3] = W; out[ring2, 3] = 255
+    im = Image.fromarray(out); im = im.crop(im.getbbox())
+    zoom = max(1, size // max(im.size))
+    return im.resize((im.width * zoom, im.height * zoom), Image.Resampling.NEAREST)
 
 
 manifest = []
 for cat, sid, label, fn in ITEMS:
     c = C(); fn(c)
-    full = finish(c.im, 256, 32); thumb = finish(c.im, 128, 24)
+    full = finish(c.im, 256); thumb = finish(c.im, 128)
     full.save(f'{OUT}/full/{sid}.webp', lossless=True, method=6)
     thumb.save(f'{OUT}/thumbs/{sid}.webp', lossless=True, method=6)
     manifest.append({'id': sid, 'label': label, 'category': cat, 'aspect': round(full.width / full.height, 3)})

@@ -1698,3 +1698,41 @@ body { padding-bottom: 80px; }
 .pet-coll-list li button:hover { background: #FFD6ED; border-color: #E0007A; }
 .pet-coll-list b { display: block; font: bold 13px Verdana, Tahoma, sans-serif; color: #3A0030; }
 .pet-coll-list small { display: block; font-size: 11px; color: #888; margin-top: 1px; }
+/* pixel-art stickers stay crisp at any size */
+img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
+
+/* ═══════════ Create-scrapbook wizard (cover / template / publish) ═══════════ */
+.y2kc { font-family: Verdana, Tahoma, Geneva, sans-serif; color: #2B0A2E; }
+.y2kc-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 0 0 18px; padding: 9px 14px;
+  background: #FFE9F4; border: 3px solid #3A0030; box-shadow: 3px 3px 0 #3A0030; font: bold 14px/1.4 Verdana, Tahoma, sans-serif; color: #3A0030; }
+.y2kc-note--yellow { background: #FFF3B0; }
+.y2kc-note--err { background: #FFE4F0; color: #B00020; margin-top: 18px; }
+.y2kc-mini { min-height: 30px; padding: 0 12px; font-size: 12px; }
+.y2kc-steps { display: flex; flex-wrap: wrap; margin: 0 auto 26px; max-width: 640px; border: 3px solid #3A0030; box-shadow: 4px 4px 0 #3A0030;
+  background: #6E32AA url(/y2k/tab-purple-sprite.gif) repeat-x 0 0 / 1px 132px; }
+.y2kc-steps button { flex: 1 1 120px; min-height: 44px; border: 0; border-right: 2px solid #3A0030; background: transparent; color: #fff; cursor: pointer;
+  font: bold 14px Verdana, Tahoma, sans-serif; text-shadow: 1px 1px 0 #3A0030; }
+.y2kc-steps button:last-child { border-right: 0; }
+.y2kc-steps button b { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 4px; background: #fff; color: #3A0030; border: 2px solid #3A0030; text-shadow: none; font-size: 12px; }
+.y2kc-steps button.is-on { background: #FFE14D; color: #3A0030; text-shadow: none; }
+.y2kc-steps button.is-done b { background: #8CE6B0; }
+.y2kc-steps button:disabled { cursor: default; color: rgba(255, 255, 255, .7); }
+.y2kc-steps button:focus-visible, .y2kc-step button:focus-visible { outline: 3px solid #E0007A; outline-offset: -3px; }
+.y2kc-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; }
+.y2kc-nav .y2kh-btn:disabled { opacity: .45; cursor: not-allowed; filter: grayscale(.4); }
+/* step headings: the homepage's sticker-type headline */
+.y2kc-step h2 { font: 400 clamp(30px, 5vw, 42px)/1.05 'Cherry Bomb One', 'Arial Black', sans-serif !important; color: #FF4FA3 !important;
+  text-shadow: 2px 0 #3A0030, -2px 0 #3A0030, 0 2px #3A0030, 0 -2px #3A0030, 2px 2px #3A0030, -2px -2px #3A0030, 2px -2px #3A0030, -2px 2px #3A0030, 4px 4px 0 #FFE14D; letter-spacing: 0; }
+.y2kc-step h2 + p { font: 15px/1.5 Verdana, Tahoma, sans-serif !important; color: #6B4A66 !important; }
+/* cover / template / visibility cards → inked windows */
+.y2kc-step button:is(.rounded-2xl, .rounded-xl) { border-radius: 0 !important; border: 3px solid #3A0030 !important; background: #fff !important;
+  box-shadow: 4px 4px 0 #3A0030 !important; --tw-ring-shadow: 0 0 #0000 !important; }
+.y2kc-step button:is(.rounded-2xl, .rounded-xl):hover { background: #FFF6FB !important; }
+.y2kc-step button:is(.rounded-2xl, .rounded-xl)[aria-pressed='true'],
+.y2kc-step button.rounded-xl[class*='bg-[#FF4FA3]/5'] { background: #FFF3B0 !important; box-shadow: 0 0 0 3px #FF4FA3, 4px 4px 0 3px #3A0030 !important; }
+.y2kc-step button.border-dashed { border-style: dashed !important; }
+.y2kc-step :is(.font-nunito, .font-caveat) { font-family: Verdana, Tahoma, sans-serif !important; }
+.y2kc-step .font-caveat { font-size: 13px !important; color: #6B4A66 !important; }
+.y2kc-step .rounded-full.bg-\[\#FF4FA3\] { border-radius: 0 !important; border: 2px solid #3A0030; box-shadow: 2px 2px 0 #3A0030; }
+.y2kc-step .scrap-card { border-radius: 0 !important; border: 3px solid #3A0030 !important; box-shadow: 4px 4px 0 #3A0030 !important; }
+@media (max-width: 520px) { .y2kc-step button.rounded-2xl { padding: 6px !important; } .y2kc-step button.rounded-2xl > div:first-child { zoom: .82; } .y2kc-step .grid.gap-4 { gap: 12px; } }

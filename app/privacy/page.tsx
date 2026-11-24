@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <ul>
           <li><strong>Account details:</strong> your email address, username, password (stored securely by our authentication provider, never in plain text) and optional display name.</li>
           <li><strong>Profile content:</strong> your photo, bio, mood, profile layout and colours, Top 8, profile song link and other details you choose to add.</li>
-          <li><strong>Things you create:</strong> scrapbooks, photos you upload, photobooth strips you save, answers to daily prompts, exchange answers, profile comments and confessions.</li>
+          <li><strong>Things you create:</strong> scrapbooks, photos you upload, photobooth strips you save, answers to daily prompts, exchange answers and confessions.</li>
           <li><strong>Messages to us:</strong> anything you send through the contact form, including your name and email if you provide them.</li>
         </ul>
         <h3>Information collected automatically</h3>
@@ -96,7 +96,6 @@ export default function PrivacyPage() {
           <li>Your username, profile page and anything you mark as <strong>public</strong> can be seen by anyone.</li>
           <li><strong>Link-only</strong> scrapbooks can be seen by anyone who has the link. <strong>Private</strong> ones are only visible to you.</li>
           <li>Confessions are shown without your name. We keep the link to your account so we can moderate abuse.</li>
-          <li>Comments you leave on profiles are public and show your username.</li>
         </ul>
       </InfoCard>
 

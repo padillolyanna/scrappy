@@ -377,7 +377,7 @@ function ProfileEditor() {
                     ))}
                   </Section>
                   <Section title="SHOW ON MY PAGE">
-                    {([['scrapbooks', 'my scrapbooks'], ['top8', 'top 8'], ['comments', 'comment wall']] as const).map(([k, label]) => (
+                    {([['scrapbooks', 'my scrapbooks'], ['top8', 'top 8']] as const).map(([k, label]) => (
                       <label key={k} className="flex items-center gap-2 font-pixel text-lg">
                         <input type="checkbox" checked={extras.show[k]} onChange={(e) => patchExtras({ show: { ...extras.show, [k]: e.target.checked } })} className="accent-[#FF4FA3] w-4 h-4" />
                         {label}
@@ -437,12 +437,8 @@ function ProfileEditor() {
                       extras={extras}
                       scrapbooks={[]}
                       top8={friends}
-                      comments={[
-                        { id: 'c1', body: 'omggg ur page is sooo cute :) ♡', created_at: new Date(createdAt).toISOString(), author_id: 'x', author: { id: 'x', username: 'stargazer', display_name: 'stargazer', avatar_url: null } },
-                      ]}
-                      commentCount={1}
                       online
-                      contactSlot={<><span className="pf-btn">✎ leave a comment</span><span className="pf-btn">♡ add to my top 8</span><span className="pf-btn">✦ share profile</span></>}
+                      contactSlot={<><span className="pf-btn">♡ add to my top 8</span><span className="pf-btn">✦ share profile</span></>}
                     />
                   </div>
                 </div>

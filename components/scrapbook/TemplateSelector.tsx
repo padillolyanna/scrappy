@@ -47,6 +47,7 @@ export default function TemplateSelector({ selected, onSelect }: Props) {
           transition={{ delay: TEMPLATES.length * 0.08, duration: 0.3 }}
           whileHover={{ scale: 1.02, y: -2 }}
           onClick={() => onSelect('custom')}
+          aria-pressed={selected === 'custom'}
           className={`text-left rounded-xl border-2 p-5 transition-all duration-200 border-dashed ${
             selected === 'custom'
               ? 'border-[#FF4FA3] bg-[#FF4FA3]/5 shadow-lg'
@@ -90,6 +91,7 @@ function TemplateCard({
       whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(template.id)}
+      aria-pressed={selected}
       className={`text-left rounded-xl border-2 p-5 transition-all duration-200 ${
         selected
           ? 'border-[#FF4FA3] bg-white shadow-xl ring-4 ring-[#FF4FA3]/20'

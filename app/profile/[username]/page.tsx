@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Footer from '@/components/layout/Footer'
-import ProfileLayout, { type CommentData, type MiniProfile } from '@/components/profile/ProfileLayout'
-import { AddToTop8Button, CommentForm, DeleteCommentButton, ShareProfileButton } from '@/components/profile/ProfileClient'
+import ProfileLayout, { type MiniProfile } from '@/components/profile/ProfileLayout'
+import { AddToTop8Button, ShareProfileButton } from '@/components/profile/ProfileClient'
 import { sanitizeExtras, sanitizeStyle } from '@/lib/profileStyle'
 import { SITE_URL } from '@/lib/site'
 
@@ -62,7 +62,7 @@ export default async function ProfilePage({ params }: PageProps<'/profile/[usern
   const extras = sanitizeExtras(profile.profile_extras)
   const isOwner = viewer?.id === profile.id
 
-  const [{ data: scrapbooks }, { data: friends }, commentsRes] = await Promise.all([
+  const [{ data: scrapbooks }, { data: friends }] = await Promise.all([
     supabase
       .from('scrapbooks')
       .select('id, title, cover_id, like_count')
@@ -73,21 +73,11 @@ export default async function ProfilePage({ params }: PageProps<'/profile/[usern
     extras.top8.length
       ? supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', extras.top8)
       : Promise.resolve({ data: [] as MiniProfile[] }),
-    supabase
-      .from('profile_comments')
-      .select('id, body, created_at, author_id, author:profiles!profile_comments_author_id_fkey(id, username, display_name, avatar_url)', { count: 'exact' })
-      .eq('profile_id', profile.id)
-      .order('created_at', { ascending: false })
-      .limit(30),
   ])
 
   const top8 = extras.top8
     .map((id) => (friends ?? []).find((f) => f.id === id))
     .filter((f): f is MiniProfile => !!f)
-  const comments = ((commentsRes.data ?? []) as unknown as (Omit<CommentData, 'author'> & { author: MiniProfile | MiniProfile[] | null })[]).map((c) => ({
-    ...c,
-    author: Array.isArray(c.author) ? c.author[0] ?? null : c.author,
-  }))
   const online = isOnline(profile.last_seen_at)
 
   return (
@@ -108,19 +98,12 @@ export default async function ProfilePage({ params }: PageProps<'/profile/[usern
           extras={extras}
           scrapbooks={scrapbooks ?? []}
           top8={top8}
-          comments={comments}
-          commentCount={commentsRes.count ?? comments.length}
           online={online || isOwner}
           contactSlot={
             <>
-              <a href="#comments" className="pf-btn">✎ leave a comment</a>
               {!isOwner && <AddToTop8Button targetId={profile.id} viewerId={viewer?.id ?? null} />}
               <ShareProfileButton />
             </>
-          }
-          commentFormSlot={<CommentForm profileId={profile.id} viewerId={viewer?.id ?? null} />}
-          commentControls={(c) =>
-            viewer && (viewer.id === c.author_id || isOwner) ? <DeleteCommentButton commentId={c.id} /> : null
           }
         />
       </main>

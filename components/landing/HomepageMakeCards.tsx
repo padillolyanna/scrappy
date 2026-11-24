@@ -20,7 +20,7 @@ const CARDS = [
     href: '/my-space',
     color: '#F59E0B',
     icon: '★',
-    text: 'A customizable profile with glitter names, layouts, backgrounds, a Top 8 and a comment wall.',
+    text: 'A customizable profile with glitter names, layouts, backgrounds and a Top 8.',
   },
 ]
 

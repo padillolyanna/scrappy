@@ -20,7 +20,7 @@ const FEATURES = [
     href: '/my-space',
     color: '#6A3FD0',
     icon: '★',
-    text: 'A customizable profile page with glitter names, layouts, backgrounds, a Top 8 and a comment wall.',
+    text: 'A customizable profile page with glitter names, layouts, backgrounds and a Top 8.',
   },
   {
     title: 'Note exchange',
