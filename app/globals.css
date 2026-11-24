@@ -1421,3 +1421,27 @@ body { padding-bottom: 80px; }
   .y2kh-tab-dd { position: static; }
   .y2kh-tabs .y2kh-menu { position: absolute; top: 100%; left: -3px !important; right: -3px !important; }
 }
+.y2kh-menu-btn { display: block; width: 100%; text-align: left; cursor: pointer; border: 0; padding: 9px 12px 9px 30px; background: url(/y2k/bullet-heart.gif) no-repeat 12px 13px #fff; }
+.y2kh-menu-btn:hover, .y2kh-menu-btn:focus-visible { background-color: #FFE3F2; }
+.y2kh-tab-dd:last-of-type .y2kh-menu { left: auto; right: -2px; }
+.y2kh-tab-dd > button { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
+
+/* ── Y2K logged-in home ── */
+.y2kd-addr { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #ECE9F2; border-bottom: 2px solid #3A0030; font-size: 13px; }
+.y2kd-addr-label { color: #555; }
+.y2kd-addr-url { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 8px; background: #fff; border: 2px inset #C9C5D3; color: #3A0030; }
+.y2kd-public { font: 12px 'Silkscreen', monospace; color: #11663A; background: #DFF8E8; border: 2px solid #11663A; padding: 2px 6px; }
+.y2kd-me { display: flex; align-items: center; gap: 14px; background: #FFF4FA url(/y2k/tile-pink-stars.gif) 0 0 / 0 0 no-repeat; }
+.y2kd-avatar { width: 64px; height: 64px; flex: 0 0 auto; display: grid; place-items: center; border: 3px solid #3A0030; background: #FF8CC8 url(/y2k/tile-pink-stars.gif);
+  font: 30px 'Cherry Bomb One', 'Arial Black', sans-serif; color: #fff; text-shadow: 2px 2px 0 #3A0030; box-shadow: 3px 3px 0 #3A0030; }
+.y2kd-handle { margin: 0; font: bold 20px/1.2 Verdana, Tahoma, sans-serif; color: #C2006B; overflow-wrap: anywhere; }
+.y2kd-latest { display: flex; align-items: center; gap: 16px; }
+.y2kd-title { margin: 0 0 10px; font: bold 17px/1.3 Verdana, Tahoma, sans-serif; color: #3A0030; overflow-wrap: anywhere; }
+.y2kd-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; padding: 12px; background: #E3F1FF url(/y2k/tile-blue-stripes.gif); }
+.y2kd-icon { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px 4px; text-decoration: none !important; border: 2px solid transparent; }
+.y2kd-icon img { width: 52px; height: 52px; object-fit: contain; }
+.y2kd-icon span { font: bold 13px/1.25 Verdana, Tahoma, sans-serif; color: #fff; text-align: center; padding: 1px 4px; background: #3A0030; }
+.y2kd-icon:hover, .y2kd-icon:focus-visible { border: 2px dotted #3A0030; background: rgba(255, 255, 255, .5); }
+.y2kd-icon:hover span { background: #E0007A; }
+.y2kd-prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; background: #FFFBE6 repeating-linear-gradient(transparent 0 27px, rgba(100, 160, 220, .2) 27px 28px); }
+.y2kd-prompt p { flex: 1 1 260px; margin: 0; font: bold 17px/1.5 Verdana, Tahoma, sans-serif; color: #3A0030; }
