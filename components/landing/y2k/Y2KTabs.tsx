@@ -19,7 +19,6 @@ const GUEST_TABS: Tab[] = [
     items: [
       { href: '/scrapbook/create', label: 'Create Scrapbook', desc: 'Start a new digital journal' },
       { href: '/photobooth', label: 'Photobooth', desc: 'Take and customize photo strips' },
-      { href: '/my-space', label: 'My Scrapbooks', desc: 'Manage your collection' },
     ],
   },
   {
