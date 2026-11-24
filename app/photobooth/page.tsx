@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 import Footer from '@/components/layout/Footer'
+import { assetThumb } from '@/lib/assetLibrary'
 import {
   BACKGROUNDS, DEFAULT_MAG_LINES, FRAMES, ensureFonts, renderStrip,
   type LayoutId,
@@ -15,7 +16,12 @@ import { EMOJI_STICKERS, GEM_COLORS, GEM_STICKERS, STICKERS, Sticker, StickerDef
 
 type Step = 'landing' | 'layout' | 'camera' | 'customize' | 'preview'
 
-type BoothTab = 'frames' | 'covers' | 'backgrounds' | 'gems' | 'stickers' | 'emoji' | 'text' | 'filters'
+type BoothTab = 'frames' | 'covers' | 'backgrounds' | 'gal' | 'kira' | 'gems' | 'stickers' | 'emoji' | 'text' | 'filters'
+
+// glossy 2008-gal decorations drawn by scripts/draw-booth-gyaru.py
+const GAL_STICKERS = ['leopard-love', 'kira-kira', 'lips', 'tiara', 'diamond-heart', 'rhinestone-heart', 'zebra-note', 'leopard-hibiscus', 'zebra-stars', 'glitter-butterfly', 'leopard-bow', 'leopard-bff', 'xoxo']
+const KIRA_FLARES = ['flare-pink', 'flare-white', 'flare-cross', 'flare-lilac']
+const galSrc = (id: string) => `/booth/gal/${id}.png`
 
 interface StickerEl {
   id: string
@@ -82,7 +88,7 @@ function newSticker(content: string, color?: string): StickerEl {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     content, color,
     x: 30 + Math.random() * 40, y: 20 + Math.random() * 60,
-    size: content.startsWith('txt:') ? 34 : 46,
+    size: content.startsWith('txt:') ? 34 : content.startsWith('url:/booth/') ? 70 : 46,
     rotation: Math.round((Math.random() - 0.5) * 24),
   }
 }
@@ -90,7 +96,7 @@ function newSticker(content: string, color?: string): StickerEl {
 // ─── Layout Preview SVG ───────────────────────────────────────────────────────
 
 function LayoutPreview({ id }: { id: LayoutId }) {
-  const base = 'fill-[#FFB6D9]/40 stroke-[#FF4FA3]/60 stroke-[0.5]'
+  const base = 'fill-[#FFD6EC] stroke-[#3A0030] stroke-[1.2]'
   if (id === 'cover') {
     return (
       <svg viewBox="0 0 44 60" className="w-full h-full">
@@ -368,9 +374,11 @@ export default function PhotoboothPage() {
     // stickers are SVG art: serialise the preview's self-contained SVG and draw it
     const serializer = new XMLSerializer()
     for (const s of stickers) {
-      const svg = stripPreviewRef.current?.querySelector(`[data-sticker-id="${s.id}"] svg`)
-      if (!svg) continue
-      const url = URL.createObjectURL(new Blob([serializer.serializeToString(svg)], { type: 'image/svg+xml' }))
+      const host = stripPreviewRef.current?.querySelector(`[data-sticker-id="${s.id}"]`)
+      const svg = host?.querySelector('svg')
+      const pic = host?.querySelector('img')
+      if (!svg && !pic) continue
+      const url = svg ? URL.createObjectURL(new Blob([serializer.serializeToString(svg)], { type: 'image/svg+xml' })) : pic!.src
       try {
         const img = await loadImage(url)
         // the SVG viewBox has a 6/112 margin around the 100-unit art
@@ -386,7 +394,7 @@ export default function PhotoboothPage() {
       } catch {
         // skip a sticker that fails to rasterise rather than failing the strip
       } finally {
-        URL.revokeObjectURL(url)
+        if (svg) URL.revokeObjectURL(url)
       }
     }
 
@@ -523,100 +531,73 @@ export default function PhotoboothPage() {
   // STEP: LANDING
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'landing') {
+    const STEPS_HOW = [
+      { n: 1, sticker: 'gem-heart', title: 'Pick a layout', text: 'Strips, grids, a collage or a magazine cover.' },
+      { n: 2, sticker: 'y2k-camera', title: 'Strike a pose', text: 'A 3-2-1 countdown, then flash! One photo per frame.' },
+      { n: 3, sticker: 'cute-star', title: 'Decorate', text: 'Add filters, stamps, gems and doodles.' },
+      { n: 4, sticker: 'charm-bow', title: 'Save & share', text: 'Download it or stick it onto a scrapbook page.' },
+    ]
     return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1">
-          {/* Hero */}
-          <div className="bg-gradient-to-b from-[#2B0A2E] via-[#3A0030] to-[#FFB6D9] py-16 px-4 text-center relative overflow-hidden">
-            {/* Decorations */}
-            <div className="absolute top-6 left-8 text-3xl opacity-40 animate-sparkle">✦</div>
-            <div className="absolute top-12 right-10 text-2xl opacity-30 animate-sparkle" style={{ animationDelay: '0.5s' }}>★</div>
-            <div className="absolute bottom-8 left-16 text-xl opacity-25">✦</div>
-            <div className="absolute bottom-6 right-12 text-2xl opacity-25">✿</div>
-            <div className="absolute top-20 left-1/4 text-xl opacity-20">♡</div>
-            <div className="absolute top-8 right-1/4 text-lg opacity-20">◆</div>
-
-            <div className="font-pixel text-xs text-[#FF4FA3] mb-3 tracking-widest" style={{ fontSize: '12px' }}>
-              ✦ YOUR LITTLE PHOTO CORNER ✦
-            </div>
-            <h1
-              className="font-pacifico text-[#FFB6D9]"
-              style={{ fontFamily: 'Pacifico, cursive', fontSize: 'clamp(32px, 8vw, 60px)', textShadow: '0 2px 20px rgba(255,75,163,0.5)' }}
-            >
-              SCRAPPY PHOTOBOOTH
-            </h1>
-            <p className="font-pixel text-[#FFD6EC] mt-2" style={{ fontSize: '14px' }}>
-              Strike a pose. Make a memory. Keep it forever.
+      <div className="pb-land">
+        {/* Hero */}
+        <section className="pb-hero">
+          <div className="pb-hero-text">
+            <p className="pb-kicker">✦ your little photo corner ✦</p>
+            <h1 className="pb-title">Scrappy Photobooth</h1>
+            <p className="pb-lead">Strike a pose. Make a memory. Keep it forever.</p>
+            <p className="pb-body">
+              Step inside our little digital photo booth and make nostalgic photo strips.
+              Bring your friends, make silly faces and decorate your pictures.
             </p>
-            <p
-              className="font-caveat text-[#FFB6D9]/80 mt-3 max-w-md mx-auto"
-              style={{ fontFamily: 'Caveat, cursive', fontSize: '18px' }}
-            >
-              Step inside our little digital photo booth and create nostalgic photo strips.
-              Bring your friends, make silly faces, and decorate your pictures.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
-              <button
-                onClick={() => setStep('layout')}
-                className="btn-y2k text-base px-8 py-3"
-                style={{ fontSize: '14px' }}
-              >
-                LET&apos;S TAKE PICTURES!
+            <div className="pb-cta">
+              <button onClick={() => setStep('layout')} className="y2kh-btn y2kh-btn--pink y2kh-btn--big">
+                📷 Let&apos;s take pictures!
               </button>
               {user && (
-                <Link href="/photobooth/gallery" className="btn-outline-y2k px-8 py-3 text-sm bg-white/10 border-white/50 text-white hover:bg-white/20" style={{ fontSize: '13px' }}>
-                  MY PHOTO STRIPS ✦
-                </Link>
+                <Link href="/photobooth/gallery" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">My photo strips ✦</Link>
               )}
             </div>
           </div>
-
-          {/* Strip style preview cards */}
-          <div className="max-w-4xl mx-auto px-4 py-10">
-            <div className="font-pixel text-xs text-center text-[#3A0030] mb-6 tracking-widest" style={{ fontSize: '12px' }}>
-              ✦ CHOOSE FROM 6 LAYOUTS ✦
-            </div>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-              {LAYOUTS.map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => { setSelectedLayout(l.id); setStep('camera') }}
-                  className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-3 hover:border-[#FF4FA3] hover:shadow-md transition-all group"
-                >
-                  <div className="h-14 flex items-center justify-center">
-                    <div className="w-8 h-14 mx-auto">
-                      <LayoutPreview id={l.id} />
-                    </div>
-                  </div>
-                  <div className="font-pixel text-[#3A0030] mt-1" style={{ fontSize: '12px' }}>{l.label}</div>
-                  <div className="font-nunito text-[#888] mt-0.5" style={{ fontSize: '12px' }}>{l.count} photos</div>
-                </button>
+          <div className="pb-hero-art" aria-hidden="true">
+            <div className="pb-hero-strip">
+              {['cute-bunny', 'cute-kitten', 'cute-star'].map((id) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <span key={id}><img src={assetThumb(id)} alt="" width={56} height={56} /></span>
               ))}
-            </div>
-
-            {/* How it works */}
-            <div className="mt-10 bg-[#FFF8ED] rounded-2xl border-2 border-[#FFB6D9]/40 p-6">
-              <div className="font-pixel text-xs text-[#FF4FA3] mb-4 text-center" style={{ fontSize: '12px' }}>
-                ✦ HOW IT WORKS ✦
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                {[
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>, label: 'Choose layout', n: '01' },
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>, label: 'Strike a pose', n: '02' },
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, label: 'Decorate', n: '03' },
-                  { icon: <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF4FA3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, label: 'Save & share', n: '04' },
-                ].map(s => (
-                  <div key={s.n} className="flex flex-col items-center gap-1">
-                    <div className="flex items-center justify-center">{s.icon}</div>
-                    <div className="font-pixel text-[#FF4FA3]" style={{ fontSize: '12px' }}>{s.n}</div>
-                    <div className="font-caveat text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive', fontSize: '15px' }}>{s.label}</div>
-                  </div>
-                ))}
-              </div>
+              <b>bff 4ever</b>
             </div>
           </div>
-        </main>
+        </section>
+
+        {/* Layouts */}
+        <section className="pb-sec">
+          <h2 className="pb-h2">Choose a layout <span>{LAYOUTS.length} to pick from</span></h2>
+          <div className="pb-layouts">
+            {LAYOUTS.map(l => (
+              <button key={l.id} onClick={() => { setSelectedLayout(l.id); setStep('camera') }} className="pb-layout">
+                <span className="pb-layout-art"><LayoutPreview id={l.id} /></span>
+                <b>{l.label.toLowerCase()}</b>
+                <small>{l.count} photo{l.count === 1 ? '' : 's'}</small>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* How it works */}
+        <section className="pb-sec">
+          <h2 className="pb-h2">How it works</h2>
+          <ol className="pb-how">
+            {STEPS_HOW.map(s => (
+              <li key={s.n}>
+                <span className="pb-how-n">{s.n}</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={assetThumb(s.sticker)} alt="" width={44} height={44} />
+                <b>{s.title}</b>
+                <span>{s.text}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
         <Footer />
       </div>
     )
@@ -684,21 +665,20 @@ export default function PhotoboothPage() {
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'camera') {
     return (
-      <div className="flex flex-col min-h-screen bg-[#1A0020]">
-        <main className="flex-1 flex flex-col items-center py-6 px-4">
-          <div className="w-full max-w-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <button onClick={() => setStep('layout')} className="text-[#FFB6D9] hover:text-white font-nunito text-sm flex items-center gap-1">
-                ← layout
-              </button>
-              <div className="font-pixel text-[#FF4FA3] text-center" style={{ fontSize: '12px' }}>
-                ✦ SCRAPPY PHOTOBOOTH ✦
-              </div>
-              <div className="font-pixel text-[#FFB6D9]" style={{ fontSize: '12px' }}>
-                {capturedPhotos.length}/{requiredCount} photos
-              </div>
+      <div className="pk-wrap">
+        <main className="pk pk--cam">
+          <div className="pk-top">
+            <div className="pk-left-btns">
+              <button onClick={() => setStep('layout')} className="pk-pill">◀ layout</button>
             </div>
+            <p className="pk-msg" aria-live="polite">
+              {capturedPhotos.length >= requiredCount ? 'all done! time to decorate ♡' : isCapturing ? 'look at the camera… smile! ✦' : 'press the big pink button and strike a pose ♡'}
+            </p>
+            <div className="pk-timer" aria-label={`${capturedPhotos.length} of ${requiredCount} photos taken`}>
+              <b style={{ fontSize: 20 }}>{capturedPhotos.length}/{requiredCount}</b>
+            </div>
+          </div>
+          <div className="pk-cam-in">
 
             {cameraError ? (
               <div className="bg-[#2B0A2E] rounded-2xl border-2 border-[#FF4FA3]/50 p-10 text-center">
@@ -875,15 +855,17 @@ export default function PhotoboothPage() {
   // STEP: CUSTOMIZE
   // ─────────────────────────────────────────────────────────────────────────────
   if (step === 'customize') {
-    const TABS: { id: BoothTab; label: string; color: string }[] = [
-      { id: 'frames', label: 'Frames', color: '#FF2E93' },
-      { id: 'covers', label: 'Cover', color: '#F59E0B' },
-      { id: 'backgrounds', label: 'Pattern', color: '#1D9BF0' },
-      { id: 'gems', label: 'Bling', color: '#A855F7' },
-      { id: 'stickers', label: 'Stamps', color: '#14B8A6' },
-      { id: 'emoji', label: 'Emoji', color: '#F43F5E' },
-      { id: 'text', label: 'Writing', color: '#7C4DDB' },
-      { id: 'filters', label: 'Colour', color: '#22C55E' },
+    const TABS: { id: BoothTab; label: string; color: string; tip: string }[] = [
+      { id: 'frames', label: 'frame', color: '#FF4FA3', tip: 'pick a frame for your strip ♡' },
+      { id: 'covers', label: 'cover', color: '#FF9F43', tip: 'turn your photo into a magazine cover ✦' },
+      { id: 'backgrounds', label: 'pattern', color: '#4FB3FF', tip: 'choose a background print: leopard, zebra, glitter…' },
+      { id: 'gal', label: 'gal ♡', color: '#E0007A', tip: 'tap a stamp to stick it on, then drag it where you want ♡' },
+      { id: 'kira', label: 'kira ✧', color: '#B07CFF', tip: 'add some kira kira sparkle ✧' },
+      { id: 'gems', label: 'bling', color: '#A855F7', tip: 'gems in any colour: pick a colour, then a gem' },
+      { id: 'stickers', label: 'stamp', color: '#14B8A6', tip: 'cute stamps: tap to add, drag to move' },
+      { id: 'emoji', label: 'emoji', color: '#F43F5E', tip: 'emoji stamps ♡' },
+      { id: 'text', label: 'write', color: '#7C4DDB', tip: 'write a message on your strip' },
+      { id: 'filters', label: 'colour', color: '#22C55E', tip: 'pick a colour filter for your photos' },
     ]
     const items: { key: string; label: string; active: boolean; onClick: () => void; node: React.ReactNode }[] =
       boothTab === 'frames' ? FRAMES.filter(f => f.group === 'frame').map(f => ({
@@ -901,6 +883,16 @@ export default function PhotoboothPage() {
         key: g.id, label: g.label, active: false, onClick: () => addSticker(`svg:${g.id}`, g.tint ? gemColor : undefined),
         node: <div className="w-full h-full p-2"><Sticker content={`svg:${g.id}`} color={g.tint ? gemColor : undefined} /></div>,
       }))
+      : boothTab === 'gal' ? GAL_STICKERS.map(id => ({
+        key: id, label: id.replace(/-/g, ' '), active: false, onClick: () => addSticker(`url:${galSrc(id)}`),
+        // eslint-disable-next-line @next/next/no-img-element
+        node: <img src={galSrc(id)} alt="" className="w-full h-full object-contain p-1" />,
+      }))
+      : boothTab === 'kira' ? KIRA_FLARES.map(id => ({
+        key: id, label: id.replace('flare-', '') + ' sparkle', active: false, onClick: () => addSticker(`url:${galSrc(id)}`),
+        // eslint-disable-next-line @next/next/no-img-element
+        node: <img src={galSrc(id)} alt="" className="w-full h-full object-contain" />,
+      }))
       : boothTab === 'stickers' ? STICKERS.map(g => ({
         key: g.id, label: g.label, active: false, onClick: () => addSticker(`svg:${g.id}`),
         node: <div className="w-full h-full p-2"><Sticker content={`svg:${g.id}`} /></div>,
@@ -915,70 +907,31 @@ export default function PhotoboothPage() {
         node: <img src={capturedPhotos[0]} alt="" className="w-full h-full object-cover" style={{ filter: f.css }} />,
       }))
       : []
-    const PAGE = 8
+    const PAGE = 12
     const pageCount = Math.max(1, Math.ceil(items.length / PAGE))
     const page = Math.min(trayPage, pageCount - 1)
     const tab = TABS.find(t => t.id === boothTab)!
     const secsLeft = Math.max(0, 300 - Math.floor((boothNow - boothStart) / 1000))
 
     return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1 py-5 px-3">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-3">
-              <button onClick={() => setStep('camera')} className="text-[#888] hover:text-[#FF4FA3] font-nunito text-sm flex items-center gap-1">
-                ← retake photos
-              </button>
-              <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>✦ STEP 03 — DECORATE ✦</div>
-              <button onClick={goToPreview} disabled={generating} className="btn-y2k py-2 px-5 text-sm" style={{ fontSize: '12px' }}>
-                {generating ? 'generating...' : 'FINISH ✦'}
-              </button>
+      <div className="pk-wrap">
+        <div className="pk">
+          {/* top bar: buttons · message · countdown */}
+          <div className="pk-top">
+            <div className="pk-left-btns">
+              <button onClick={() => setStep('camera')} className="pk-pill">◀ retake</button>
+              <button onClick={goToPreview} disabled={generating} className="pk-pill pk-pill--go">{generating ? 'wait…' : 'finish ✦'}</button>
             </div>
+            <p className="pk-msg" aria-live="polite">{tab.tip}</p>
+            <div className={`pk-timer ${secsLeft === 0 ? 'is-bonus' : ''}`} role="timer" aria-label="decorating time">
+              <b>{secsLeft === 0 ? '♡' : secsLeft}</b>
+            </div>
+          </div>
 
-            {/* ── the machine ── */}
-            <div className="booth-machine">
-              {/* LCD timer */}
-              <div className="flex justify-center -mt-1 mb-3">
-                <div className="booth-lcd" role="timer" aria-label="decorating time">
-                  <span className="opacity-80">Time:</span>
-                  <span className={secsLeft === 0 ? 'animate-blink' : ''}>{secsLeft === 0 ? 'BONUS!' : String(secsLeft).padStart(3, ' ')}</span>
-                </div>
-              </div>
-
-              <div className="grid gap-3 lg:grid-cols-[190px_minmax(0,1fr)_180px]">
-                {/* left: categories */}
-                <div className="booth-pillar order-2 lg:order-1">
-                  <div className="booth-pillar-title" style={{ background: 'linear-gradient(180deg,#ffffff88,#FF2E93 55%,#D4006E)' }}>Category</div>
-                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-2 p-2">
-                    {TABS.map(t => (
-                      <button
-                        key={t.id}
-                        onClick={() => { setBoothTab(t.id); setTrayPage(0) }}
-                        className={`booth-tile ${boothTab === t.id ? 'booth-tile-on' : ''}`}
-                        style={{ ['--tile' as string]: t.color }}
-                        aria-pressed={boothTab === t.id}
-                      >
-                        <span className="booth-tile-art">
-                          {t.id === 'frames' && <ArtThumb kind="frame" id={selectedFrame.startsWith('mag-') ? 'rhinestone' : selectedFrame} bgId={bgId} layout={selectedLayout} imgs={loadedImgs} magTitle={magTitle} magLines={magLines} />}
-                          {t.id === 'covers' && <ArtThumb kind="frame" id="mag-bubble" bgId={bgId} layout="cover" imgs={loadedImgs.slice(0, 1)} magTitle={magTitle} magLines={magLines} />}
-                          {t.id === 'backgrounds' && <ArtThumb kind="bg" id={bgId} />}
-                          {t.id === 'gems' && <div className="w-full h-full p-1.5"><Sticker content="svg:gem-heart" color={gemColor} /></div>}
-                          {t.id === 'stickers' && <div className="w-full h-full p-1.5"><Sticker content="svg:butterfly" /></div>}
-                          {t.id === 'emoji' && <div className="w-full h-full p-2"><Sticker content="txt:💖" /></div>}
-                          {t.id === 'text' && <span className="font-pacifico text-2xl text-[#7C4DDB]" style={{ textShadow: '1px 1px 0 #fff' }}>Aa</span>}
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          {t.id === 'filters' && <img src={capturedPhotos[0]} alt="" className="w-full h-full object-cover" style={{ filter: 'saturate(1.6) hue-rotate(-20deg)' }} />}
-                        </span>
-                        <span className="booth-tile-label">{t.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* centre: the strip */}
-                <div className="booth-screen order-1 lg:order-2">
-                  <div className="font-pixel text-white/80 text-center mb-2" style={{ fontSize: '12px' }}>DRAG STICKERS &amp; TEXT · TAP A STICKER TO EDIT IT</div>
-                  <div className="flex justify-center">
+          <div className="pk-main">
+            {/* the photo on its rhinestone stage */}
+            <div className="pk-stage">
+              <div className="pk-stage-in">
                   <div
                     ref={stripPreviewRef}
                     className="relative select-none"
@@ -1045,93 +998,42 @@ export default function PhotoboothPage() {
                       </div>
                     ))}
                     </div>
-                  </div>
-                </div>
+              </div>
+              <p className="pk-hint">drag stickers &amp; text · tap one to edit it</p>
+            </div>
 
-                {/* right: shots + functions */}
-                <div className="booth-pillar order-3">
-                  <div className="booth-pillar-title" style={{ background: 'linear-gradient(180deg,#ffffff88,#1D9BF0 55%,#0B5FD0)' }}>Your shots</div>
-                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 p-2">
-                    {capturedPhotos.map((src, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img key={i} src={src} alt={`shot ${i + 1}`} className="w-full aspect-[4/3] object-cover rounded border-2 border-white shadow" style={{ filter: FILTERS.find(f => f.id === selectedFilter)?.css }} />
+            {/* side panel: vertical tabs + item grid */}
+            <div className="pk-panel">
+              <div className="pk-tabs" role="tablist" aria-label="decoration type">
+                {TABS.map(t => (
+                  <button
+                    key={t.id}
+                    role="tab"
+                    aria-selected={boothTab === t.id}
+                    onClick={() => { setBoothTab(t.id); setTrayPage(0) }}
+                    className="pk-tab"
+                    style={{ ['--tab' as string]: t.color }}
+                  >{t.label}</button>
+                ))}
+              </div>
+              <div className="pk-board">
+                {boothTab === 'gems' && (
+                  <div className="pk-gemcolors" role="radiogroup" aria-label="gem colour">
+                    {GEM_COLORS.map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => setGemColor(c.hex)}
+                        title={c.label}
+                        aria-label={c.label}
+                        aria-checked={gemColor === c.hex}
+                        role="radio"
+                        style={{ background: `radial-gradient(circle at 35% 30%, #fff 0 12%, ${c.hex} 45%, #2B0A2E 130%)` }}
+                      />
                     ))}
                   </div>
-                  <div className="booth-pillar-title" style={{ background: 'linear-gradient(180deg,#ffffff88,#22C55E 55%,#15803D)' }}>Function</div>
-                  <div className="grid grid-cols-4 lg:grid-cols-2 gap-1.5 p-2">
-                    <button className="booth-fn" onClick={autoSelect}>Auto ✦</button>
-                    <button className="booth-fn" onClick={() => setBgId('solid-white')}>Del BG</button>
-                    <button className="booth-fn" onClick={() => { setStickers([]); setTextElements([]); setSelectedStickerId(null) }}>Del FG</button>
-                    <button className="booth-fn" onClick={() => setSelectedFrame('none')}>No frame</button>
-                  </div>
-                </div>
-              </div>
-
-              {/* selected sticker controls */}
-              <div className="mt-3">
-                  {stickers.find(x => x.id === selectedStickerId) && (() => {
-                    const cur = stickers.find(x => x.id === selectedStickerId)!
-                    return (
-                      <div className="mt-3 p-3 rounded-xl bg-[#FFF0F7] border-2 border-[#FFB6D9] space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 shrink-0"><Sticker content={cur.content} color={cur.color} /></div>
-                          <span className="font-pixel text-[#3A0030] flex-1" style={{ fontSize: '12px' }}>SELECTED STICKER — drag it on the strip</span>
-                          <button onClick={() => { setStickers(prev => [...prev.filter(x => x.id !== cur.id), cur]) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">to front</button>
-                          <button onClick={() => addSticker(cur.content, cur.color)} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">copy</button>
-                          <button onClick={() => { setStickers(prev => prev.filter(x => x.id !== cur.id)); setSelectedStickerId(null) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-red-200 bg-white text-red-500">delete</button>
-                        </div>
-                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
-                          <span className="w-12">size</span>
-                          <input type="range" min={16} max={150} value={cur.size} onChange={e => updateSticker(cur.id, { size: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
-                        </label>
-                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
-                          <span className="w-12">rotate</span>
-                          <input type="range" min={-180} max={180} value={cur.rotation} onChange={e => updateSticker(cur.id, { rotation: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
-                        </label>
-                        {stickerTintable(cur.content) && (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-nunito text-xs text-[#3A0030] w-12">colour</span>
-                            {GEM_COLORS.map(c => (
-                              <button key={c.id} onClick={() => updateSticker(cur.id, { color: c.hex })} title={c.label} aria-label={c.label} className={`w-6 h-6 rounded-full border-2 ${cur.color === c.hex ? 'border-[#3A0030]' : 'border-white shadow'}`} style={{ background: c.hex }} />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })()}
-              </div>
-
-              {/* bottom tray */}
-              <div className="booth-tray mt-3">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
-                  <span className="booth-tray-title" style={{ background: tab.color }}>{tab.label}</span>
-                  {boothTab === 'gems' && (
-                    <div className="flex flex-wrap gap-1" role="radiogroup" aria-label="gem colour">
-                      {GEM_COLORS.map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => setGemColor(c.hex)}
-                          title={c.label}
-                          aria-label={c.label}
-                          aria-checked={gemColor === c.hex}
-                          role="radio"
-                          className={`w-6 h-6 rounded-full border-2 ${gemColor === c.hex ? 'border-white scale-110' : 'border-white/50'}`}
-                          style={{ background: `radial-gradient(circle at 35% 30%, #fff 0 12%, ${c.hex} 45%, #2B0A2E 130%)` }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex-1" />
-                  {pageCount > 1 && (
-                    <>
-                      <button className="booth-page" onClick={() => setTrayPage(Math.max(0, page - 1))} disabled={page === 0}>PrevPage</button>
-                      <span className="font-silkscreen text-[12px] text-white">{page + 1}/{pageCount}</span>
-                      <button className="booth-page" onClick={() => setTrayPage(Math.min(pageCount - 1, page + 1))} disabled={page >= pageCount - 1}>NextPage</button>
-                    </>
-                  )}
-                </div>
-
+                )}
                 {boothTab === 'text' ? (
+                  <div className="pk-form">
                   <div className="bg-white/95 rounded-xl p-3">
                   {addingText ? (
                     <div className="space-y-2">
@@ -1181,18 +1083,19 @@ export default function PhotoboothPage() {
                     </div>
                   )}
                   </div>
+</div>
                 ) : (
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                  <div className="pk-grid">
                     {items.slice(page * PAGE, page * PAGE + PAGE).map(it => (
-                      <button key={it.key} onClick={it.onClick} title={it.label} className={`booth-item ${it.active ? 'booth-item-on' : ''}`} aria-pressed={it.active}>
-                        <span className="booth-item-art">{it.node}</span>
-                        <span className="booth-item-label">{it.label}</span>
+                      <button key={it.key} onClick={it.onClick} title={it.label} aria-label={it.label} className="pk-item" aria-pressed={it.active}>
+                        {it.node}
+                        {it.active && <i className="pk-check" aria-hidden="true">✓</i>}
                       </button>
                     ))}
                   </div>
                 )}
                 {boothTab === 'covers' && (
-                  <div className="bg-white/95 rounded-xl p-3 mt-2">
+                  <div className="pk-form mt-2">
                   {(selectedFrame.startsWith('mag-') || selectedLayout === 'friendship') && (
                     <div className="mt-3 space-y-2">
                       {selectedLayout === 'friendship' && (
@@ -1222,15 +1125,76 @@ export default function PhotoboothPage() {
                   )}
                   </div>
                 )}
+                {pageCount > 1 && boothTab !== 'text' && (
+                  <div className="pk-pager">
+                    <button className="pk-arrow" onClick={() => setTrayPage(Math.max(0, page - 1))} disabled={page === 0} aria-label="previous page">◀</button>
+                    <span>{page + 1} / {pageCount}</span>
+                    <button className="pk-arrow" onClick={() => setTrayPage(Math.min(pageCount - 1, page + 1))} disabled={page >= pageCount - 1} aria-label="next page">▶</button>
+                  </div>
+                )}
               </div>
             </div>
-
-            <button onClick={goToPreview} disabled={generating} className="btn-y2k w-full py-3 mt-6 text-base">
-              {generating ? 'generating preview...' : 'FINISH & PREVIEW MY STRIP ✦'}
-            </button>
           </div>
-        </main>
-        <Footer />
+
+          <div className="pk-selected">
+                  {stickers.find(x => x.id === selectedStickerId) && (() => {
+                    const cur = stickers.find(x => x.id === selectedStickerId)!
+                    return (
+                      <div className="mt-3 p-3 rounded-xl bg-[#FFF0F7] border-2 border-[#FFB6D9] space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-10 h-10 shrink-0"><Sticker content={cur.content} color={cur.color} /></div>
+                          <span className="font-pixel text-[#3A0030] flex-1" style={{ fontSize: '12px' }}>SELECTED STICKER — drag it on the strip</span>
+                          <button onClick={() => { setStickers(prev => [...prev.filter(x => x.id !== cur.id), cur]) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">to front</button>
+                          <button onClick={() => addSticker(cur.content, cur.color)} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-[#FFB6D9] bg-white">copy</button>
+                          <button onClick={() => { setStickers(prev => prev.filter(x => x.id !== cur.id)); setSelectedStickerId(null) }} className="font-nunito text-xs font-bold px-2 py-1 rounded-full border-2 border-red-200 bg-white text-red-500">delete</button>
+                        </div>
+                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
+                          <span className="w-12">size</span>
+                          <input type="range" min={16} max={150} value={cur.size} onChange={e => updateSticker(cur.id, { size: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
+                        </label>
+                        <label className="flex items-center gap-2 font-nunito text-xs text-[#3A0030]">
+                          <span className="w-12">rotate</span>
+                          <input type="range" min={-180} max={180} value={cur.rotation} onChange={e => updateSticker(cur.id, { rotation: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" />
+                        </label>
+                        {stickerTintable(cur.content) && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-nunito text-xs text-[#3A0030] w-12">colour</span>
+                            {GEM_COLORS.map(c => (
+                              <button key={c.id} onClick={() => updateSticker(cur.id, { color: c.hex })} title={c.label} aria-label={c.label} className={`w-6 h-6 rounded-full border-2 ${cur.color === c.hex ? 'border-[#3A0030]' : 'border-white shadow'}`} style={{ background: c.hex }} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+          </div>
+
+          {/* bottom bar */}
+          <div className="pk-bottom">
+            <div className="pk-box">
+              <span className="pk-box-ttl">erase</span>
+              <div className="pk-box-btns">
+                <button onClick={() => setBgId('solid-white')}>bg</button>
+                <button onClick={() => { setStickers([]); setTextElements([]); setSelectedStickerId(null) }}>stamps</button>
+                <button onClick={() => setSelectedFrame('none')}>frame</button>
+              </div>
+            </div>
+            <div className="pk-box">
+              <span className="pk-box-ttl">auto mode</span>
+              <div className="pk-box-btns"><button className="pk-auto" onClick={autoSelect}>surprise me ✦</button></div>
+            </div>
+            <div className="pk-box pk-shots">
+              <span className="pk-box-ttl">your shots</span>
+              <div className="pk-shots-row">
+                {capturedPhotos.map((src, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={src} alt={`shot ${i + 1}`} style={{ filter: FILTERS.find(f => f.id === selectedFilter)?.css }} />
+                ))}
+              </div>
+            </div>
+            <button onClick={goToPreview} disabled={generating} className="pk-done">{generating ? 'printing…' : 'print my strip ♡'}</button>
+          </div>
+        </div>
       </div>
     )
   }
@@ -1239,16 +1203,16 @@ export default function PhotoboothPage() {
   // STEP: PREVIEW + SAVE
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 py-10 px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <button onClick={() => setStep('customize')} className="text-[#888] hover:text-[#FF4FA3] font-nunito text-sm flex items-center gap-1">
-              ← edit
-            </button>
-            <div className="font-pixel text-xs text-[#3A0030]" style={{ fontSize: '12px' }}>✦ YOUR PHOTO STRIP ✦</div>
-            <div />
+    <div className="pk-wrap">
+      <main className="pk pk--print">
+        <div className="pk-top">
+          <div className="pk-left-btns">
+            <button onClick={() => setStep('customize')} className="pk-pill">◀ edit</button>
           </div>
+          <p className="pk-msg" aria-live="polite">{exportedUrl ? 'printed! ♡ download your strip or save it to your gallery' : 'printing your strip… ✦'}</p>
+          <div className="pk-timer" aria-hidden="true"><b>♡</b></div>
+        </div>
+        <div className="pk-print-in">
 
           {exportedUrl ? (
             <div className="text-center">
