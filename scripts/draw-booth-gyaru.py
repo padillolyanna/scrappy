@@ -1,7 +1,7 @@
 """Scrappy photobooth: 2008 gal / purikura assets drawn in code.
 
 Writes to public/booth/:
-  tile-roses.png    soft pink rose wallpaper for the machine body (seamless)
+  tile-hearts.png   pink polka-dot / heart / sparkle wallpaper for the machine body (seamless)
   tile-zebra.png    zebra print band (seamless)
   tile-leopard.png  pink leopard print (seamless)
   gal/<id>.png      glossy decoration stickers (256 px, transparent)
@@ -435,44 +435,36 @@ def xoxo():
 
 
 # ───────────────────────── tiles ─────────────────────────
-def roses_tile(n=512):
-    """soft pink roses (seamless): layered petals, low contrast, slightly blurred"""
-    im = Image.new('RGB', (n, n), (255, 214, 232))
-    r = rng(31)
-    spots = [(r.uniform(0, n), r.uniform(0, n), r.uniform(60, 95)) for _ in range(9)]
-    for (cx, cy, R) in spots:
+def hearts_tile(n=240):
+    """pastel pink with white polka dots, little hearts and sparkles (seamless)"""
+    S = n * SS
+    im = Image.new('RGBA', (S, S), (255, 210, 230, 255))
+    d = ImageDraw.Draw(im)
+    step = S // 6
+    for gy in range(7):
+        for gx in range(7):
+            x = gx * step + (step // 2 if gy % 2 else 0)
+            y = gy * step
+            for ox in (-S, 0, S):
+                d.ellipse([x + ox - 9 * SS, y - 9 * SS, x + ox + 9 * SS, y + 9 * SS], fill=(255, 245, 250, 255))
+    r = rng(41)
+    items = [('heart', 60, 70, 15, (255, 120, 180)), ('heart', 170, 160, 12, (230, 70, 150)), ('spark', 175, 50, 13, (255, 255, 255)),
+             ('spark', 55, 190, 10, (255, 255, 255)), ('heart', 120, 110, 8, (255, 160, 205)), ('spark', 215, 215, 8, (255, 140, 200))]
+    for kind, x, y, sz, col in items:
         for ox in (-n, 0, n):
             for oy in (-n, 0, n):
-                x0, y0 = cx + ox, cy + oy
-                if x0 + R < 0 or y0 + R < 0 or x0 - R > n or y0 - R > n:
-                    continue
-                L = Image.new('RGBA', (n, n), (0, 0, 0, 0)); d = ImageDraw.Draw(L)
-                # outer petals → inner swirl
-                layers = 7
-                for k in range(layers):
-                    rr = R * (1 - k / (layers + 1))
-                    shade = 236 - k * 9
-                    col = (255, max(120, shade - 40), max(160, shade - 10), 255)
-                    petals = 6 - k // 2
-                    rot = r.uniform(0, 6.28)
-                    for p in range(max(3, petals)):
-                        a = rot + p * 6.28 / max(3, petals)
-                        px, py = x0 + math.cos(a) * rr * .35, y0 + math.sin(a) * rr * .35
-                        d.ellipse([px - rr * .7, py - rr * .6, px + rr * .7, py + rr * .6], fill=col,
-                                  outline=(240, 140, 185, 255), width=2)
-                d.arc([x0 - R * .25, y0 - R * .25, x0 + R * .25, y0 + R * .25], 0, 300, fill=(220, 100, 160, 255), width=3)
-                im.paste(L.filter(ImageFilter.GaussianBlur(1.2)), (0, 0), L)
-    # lace dots
-    d = ImageDraw.Draw(im)
-    for _ in range(140):
-        x, y = r.uniform(0, n), r.uniform(0, n)
-        d.ellipse([x - 2.5, y - 2.5, x + 2.5, y + 2.5], fill=(255, 245, 250))
-    im = im.filter(ImageFilter.GaussianBlur(.6))
-    im.save(f'{OUT}/tile-roses.png', optimize=True)
+                cx, cy = (x + ox) * SS, (y + oy) * SS
+                if kind == 'heart':
+                    d.polygon(heart_poly(cx, cy, sz * SS / 16), fill=col + (255,))
+                    d.ellipse([cx - sz * SS * .45, cy - sz * SS * .55, cx - sz * SS * .1, cy - sz * SS * .2], fill=(255, 255, 255, 200))
+                else:
+                    sparkle(d, cx, cy, sz * SS, col + (255,), .2)
+    im = im.resize((n, n), Image.Resampling.LANCZOS).convert('RGB')
+    im.save(f'{OUT}/tile-hearts.png', optimize=True)
 
 
 def main():
-    roses_tile()
+    hearts_tile()
     zebra((192, 96), seed=4).save(f'{OUT}/tile-zebra.png', optimize=True)
     leopard((256, 256), base=(255, 170, 210), spot=(80, 10, 60), inner=(240, 120, 180), seed=6).save(f'{OUT}/tile-leopard.png', optimize=True)
     lips()
