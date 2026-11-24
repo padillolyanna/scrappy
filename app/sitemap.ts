@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase-server'
 import { SITE_URL } from '@/lib/site'
 import { JOURNAL_ARTICLES } from '@/lib/journal'
 
-export const dynamic = 'force-dynamic'
+export const instant = false
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = SITE_URL
