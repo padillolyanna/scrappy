@@ -1595,6 +1595,7 @@ body { padding-bottom: 80px; }
 .y2k-app:has(.y2k-bare) :is(.y2k-pagewin-ttl, .y2k-statusbar) { display: none !important; }
 .y2k-app:has(.y2k-bare) .y2k-pagewin { border: 0 !important; box-shadow: none !important; background: transparent !important; }
 .y2k-app:has(.y2k-bare) .y2k-pagewin-in { background: transparent !important; }
+.y2k-app:has(.y2k-bare) .y2k-shellfoot { display: none !important; }
 
 /* ═══════════ Pet Studio ═══════════ */
 .pet-studio { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
