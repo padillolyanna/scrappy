@@ -20,6 +20,8 @@ export interface DashScrapbook {
 
 function DotMenu({ id, onDeleted }: { id: string; onDeleted: () => void }) {
   const [open, setOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const [isPending, startTransition] = useTransition()
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -34,12 +36,16 @@ function DotMenu({ id, onDeleted }: { id: string; onDeleted: () => void }) {
   }, [open])
 
   const handleDelete = () => {
-    if (!confirm('Delete this scrapbook? This cannot be undone.')) return
     setOpen(false)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = () => {
+    setConfirmOpen(false)
     startTransition(async () => {
       const result = await deleteScrapbook(id)
       if (result.error) {
-        alert(result.error)
+        setDeleteError(result.error)
       } else {
         onDeleted()
         router.refresh()
@@ -49,6 +55,44 @@ function DotMenu({ id, onDeleted }: { id: string; onDeleted: () => void }) {
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
+      {/* Y2K confirm modal */}
+      {confirmOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(43,10,46,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setConfirmOpen(false)}
+        >
+          <div
+            style={{ background: '#FFF0F7', border: '3px solid #2B0A2E', borderRadius: 16, boxShadow: '5px 5px 0 #2B0A2E', padding: '28px 28px 22px', maxWidth: 340, width: '90vw', textAlign: 'center' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ fontFamily: 'Nunito, sans-serif', fontWeight: 900, fontSize: 18, color: '#3A0030', marginBottom: 8 }}>delete scrapbook?</div>
+            <div style={{ fontFamily: 'Nunito, sans-serif', fontSize: 14, color: '#666', marginBottom: 20 }}>this cannot be undone ✦</div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                onClick={() => setConfirmOpen(false)}
+                style={{ padding: '8px 20px', border: '2px solid #2B0A2E', borderRadius: 10, background: 'white', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 14, cursor: 'pointer', color: '#2B0A2E' }}
+              >
+                cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                style={{ padding: '8px 20px', border: '2px solid #2B0A2E', borderRadius: 10, background: '#E0007A', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 14, cursor: 'pointer', color: 'white' }}
+              >
+                delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* In-page error banner */}
+      {deleteError && (
+        <div
+          style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#FFF0F7', border: '2px solid #E0007A', borderRadius: 12, padding: '10px 20px', fontFamily: 'Nunito, sans-serif', fontWeight: 800, fontSize: 13, color: '#E0007A', boxShadow: '3px 3px 0 #2B0A2E', cursor: 'pointer' }}
+          onClick={() => setDeleteError('')}
+        >
+          {deleteError} — click to dismiss
+        </div>
+      )}
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={isPending}
