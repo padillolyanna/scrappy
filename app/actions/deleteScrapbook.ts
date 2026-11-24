@@ -21,5 +21,8 @@ export async function deleteScrapbook(id: string): Promise<{ error?: string }> {
   if (error) return { error: error.message }
 
   revalidatePath('/')
+  revalidatePath('/my-space')
+  revalidatePath('/explore')
+  revalidatePath(`/scrapbook/${id}`)
   return {}
 }

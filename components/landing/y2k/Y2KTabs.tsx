@@ -42,7 +42,6 @@ function memberTabs(username: string): Tab[] {
   const [, explore, create, community, hangouts] = GUEST_TABS
   return [
     { label: 'Home', href: '/' },
-    { label: 'My Space', href: '/my-space' },
     create,
     community,
     hangouts,

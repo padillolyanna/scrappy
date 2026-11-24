@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
+import { toggleScrapbookVisibility } from '@/app/actions/toggleScrapbookVisibility'
+import { deleteScrapbook } from '@/app/actions/deleteScrapbook'
 import type { NbPage } from '@/lib/notebook'
 import PageThumbnail from '@/components/notebook/PageThumbnail'
 
@@ -71,23 +72,27 @@ export default function MySpaceClient({
       return
     }
     setDeletingId(id)
-    const supabase = createClient()
-    await supabase.from('scrapbooks').delete().eq('id', id).eq('user_id', userId)
-    setScrapbooks((prev) => prev.filter((s) => s.id !== id))
+    const result = await deleteScrapbook(id)
+    if (!result.error) {
+      setScrapbooks((prev) => prev.filter((s) => s.id !== id))
+      router.refresh()
+    }
     setDeletingId(null)
     setConfirmDelete(null)
   }
 
   async function handleToggleVisibility(id: string, currentlyPublic: boolean) {
-    const supabase = createClient()
-    await supabase
-      .from('scrapbooks')
-      .update({ is_public: !currentlyPublic })
-      .eq('id', id)
-      .eq('user_id', userId)
+    // Optimistic update
     setScrapbooks((prev) =>
       prev.map((s) => (s.id === id ? { ...s, is_public: !currentlyPublic } : s))
     )
+    const result = await toggleScrapbookVisibility(id, !currentlyPublic)
+    if (result.error) {
+      // Rollback on failure
+      setScrapbooks((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, is_public: currentlyPublic } : s))
+      )
+    }
   }
 
   const TABS: { key: Tab; label: string; count: number }[] = [

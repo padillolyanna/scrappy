@@ -7,9 +7,34 @@ import { starterCover, PAGE_W, PAGE_H, type NbPage } from '@/lib/notebook'
 import { StaticCover } from '@/components/notebook/Spread'
 import { deleteScrapbook } from '@/app/actions/deleteScrapbook'
 
-const SCALE = 0.24
-const W = Math.round(PAGE_W * SCALE)
-const H = Math.round(PAGE_H * SCALE)
+function ScrapbookCoverFill({ page }: { page: NbPage | undefined }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0.24)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new ResizeObserver(([entry]) => {
+      setScale(entry.contentRect.width / PAGE_W)
+    })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      style={{ width: '100%', aspectRatio: `${PAGE_W} / ${PAGE_H}`, position: 'relative', overflow: 'hidden' }}
+    >
+      <div
+        className="pointer-events-none absolute left-0 top-0 origin-top-left"
+        style={{ transform: `scale(${scale})`, width: PAGE_W, height: PAGE_H }}
+      >
+        {page ? <StaticCover page={page} /> : <div style={{ width: PAGE_W, height: PAGE_H, background: '#f3e3ee' }} />}
+      </div>
+    </div>
+  )
+}
 
 export interface DashScrapbook {
   id: string
@@ -187,22 +212,12 @@ export default function DashboardScrapbooks({ scrapbooks: initial }: { scrapbook
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
       {scrapbooks.map((sb) => (
         <div key={sb.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          {/* Cover — no card box, just the cover floating */}
+          {/* Cover — fills the full grid cell width */}
           <Link
             href={`/scrapbook/${sb.id}/edit`}
-            style={{ display: 'block', position: 'relative', width: '100%', paddingTop: `${(H / W) * 100}%`, overflow: 'hidden', borderRadius: 6, boxShadow: '3px 3px 0 rgba(43,10,46,.35)', flexShrink: 0 }}
+            style={{ display: 'block', width: '100%', borderRadius: 6, boxShadow: '3px 3px 0 rgba(43,10,46,.35)', overflow: 'hidden', flexShrink: 0 }}
           >
-            <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', borderRadius: 6 }}>
-              <div
-                className="pointer-events-none absolute left-0 top-0 origin-top-left"
-                style={{ transform: `scale(${SCALE})`, width: PAGE_W, height: PAGE_H }}
-              >
-                {covers
-                  ? <StaticCover page={covers[sb.id]} />
-                  : <div style={{ width: PAGE_W, height: PAGE_H, background: '#f3e3ee' }} />
-                }
-              </div>
-            </div>
+            <ScrapbookCoverFill page={covers?.[sb.id]} />
           </Link>
 
           {/* Info + actions below the cover, no background */}

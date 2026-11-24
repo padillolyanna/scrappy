@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
+import { revalidateProfile } from '@/app/actions/revalidateProfile'
 import Footer from '@/components/layout/Footer'
 import ProfileLayout, { type MiniProfile } from '@/components/profile/ProfileLayout'
 import { STICKERS, Sticker, StickerDefs } from '@/components/notebook/Stickers'
@@ -165,6 +166,8 @@ function ProfileEditor() {
     setDirty(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
+    // Bust the Router Cache so the profile page shows fresh data on next visit
+    await revalidateProfile(username)
   }
 
   const previewProfile = useMemo(
