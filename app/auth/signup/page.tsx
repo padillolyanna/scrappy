@@ -21,7 +21,7 @@ export default function SignupPage() {
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace('/my-space')
+      if (user) router.replace('/')
     })
   }, [router])
 

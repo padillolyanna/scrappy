@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     createClient().auth.getUser().then(({ data: { user } }) => {
-      if (user) router.replace('/my-space')
+      if (user) router.replace('/')
     })
   }, [router])
 
@@ -29,7 +29,7 @@ export default function LoginPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/my-space')
+      router.push('/')
       router.refresh()
     }
   }
