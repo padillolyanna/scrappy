@@ -1191,6 +1191,7 @@ body { padding-bottom: 80px; }
 .y2kh-bubble b { color: #E0007A; }
 .y2kh-bubble:hover { transform: rotate(0deg) scale(1.04); }
 .y2kh-auth { display: flex; gap: 8px; }
+.y2kh-headright--loggedin { align-items: flex-start; padding-top: 6px; }
 
 /* buttons: glossy era pills, CSS only */
 .y2kh-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 18px; border-radius: 999px;
