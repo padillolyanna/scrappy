@@ -1454,3 +1454,112 @@ body { padding-bottom: 80px; }
 .y2kh-logo:focus-visible { outline: 3px solid #FFE14D; outline-offset: 3px; }
 .y2kh .y2kh-logo, .y2kh .y2kh-logo:hover { color: #fff; text-decoration: none; }
 .y2kh-tab-dd.is-current > button { background: #FFE14D; color: #3A0030; text-shadow: none; }
+
+/* ═══════════ Y2K theme for every other page ═══════════
+   Applies inside AppWindow unless the page marks itself with data-y2k-off
+   (homepage, user-themed profiles, scrapbook editor/viewer/create, admin). Restyles the
+   shared building blocks so pages match the homepage without rewriting them. */
+.y2k-app:not(:has([data-y2k-off])) {
+  border-radius: 0 !important;
+  border: 3px solid #3A0030 !important;
+  box-shadow: 6px 6px 0 rgba(58, 0, 48, .35) !important;
+  background: linear-gradient(rgba(255, 244, 250, .86), rgba(255, 244, 250, .86)), #F6D9EC url(/y2k/tile-glitter-check.gif) !important;
+  font-family: Verdana, Tahoma, Geneva, sans-serif;
+}
+.y2k-app:not(:has([data-y2k-off])) .font-nunito { font-family: Verdana, Tahoma, Geneva, sans-serif !important; }
+
+/* page titles: chunky outlined bubble letters like the homepage */
+.y2k-app:not(:has([data-y2k-off])) h1,
+.y2k-app:not(:has([data-y2k-off])) h1.font-pacifico,
+.y2k-app:not(:has([data-y2k-off])) .font-pacifico.text-5xl,
+.y2k-app:not(:has([data-y2k-off])) .font-pacifico.text-4xl {
+  font-family: 'Cherry Bomb One', 'Arial Black', sans-serif !important; font-weight: 400 !important; letter-spacing: 0;
+  color: #E0007A !important; line-height: 1.15 !important; padding-bottom: 4px !important; -webkit-text-fill-color: #E0007A !important;
+  background: none !important;
+  text-shadow: 2px 0 #3A0030, -2px 0 #3A0030, 0 2px #3A0030, 0 -2px #3A0030, 2px 2px #3A0030, -2px -2px #3A0030, 2px -2px #3A0030, -2px 2px #3A0030, 4px 4px 0 #FFE14D !important;
+}
+.y2k-app:not(:has([data-y2k-off])) h2.font-pacifico,
+.y2k-app:not(:has([data-y2k-off])) h3.font-pacifico,
+.y2k-app:not(:has([data-y2k-off])) .font-pacifico.text-3xl {
+  font-family: 'Cherry Bomb One', 'Arial Black', sans-serif !important; font-weight: 400 !important; color: #3A0030 !important;
+  -webkit-text-fill-color: #3A0030 !important; background: none !important; text-shadow: 2px 2px 0 #FFB6D9 !important; line-height: 1.2 !important;
+}
+/* handwriting subtitles under titles become plain era body text */
+.y2k-app:not(:has([data-y2k-off])) h1 + .font-caveat,
+.y2k-app:not(:has([data-y2k-off])) h1 + p.font-caveat,
+.y2k-app:not(:has([data-y2k-off])) h1 ~ p.font-caveat:first-of-type {
+  font-family: Verdana, Tahoma, sans-serif !important; font-size: 15px !important; color: #6B4A66 !important; margin-top: 8px;
+}
+.y2k-app:not(:has([data-y2k-off])) .font-pixel,
+.y2k-app:not(:has([data-y2k-off])) .font-silkscreen { letter-spacing: .08em; }
+
+/* buttons: glossy hard-shadow pills */
+.y2k-app:not(:has([data-y2k-off])) .btn-y2k,
+.y2k-app:not(:has([data-y2k-off])) .btn-outline-y2k,
+.y2k-app:not(:has([data-y2k-off])) .btn-pill,
+.y2k-app:not(:has([data-y2k-off])) .btn-bevel {
+  font-family: Verdana, Tahoma, sans-serif !important; font-weight: bold !important; letter-spacing: 0 !important;
+  border: 2px solid #3A0030 !important; border-radius: 999px !important; box-shadow: 0 3px 0 #3A0030 !important; transform: none;
+  text-shadow: 1px 1px 0 rgba(58, 0, 48, .45);
+}
+.y2k-app:not(:has([data-y2k-off])) .btn-y2k,
+.y2k-app:not(:has([data-y2k-off])) .btn-pill-pink {
+  color: #fff !important;
+  background: linear-gradient(rgba(255, 255, 255, .42), rgba(255, 255, 255, .42)) no-repeat 50% 3px / 84% 42%, linear-gradient(#FF8CC8, #E0007A) !important;
+}
+.y2k-app:not(:has([data-y2k-off])) .btn-outline-y2k,
+.y2k-app:not(:has([data-y2k-off])) .btn-bevel {
+  color: #3A0030 !important; text-shadow: none;
+  background: linear-gradient(rgba(255, 255, 255, .7), rgba(255, 255, 255, .7)) no-repeat 50% 3px / 84% 42%, linear-gradient(#FFFFFF, #D5D9E3) !important;
+}
+.y2k-app:not(:has([data-y2k-off])) .btn-pill-purple {
+  color: #fff !important; background: linear-gradient(rgba(255, 255, 255, .4), rgba(255, 255, 255, .4)) no-repeat 50% 3px / 84% 42%, linear-gradient(#C9A6FF, #6A3FD0) !important;
+}
+.y2k-app:not(:has([data-y2k-off])) :is(.btn-y2k, .btn-outline-y2k, .btn-pill, .btn-bevel):hover { filter: brightness(1.07); transform: none !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(.btn-y2k, .btn-outline-y2k, .btn-pill, .btn-bevel):active { transform: translateY(2px) !important; box-shadow: 0 1px 0 #3A0030 !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(.btn-y2k, .btn-outline-y2k, .btn-pill, .btn-bevel):disabled { filter: grayscale(.5); opacity: .7; }
+
+/* windows */
+.y2k-app:not(:has([data-y2k-off])) .window-chrome { background: #fff !important; border: 3px solid #3A0030 !important; border-radius: 0 !important; box-shadow: 4px 4px 0 #3A0030 !important; }
+.y2k-app:not(:has([data-y2k-off])) .window-title-bar {
+  background: #E0007A url(/y2k/bar-pink-24.gif) repeat-x 0 0 / 1px 100% !important; border-bottom: 3px solid #3A0030;
+  font: bold 14px/1.2 Verdana, Tahoma, sans-serif !important; padding: 6px 6px 6px 10px !important; text-shadow: 1px 1px 0 #3A0030;
+}
+.y2k-app:not(:has([data-y2k-off])) .window-btn {
+  width: 18px; height: 18px; font: bold 11px/1 Verdana, sans-serif; color: #3A0030; background: linear-gradient(#fff, #D5D9E3) !important; border: 2px solid #3A0030 !important;
+}
+.y2k-app:not(:has([data-y2k-off])) .panel-header {
+  background: #E0007A url(/y2k/bar-pink-24.gif) repeat-x 0 0 / 1px 100% !important; border: 3px solid #3A0030 !important; border-bottom: 0 !important; border-radius: 0 !important;
+  font: bold 14px/1.3 Verdana, Tahoma, sans-serif !important; padding: 6px 10px !important; box-shadow: none !important; text-shadow: 1px 1px 0 #3A0030 !important;
+}
+.y2k-app:not(:has([data-y2k-off])) :is(.widget-box, .widget-box-full, .card-ink) {
+  border: 3px solid #3A0030 !important; border-radius: 0 !important; box-shadow: 4px 4px 0 #3A0030 !important; background: #fff;
+}
+
+/* generic cards: square-ish corners and hard offset shadows instead of soft blur */
+.y2k-app:not(:has([data-y2k-off])) :is(.rounded-2xl, .rounded-3xl, .rounded-xl):not(.rounded-full):is(.bg-white, [class*='bg-white/'], .shadow, .shadow-md, .shadow-lg, .shadow-xl, .border-2) {
+  border-radius: 6px !important;
+}
+.y2k-app:not(:has([data-y2k-off])) :is(.shadow, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl):not(.btn-y2k):not(.btn-pill) { box-shadow: 4px 4px 0 rgba(58, 0, 48, .85) !important; }
+.y2k-app:not(:has([data-y2k-off])) :is(.shadow, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl):not(.btn-y2k):not(.btn-pill):is(.border, .border-2):not([class*='border-[#2B0A2E]']):not([class*='border-[#3A0030]']) { border-color: #3A0030 !important; }
+
+/* form fields: inset bevel boxes */
+.y2k-app:not(:has([data-y2k-off])) :is(input[type='text'], input[type='search'], input[type='email'], input[type='password'], input[type='url'], input:not([type]), textarea, select) {
+  font-family: Verdana, Tahoma, sans-serif !important; font-size: 15px; border: 2px solid #3A0030 !important; border-radius: 4px !important;
+  box-shadow: inset 2px 2px 0 #E9D9E6 !important; background-color: #fff;
+}
+.y2k-app:not(:has([data-y2k-off])) :is(input, textarea, select):focus { outline: 3px solid #FFE14D !important; outline-offset: 1px; }
+
+/* info pages: InfoCard titles get the GIF title bar */
+.y2k-app:not(:has([data-y2k-off])) .info-prose { font-size: 15px; line-height: 1.65; }
+
+/* footer (all pages) */
+.y2k-footer { margin-top: 24px; text-align: left; }
+.y2k-footer-cols { display: grid; gap: 20px 40px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); max-width: 880px; margin: 0 auto 14px; font-size: 14px; }
+.y2k-footer-cols nav { display: flex; flex-direction: column; gap: 6px; }
+.y2k-footer-cols b { font: 12px 'Silkscreen', monospace; letter-spacing: .1em; color: #FFE14D; margin-bottom: 4px; }
+.y2k-footer-cols a { color: #FFB6D9 !important; font-family: Verdana, Tahoma, sans-serif; }
+.y2k-footer-cols a:hover { color: #fff !important; }
+.y2k-footer-logo { font: 34px/1 'Cherry Bomb One', 'Arial Black', sans-serif; color: #fff; text-shadow: 2px 2px 0 #E0007A; margin-bottom: 6px; }
+.y2k-footer-logo span { font-size: .5em; color: #FFE14D; }
+.y2k-footer > p { text-align: center; }

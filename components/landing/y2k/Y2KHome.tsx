@@ -47,7 +47,7 @@ const FOOT_LINKS = [
 /** Shared Y2K page frame for the homepage: header, tab bar, tiled body and footer. */
 export function Y2KShell({ dateLabel, user, children }: { dateLabel: string; user?: { username: string } | null; children: ReactNode }) {
   return (
-    <div className="y2kh">
+    <div className="y2kh" data-y2k-off>
       <div className="y2kh-box">
         <Y2KHeader user={user} dateLabel={dateLabel} />
 
