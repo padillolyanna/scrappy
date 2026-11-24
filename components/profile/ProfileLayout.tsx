@@ -22,7 +22,6 @@ export interface ProfileData {
   last_seen_at: string | null
 }
 export interface MiniProfile { id: string; username: string; display_name: string | null; avatar_url: string | null }
-export interface CommentData { id: string; body: string; created_at: string; author_id: string; author: MiniProfile | null }
 export interface ScrapbookMini { id: string; title: string | null; cover_id: string; like_count: number | null }
 
 interface Props {
@@ -31,15 +30,9 @@ interface Props {
   extras: ProfileExtras
   scrapbooks: ScrapbookMini[]
   top8: MiniProfile[]
-  comments: CommentData[]
-  commentCount: number
   online: boolean
   /** buttons in the contact box (share, add to top 8, edit…) */
   contactSlot?: React.ReactNode
-  /** comment form */
-  commentFormSlot?: React.ReactNode
-  /** per-comment controls (delete) */
-  commentControls?: (c: CommentData) => React.ReactNode
   preview?: boolean
 }
 
@@ -108,8 +101,8 @@ function Panel({
 }
 
 export default function ProfileLayout({
-  profile, style: s, extras: x, scrapbooks, top8, comments, commentCount, online,
-  contactSlot, commentFormSlot, commentControls, preview,
+  profile, style: s, extras: x, scrapbooks, top8, online,
+  contactSlot, preview,
 }: Props) {
   const name = profile.display_name || profile.username
   const body = BODY_FONTS.find((f) => f.id === s.bodyFont)?.css ?? BODY_FONTS[0].css
@@ -137,7 +130,7 @@ export default function ProfileLayout({
             <Avatar p={profile} size={150} />
           </div>
           <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, textAlign: 'center', marginTop: 4, color: s.panelText, background: rgba(s.panelBg, s.panelOpacity), border: `1px solid ${s.borderColor}`, padding: '1px 4px' }}>
-            View My: <a href="#scrapbooks" style={linkStyle}>Scrapbooks</a> | <a href="#comments" style={linkStyle}>Comments</a>
+            View My: <a href="#scrapbooks" style={linkStyle}>Scrapbooks</a>
           </div>
         </div>
         <div
@@ -265,33 +258,6 @@ export default function ProfileLayout({
         </Panel>
       )}
 
-      {x.show.comments && (
-        <Panel ctx={ctx} id="comments" title={`${name}'s Friends Comments`} right={<span>displaying {comments.length} of {commentCount} comments</span>}>
-          {commentFormSlot}
-          {comments.length === 0 && <i style={{ opacity: 0.6, display: 'block', padding: '6px 0' }}>no comments yet — be the first ♡</i>}
-          <div>
-            {comments.map((c) => (
-              <div key={c.id} style={{ display: 'flex', gap: 10, padding: '8px 0', borderTop: `1px solid ${rgba(s.borderColor, 0.4)}` }}>
-                <Link href={c.author ? `/profile/${c.author.username}` : '#'} style={{ flexShrink: 0, textAlign: 'center', width: 64, textDecoration: 'none' }}>
-                  <div style={{ border: `2px solid ${s.borderColor}` }}>{c.author ? <Avatar p={c.author} size={60} /> : <div style={{ width: 60, height: 60, background: '#ccc' }} />}</div>
-                </Link>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
-                    <Link href={c.author ? `/profile/${c.author.username}` : '#'} style={{ ...linkStyle, fontFamily: 'Verdana, sans-serif', fontSize: 13 }}>
-                      {c.author?.display_name || c.author?.username || 'someone'}
-                    </Link>
-                    <span style={{ fontSize: 12, opacity: 0.65, fontFamily: 'Verdana, sans-serif' }}>
-                      {new Date(c.created_at).toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                    </span>
-                    <span style={{ marginLeft: 'auto' }}>{commentControls?.(c)}</span>
-                  </div>
-                  <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', marginTop: 2 }}>{c.body}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Panel>
-      )}
     </div>
   )
 

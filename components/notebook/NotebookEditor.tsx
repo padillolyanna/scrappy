@@ -20,7 +20,7 @@ import ElementView, { QuestionView, textBoxStyle } from './ElementView'
 import StaticSpread, { CoverFrame, SpreadFrame, StaticCover, placed, sortedSpreadElements } from './Spread'
 import { EMOJI_STICKERS, GEM_STICKERS, STICKERS, Sticker, stickerTintable } from './Stickers'
 
-type Panel = 'library' | 'frames' | 'photos' | 'text' | 'stickers' | 'tape' | 'shapes' | 'backgrounds' | 'questions'
+type Panel = 'library' | 'frames' | 'photos' | 'text' | 'tape' | 'shapes' | 'backgrounds' | 'questions'
 type Sel = { page: number; id: string } | null
 
 const IcoCam = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -81,11 +81,10 @@ function SelectMini({
 }
 
 const PANELS: { id: Panel; icon: React.ReactNode; label: string; color: string }[] = [
-  { id: 'library', icon: '♦', label: 'objects', color: '#FF2E93' },
+  { id: 'library', icon: '★', label: 'stickers', color: '#FF2E93' },
   { id: 'frames', icon: '▣', label: 'frames', color: '#1D9BF0' },
   { id: 'photos', icon: <IcoCam />, label: 'photos', color: '#14B8A6' },
   { id: 'text', icon: 'Aa', label: 'text', color: '#7C4DDB' },
-  { id: 'stickers', icon: '★', label: 'doodles', color: '#F59E0B' },
   { id: 'tape', icon: '▤', label: 'tape', color: '#EC4899' },
   { id: 'shapes', icon: '◆', label: 'shapes', color: '#22C55E' },
   { id: 'backgrounds', icon: '▦', label: 'bg', color: '#0EA5E9' },
@@ -178,7 +177,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [activePage, setActivePage] = useState(0)
   const [sel, setSel] = useState<Sel>(null)
   const [editing, setEditing] = useState<string | null>(null)
-  const [panel, setPanel] = useState<Panel | null>('stickers')
+  const [panel, setPanel] = useState<Panel | null>('library')
   const [fullscreen, setFullscreen] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [previewing, setPreviewing] = useState(false)
@@ -774,11 +773,12 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
               className="sticky top-0 z-10 px-3 py-1.5 font-silkscreen text-[12px] text-white border-b-2 border-[#0B1B4A]"
               style={{ background: `linear-gradient(180deg, #ffffff55, ${meta.color} 50%, ${meta.color})`, textShadow: '0 1px 0 rgba(0,0,0,.35)' }}
             >
-              {meta.label === 'bg' ? 'BACKGROUNDS' : meta.label === 'objects' ? 'OBJECT SHELF' : meta.label.toUpperCase()}
+              {meta.label === 'bg' ? 'BACKGROUNDS' : meta.label === 'stickers' ? 'STICKER SHELF' : meta.label.toUpperCase()}
             </div>
             <div className="p-3">
               {panel === 'library' && (
                 <div className="space-y-2">
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">OBJECTS</div>
                   <CatChips value={libCat} onChange={(v) => setLibCat(v as StickerCategory | 'all')} cats={STICKER_CATEGORIES} />
                   {STICKER_ASSETS.length === 0 ? (
                     <EmptyShelf />
@@ -789,15 +789,69 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                           key={a.id}
                           onClick={() => add({ ...makeSticker(`img:${a.id}`), w: Math.round(110 * Math.min(1, a.aspect)), h: Math.round(110 / Math.max(1, a.aspect)), props: { shadow: true } })}
                           title={a.label}
-                          className="aspect-square rounded-xl p-1 transition-transform hover:scale-110 hover:-rotate-3"
-                          style={{ background: 'radial-gradient(circle at 50% 40%, #ffffff, #f1e9ff)', boxShadow: 'inset 0 0 0 1.5px #e5d5ff' }}
+                          className="aspect-square p-1 bg-white border-2 border-[#3A0030] shadow-[2px_2px_0_#3A0030] hover:bg-[#FFE9F4] active:translate-y-px active:shadow-none"
+                          style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0 7px, rgba(124,77,219,.06) 7px 8px), repeating-linear-gradient(90deg, transparent 0 7px, rgba(124,77,219,.06) 7px 8px)' }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={assetThumb(a.id)} alt={a.label} loading="lazy" decoding="async" className="w-full h-full object-contain drop-shadow" />
+                          <img src={assetThumb(a.id)} alt={a.label} loading="lazy" decoding="async" className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} />
                         </button>
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {panel === 'library' && (
+                <div className="space-y-3 mt-4 pt-3 border-t-2 border-dashed border-[#E5D5FF]">
+                  <input ref={stickerFileRef} type="file" accept="image/png,image/webp,image/gif,image/jpeg" multiple hidden onChange={(e) => { handleStickerFiles(e.target.files); e.target.value = '' }} />
+                  <button onClick={() => stickerFileRef.current?.click()} className="btn-bevel w-full text-sm" disabled={busy}>
+                    {busy ? 'uploading…' : '↑ upload your own sticker'}
+                  </button>
+                  <div className="rounded-lg border-2 border-dashed border-[#F59E0B]/60 bg-[#FFF8E6] px-2.5 py-2 font-nunito text-[13px] leading-snug text-[#5A3A10]">
+                    <b>sticker tips ✦</b>
+                    <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                      <li><b>PNG with a transparent background</b> (no background) looks best. JPGs show as a rectangle.</li>
+                      <li>Up to <b>{MAX_STICKER_MB} MB</b> each, up to 8 at a time.</li>
+                      <li>At least <b>300×300 px</b> so it stays sharp. Big images are shrunk to 800 px.</li>
+                      <li>PNG, WebP, GIF (first frame) or JPG.</li>
+                    </ul>
+                  </div>
+                  {myStickers.length > 0 && (
+                    <>
+                      <div className="font-silkscreen text-[12px] text-[#D4006E]">YOUR STICKERS</div>
+                      <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
+                        {myStickers.map((c) => (
+                          <button key={c.slice(-40)} onClick={() => add({ ...makeSticker(c), w: 110, h: 110 })} className="aspect-square rounded-lg p-1 bg-[repeating-conic-gradient(#f3eef8_0_25%,#fff_0_50%)] bg-[length:10px_10px] hover:scale-110 transition-transform" title="add again">
+                            <Sticker content={c} />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">DOODLES</div>
+                  <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
+                    {STICKERS.map((s) => (
+                      <button key={s.id} onClick={() => add(makeSticker(`svg:${s.id}`))} title={s.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110 hover:-rotate-6">
+                        <Sticker content={`svg:${s.id}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">GEMS</div>
+                  <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
+                    {GEM_STICKERS.map((g) => (
+                      <button key={g.id} onClick={() => add({ ...makeSticker(`svg:${g.id}`), w: 64, h: 64 })} title={g.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110">
+                        <Sticker content={`svg:${g.id}`} />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="font-silkscreen text-[12px] text-[#D4006E]">SYMBOLS & EMOJI</div>
+                  <div className="grid grid-cols-8 md:grid-cols-5 gap-1">
+                    {EMOJI_STICKERS.map((s) => (
+                      <button key={s} onClick={() => add({ ...makeSticker(`txt:${s}`), w: 64, h: 64 })} className="aspect-square rounded hover:bg-[#FFE4F0] p-0.5 hover:scale-110 transition-transform">
+                        <Sticker content={`txt:${s}`} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -910,59 +964,6 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                 </div>
               )}
 
-              {panel === 'stickers' && (
-                <div className="space-y-3">
-                  <input ref={stickerFileRef} type="file" accept="image/png,image/webp,image/gif,image/jpeg" multiple hidden onChange={(e) => { handleStickerFiles(e.target.files); e.target.value = '' }} />
-                  <button onClick={() => stickerFileRef.current?.click()} className="btn-bevel w-full text-sm" disabled={busy}>
-                    {busy ? 'uploading…' : '↑ upload your own sticker'}
-                  </button>
-                  <div className="rounded-lg border-2 border-dashed border-[#F59E0B]/60 bg-[#FFF8E6] px-2.5 py-2 font-nunito text-[13px] leading-snug text-[#5A3A10]">
-                    <b>sticker tips ✦</b>
-                    <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
-                      <li><b>PNG with a transparent background</b> (no background) looks best. JPGs show as a rectangle.</li>
-                      <li>Up to <b>{MAX_STICKER_MB} MB</b> each, up to 8 at a time.</li>
-                      <li>At least <b>300×300 px</b> so it stays sharp. Big images are shrunk to 800 px.</li>
-                      <li>PNG, WebP, GIF (first frame) or JPG.</li>
-                    </ul>
-                  </div>
-                  {myStickers.length > 0 && (
-                    <>
-                      <div className="font-silkscreen text-[12px] text-[#D4006E]">YOUR STICKERS</div>
-                      <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
-                        {myStickers.map((c) => (
-                          <button key={c.slice(-40)} onClick={() => add({ ...makeSticker(c), w: 110, h: 110 })} className="aspect-square rounded-lg p-1 bg-[repeating-conic-gradient(#f3eef8_0_25%,#fff_0_50%)] bg-[length:10px_10px] hover:scale-110 transition-transform" title="add again">
-                            <Sticker content={c} />
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  <div className="font-silkscreen text-[12px] text-[#D4006E]">DOODLES</div>
-                  <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
-                    {STICKERS.map((s) => (
-                      <button key={s.id} onClick={() => add(makeSticker(`svg:${s.id}`))} title={s.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110 hover:-rotate-6">
-                        <Sticker content={`svg:${s.id}`} />
-                      </button>
-                    ))}
-                  </div>
-                  <div className="font-silkscreen text-[12px] text-[#D4006E]">GEMS</div>
-                  <div className="grid grid-cols-6 md:grid-cols-3 gap-2">
-                    {GEM_STICKERS.map((g) => (
-                      <button key={g.id} onClick={() => add({ ...makeSticker(`svg:${g.id}`), w: 64, h: 64 })} title={g.label} className="aspect-square rounded-lg hover:bg-[#FFE4F0] p-1.5 transition-transform hover:scale-110">
-                        <Sticker content={`svg:${g.id}`} />
-                      </button>
-                    ))}
-                  </div>
-                  <div className="font-silkscreen text-[12px] text-[#D4006E]">SYMBOLS & EMOJI</div>
-                  <div className="grid grid-cols-8 md:grid-cols-5 gap-1">
-                    {EMOJI_STICKERS.map((s) => (
-                      <button key={s} onClick={() => add({ ...makeSticker(`txt:${s}`), w: 64, h: 64 })} className="aspect-square rounded hover:bg-[#FFE4F0] p-0.5 hover:scale-110 transition-transform">
-                        <Sticker content={`txt:${s}`} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {panel === 'tape' && (
                 <div className="space-y-2">
@@ -1761,7 +1762,7 @@ function EmptyShelf() {
   return (
     <div className="rounded-xl border-2 border-dashed border-[#FF2E93]/50 bg-[#FFF0F7] p-3 text-center">
       <div className="font-chango text-[#FF2E93] text-sm">shelf restocking ✦</div>
-      <p className="font-pixel text-base text-[#555] leading-tight mt-1">new realistic gems, charms and gadgets are on their way. use the doodles tab meanwhile!</p>
+      <p className="font-pixel text-base text-[#555] leading-tight mt-1">new realistic gems, charms and gadgets are on their way. scroll down for doodles meanwhile!</p>
     </div>
   )
 }

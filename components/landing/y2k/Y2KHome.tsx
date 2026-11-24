@@ -19,7 +19,7 @@ import { Gif, Px, Panel } from './Y2KPanel'
 const FEATURES = [
   { title: 'Scrapbook', href: '/scrapbook/create', text: 'Spiral-notebook pages you decorate with photos, frames, gems, washi tape and handwritten notes. Fully editable.' },
   { title: 'Photobooth', href: '/photobooth', text: 'Snap 1–6 photos and decorate them like a purikura machine with patterns, rhinestones and stamps.' },
-  { title: 'Your profile', href: '/my-space', text: 'A customizable profile page with glitter names, layouts, backgrounds, a Top 8 and a comment wall.' },
+  { title: 'Your profile', href: '/my-space', text: 'A customizable profile page with glitter names, layouts, backgrounds and a Top 8.' },
   { title: 'Note exchange', href: '/exchange', text: "Pass notes like it's 2004: answer the same questions as a friend and reveal them together." },
 ]
 

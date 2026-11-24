@@ -421,7 +421,7 @@ export function Sticker({ content, color, standalone }: { content: string; color
     const id = content.slice(4)
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={assetFull(id)} alt="" draggable={false} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', pointerEvents: 'none' }} />
+      <img src={assetFull(id)} alt="" draggable={false} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', imageRendering: 'pixelated', pointerEvents: 'none' }} />
     )
   }
   if (content.startsWith('svg:')) {

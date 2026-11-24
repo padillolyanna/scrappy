@@ -14,7 +14,7 @@ const FEATURES = [
   { title: 'Daily prompt', href: '/prompts', color: '#7C4DDB', text: 'A new question every day, like "what song takes you back to childhood?". Answer it, read what others said, and add your favourite answers to a scrapbook.' },
   { title: 'Confession wall', href: '/confessions', color: '#F43F5E', text: 'Share small anonymous thoughts and react to others. Confessions are moderated, and no names are shown.' },
   { title: 'Scrapbook exchange', href: '/exchange', color: '#14B8A6', text: 'Pass notes the old-school way: answer the same questions as a friend or a stranger, reveal your answers together, and turn the swap into a friendship page.' },
-  { title: 'Your own page', href: '/my-space', color: '#F59E0B', text: 'A customizable profile in the spirit of early social sites: pick a layout, background, glitter name, Top 8, a profile song and a comment wall.' },
+  { title: 'Your own page', href: '/my-space', color: '#F59E0B', text: 'A customizable profile in the spirit of early social sites: pick a layout, background, glitter name, Top 8 and a profile song.' },
 ]
 
 export default function AboutPage() {
