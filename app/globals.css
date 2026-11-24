@@ -1565,6 +1565,37 @@ body { padding-bottom: 80px; }
 .y2k-footer-logo span { font-size: .5em; color: #FFE14D; }
 .y2k-footer > p { text-align: center; }
 
+/* ═══════════ Page frame: every themed page sits in a homepage-style window ═══════════ */
+.y2k-pagewin-ttl, .y2k-statusbar, .y2k-shellfoot { display: none; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-ttl { display: flex; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-statusbar { display: flex; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-shellfoot { display: block; }
+/* header + page read as one box, like the homepage */
+.y2kh--site { padding-bottom: 0 !important; }
+.y2kh--site .y2kh-box { box-shadow: none; }
+.y2k-app:has([data-y2k-off]):not(:has(.y2kh)) { margin-top: 12px; }
+.y2k-app:not(:has([data-y2k-off])) { border-top: 0 !important; background: #fff !important; overflow: hidden !important; }
+.y2k-app:not(:has([data-y2k-off])) > .y2k-pagebody { padding: 16px; background: #F6D9EC url(/y2k/tile-glitter-check.gif); }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin { position: relative; background: #FFF6FB; border: 3px solid #3A0030; box-shadow: 4px 4px 0 #3A0030; }
+.y2k-pagewin-ttl .y2kh-ttl-text { font: bold 14px Verdana, Tahoma, sans-serif; color: #fff; text-shadow: 1px 1px 0 #3A0030; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-in { position: relative; min-height: 320px;
+  background: #FFF6FB repeating-linear-gradient(0deg, transparent 0 23px, rgba(224, 0, 122, .045) 23px 24px); }
+@media (max-width: 640px) { .y2k-app:not(:has([data-y2k-off])) > .y2k-pagebody { padding: 8px; } }
+.y2k-statusbar { align-items: center; gap: 4px; padding: 3px 4px; border-top: 3px solid #3A0030; background: #E9E2F2; font: 12px Verdana, Tahoma, sans-serif; color: #3A0030; }
+.y2k-statusbar span { padding: 1px 8px; border: 2px inset #fff; background: #F3EEF9; }
+.y2k-statusbar span:first-child { flex: 1; }
+@media (max-width: 520px) { .y2k-statusbar-zone { display: none; } }
+.y2k-shellfoot .y2k-footer { margin-top: 0; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-in .y2k-footer { display: none; }
+.y2k-frame:not(:has([data-y2k-off])) > .y2k-edge-spark { display: none; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-in .min-h-screen { min-height: 0 !important; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-in :is([class*='border-[#FFB6D9]'], [class*='border-[#C9B6FF]'], [class*='border-[#A8DFFF]']):not(input):not(textarea) { border-color: #3A0030 !important; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-in :is([class*='border-[#FFB6D9]'], [class*='border-[#C9B6FF]'], [class*='border-[#A8DFFF]']):is(.rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl):not(.rounded-full) { border-radius: 0 !important; box-shadow: 3px 3px 0 #3A0030; }
+.y2k-app:not(:has([data-y2k-off])) .y2k-pagewin-in :is([class*='border-[#FFB6D9]'], [class*='border-[#C9B6FF]']):is(.rounded-lg, .rounded-xl, .rounded-2xl):is(a, button):hover { background: #FFE9F4 !important; }
+.y2k-app:has(.y2k-bare) :is(.y2k-pagewin-ttl, .y2k-statusbar) { display: none !important; }
+.y2k-app:has(.y2k-bare) .y2k-pagewin { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.y2k-app:has(.y2k-bare) .y2k-pagewin-in { background: transparent !important; }
+
 /* ═══════════ Pet Studio ═══════════ */
 .pet-studio { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
 

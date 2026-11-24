@@ -1,6 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import Footer from './Footer'
+import PageWindowTitle from './PageWindowTitle'
 
 interface Props {
   children: ReactNode
@@ -18,13 +20,13 @@ const SPARKLES = [
 
 export default function AppWindow({ children }: Props) {
   return (
-    <div className="w-full max-w-[960px] relative mt-0">
+    <div className="y2k-frame w-full max-w-[960px] relative mt-0">
       {/* Outer sparkle decorations around the window frame */}
       {SPARKLES.map((s, i) => (
         <span
           key={i}
           aria-hidden="true"
-          className="absolute font-pixel text-[#FF4FA3] pointer-events-none select-none animate-twinkle"
+          className="y2k-edge-spark absolute font-pixel text-[#FF4FA3] pointer-events-none select-none animate-twinkle"
           style={{
             top: s.top,
             left: (s as { left?: string }).left,
@@ -51,7 +53,27 @@ export default function AppWindow({ children }: Props) {
           overflow: 'visible',
         }}
       >
-        {children}
+        {/* Themed pages get the homepage's frame: glitter-check backdrop, one
+            window with a title bar, a status bar and the shared footer. Pages
+            marked data-y2k-off (profile, scrapbook editor, home) hide all of
+            this through CSS and keep their own look. */}
+        <div className="y2k-pagebody">
+          <div className="y2k-pagewin">
+            <div className="y2kh-ttl y2kh-ttl--pink y2k-pagewin-ttl" aria-hidden="true">
+              <span className="y2kh-ttl-text">
+                <Suspense fallback="✦ scrappy.exe"><PageWindowTitle /></Suspense>
+              </span>
+              <span className="y2kh-winbtns"><i>_</i><i>□</i><i>×</i></span>
+            </div>
+            <div className="y2k-pagewin-in">{children}</div>
+            <div className="y2k-statusbar" aria-hidden="true">
+              <span>✦ done</span>
+              <span>scrappy.fun</span>
+              <span className="y2k-statusbar-zone">♡ internet zone</span>
+            </div>
+          </div>
+        </div>
+        <div className="y2k-shellfoot"><Footer always /></div>
       </div>
     </div>
   )

@@ -28,7 +28,7 @@ const INFO_LINKS = [
   { label: 'Cookie Policy', href: '/cookie-policy' },
 ]
 
-export default function Footer() {
+export default function Footer({ always = false }: { always?: boolean } = {}) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -37,7 +37,7 @@ export default function Footer() {
     })
   }, [])
 
-  if (loggedIn === null || loggedIn) return null
+  if (!always && (loggedIn === null || loggedIn)) return null
 
   return (
     <footer className="y2kh-foot y2k-footer">
