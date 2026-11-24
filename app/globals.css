@@ -1911,7 +1911,7 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 /* ═══════════ Photobooth decorate: 2008 gal purikura machine ═══════════ */
 .pk-wrap { padding: 14px 10px 18px; }
 .pk { position: relative; max-width: 1060px; margin: 0 auto; padding: 12px 12px 34px; border: 3px solid #3A0030; border-radius: 18px; overflow: hidden;
-  background: #FFD6E8 url(/booth/tile-roses.png) 0 0 / 320px; box-shadow: 5px 5px 0 #3A0030, inset 0 0 0 4px rgba(255, 255, 255, .7);
+  background: #FFD6E8 url(/booth/tile-hearts.png) 0 0 / 120px; box-shadow: 5px 5px 0 #3A0030, inset 0 0 0 4px rgba(255, 255, 255, .7);
   font-family: Verdana, Tahoma, Geneva, sans-serif; color: #3A0030; }
 /* zebra band along the bottom, lace edge above it */
 .pk::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 24px; border-top: 3px solid #3A0030;
