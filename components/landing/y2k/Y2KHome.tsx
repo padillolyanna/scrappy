@@ -8,7 +8,6 @@ import Y2KTabs from './Y2KTabs'
 import Y2KHeader from './Y2KHeader'
 import Y2KTv from './Y2KTv'
 import { Gif, Px, Panel } from './Y2KPanel'
-import PetWelcome from './PetWelcome'
 
 /*
   Logged-out homepage, built like a 2005-2008 fan site: one bordered "site box",
@@ -96,9 +95,6 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel:
               </div>
             </section>
           </div>
-
-          {/* ───────────── pet welcome ───────────── */}
-          <PetWelcome />
 
           {/* ───────────── sidebar + main ───────────── */}
           <div className="y2kh-grid y2kh-grid--cols">

@@ -27,9 +27,8 @@ export default function Mascot() {
 
   const { pet, guest, loading } = usePet({ claim: 'session' })
 
-  // Only authenticated users who have the companion enabled can drag/see the pet.
-  const canDrag = !loading && !guest
-  // Guests see a default view-only pet. Logged-in users see it unless they disabled it.
+  // Everyone can drag (guests get a default pet). Logged-in users who disabled
+  // the companion won't see it, but guests always see the default.
   const isVisible = loading || guest || pet?.show_companion !== false
 
   function clamp(x: number, y: number) {
@@ -69,17 +68,25 @@ export default function Mascot() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Show guest welcome bubble once per session
+  const shownGuestBubble = useRef(false)
+  useEffect(() => {
+    if (!guest || loading || shownGuestBubble.current) return
+    shownGuestBubble.current = true
+    const t1 = setTimeout(() => setBubble('welcome to scrappy! ♡'), 1200)
+    const t2 = setTimeout(() => setBubble(null), 4500)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [guest, loading])
+
   function handlePointerDown(e: React.PointerEvent) {
-    if (!canDrag || !posRef.current) return
+    if (!posRef.current) return
     e.preventDefault()
-    // Capture on currentTarget (the outer div) so move/up events route correctly.
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     dragOffset.current = {
       x: e.clientX - posRef.current.x,
       y: e.clientY - posRef.current.y,
     }
     didDrag.current = false
-    // Update ref first (synchronous) so handlePointerMove sees it immediately.
     draggingRef.current = true
     setDragging(true)
   }
@@ -102,7 +109,9 @@ export default function Mascot() {
   function handleClick() {
     if (didDrag.current) return
     setShowHint(false)
-    const tip = TIPS[Math.floor(Math.random() * TIPS.length)]
+    const tip = guest
+      ? 'welcome to scrappy! ♡'
+      : TIPS[Math.floor(Math.random() * TIPS.length)]
     setBubble(tip)
     setWaving(true)
     setTimeout(() => setBubble(null), 3000)
@@ -111,7 +120,7 @@ export default function Mascot() {
 
   if (!pos || !isVisible) return null
 
-  const activeBubble = bubble ?? (showHint && canDrag ? 'sama mo ako! ✦' : null)
+  const activeBubble = bubble ?? (showHint ? 'sama mo ako! ✦' : null)
 
   return createPortal(
     <div
@@ -122,11 +131,11 @@ export default function Mascot() {
         zIndex: 9999,
         userSelect: 'none',
         touchAction: 'none',
-        cursor: canDrag ? (dragging ? 'grabbing' : 'grab') : 'default',
+        cursor: dragging ? 'grabbing' : 'grab',
       }}
-      onPointerDown={canDrag ? handlePointerDown : undefined}
-      onPointerMove={canDrag ? handlePointerMove : undefined}
-      onPointerUp={canDrag ? handlePointerUp : undefined}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       onClick={handleClick}
     >
       {activeBubble && (
@@ -153,7 +162,7 @@ export default function Mascot() {
         </div>
       )}
 
-      {showHint && canDrag && (
+      {showHint && (
         <div style={{
           position: 'absolute',
           top: '110%',
