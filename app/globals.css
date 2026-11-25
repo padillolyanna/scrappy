@@ -1251,6 +1251,14 @@ body { padding-bottom: 80px; }
 .y2kh-tv-eq i:nth-child(4) { height: 95%; background: #FFE14D; } .y2kh-tv-eq i:nth-child(5) { height: 65%; }
 
 .y2kh-welcome { display: flex; flex-direction: column; }
+/* pet welcome dialog below the hero */
+.y2kh-pet-welcome-body { display: flex; align-items: center; gap: 16px; padding: 14px 16px; }
+.y2kh-pet-welcome-figure { flex: 0 0 auto; }
+.y2kh-pet-welcome-bubble { position: relative; flex: 1; background: #FFF0F7; border: 2px solid #3A0030; border-radius: 12px; padding: 12px 16px; box-shadow: 2px 2px 0 #3A0030; }
+.y2kh-pet-welcome-bubble::before { content: ''; position: absolute; left: -13px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 9px solid transparent; border-bottom: 9px solid transparent; border-right: 13px solid #3A0030; }
+.y2kh-pet-welcome-bubble::after { content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%); width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-right: 11px solid #FFF0F7; }
+.y2kh-pet-welcome-text { font-family: 'Caveat', cursive; font-size: 17px; font-weight: 600; color: #3A0030; margin: 0 0 10px; line-height: 1.4; }
+.y2kh-pet-welcome-text span { font-size: 14px; font-weight: 400; color: #7A3060; }
 .y2kh-welcome-in { position: relative; flex: 1; background: #FFF4FA url(/y2k/tile-pink-stars.gif) 0 0 / 0 0 no-repeat; }
 .y2kh-kicker { margin: 0 0 6px; font: 13px/1.2 'Silkscreen', monospace; letter-spacing: .08em; color: #C2006B; }
 .y2kh-h1 { margin: 0 0 12px; max-width: 15ch; font-family: 'Cherry Bomb One', 'Arial Black', sans-serif; font-weight: 400; font-size: clamp(32px, 4.6vw, 42px); line-height: 1.1;
