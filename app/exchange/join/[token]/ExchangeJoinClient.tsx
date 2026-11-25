@@ -1,281 +1,230 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Footer from '@/components/layout/Footer'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
-import { TEMPLATES } from '@/lib/types'
-import AuthModal from '@/components/ui/AuthModal'
-
-interface Exchange {
-  id: string
-  creator_id: string
-  template_id: string
-  status: string
-  expires_at: string
-}
+import { NotebookCover, NotebookPage } from '@/components/exchange/Notebook'
+import { MAX_ANSWER_LEN, personName, rpcMessage, type ExchangeInfo, type RevealPerson } from '@/lib/exchange'
 
 export default function ExchangeJoinClient({ token }: { token: string }) {
   const { user, loading } = useAuth()
-  const [exchange, setExchange] = useState<Exchange | null>(null)
-  const [loadingExchange, setLoadingExchange] = useState(true)
-  const [invalidToken, setInvalidToken] = useState(false)
+  const [info, setInfo] = useState<ExchangeInfo | null | undefined>(undefined)
+  const [people, setPeople] = useState<RevealPerson[] | null>(null)
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [alreadyAnswered, setAlreadyAnswered] = useState(false)
-  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [opened, setOpened] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const load = useCallback(async () => {
+    const sb = createClient()
+    const { data, error: e } = await sb.rpc('get_exchange', { p_token: token })
+    if (e) { setError(rpcMessage(e)); setInfo(null); return }
+    const ex = data as ExchangeInfo | null
+    setInfo(ex)
+    if (ex?.revealed && ex.is_member) {
+      const r = await sb.rpc('reveal_exchange', { p_token: token })
+      setPeople((r.data as RevealPerson[]) ?? [])
+    }
+  }, [token])
 
   useEffect(() => {
-    async function loadExchange() {
-      const supabase = createClient()
-      const { data, error: fetchError } = await supabase
-        .from('exchanges')
-        .select('id, creator_id, template_id, status, expires_at')
-        .eq('invite_token', token)
-        .single()
+    if (loading) return
+    const t = setTimeout(() => void load(), 0) // load runs after this render, not inside the effect body
+    return () => clearTimeout(t)
+  }, [load, loading, user?.id])
 
-      if (fetchError || !data) {
-        setInvalidToken(true)
-        setLoadingExchange(false)
-        return
-      }
+  // while waiting for the other person, check back every 20 seconds
+  const waiting = !!info && info.is_member && info.i_answered && !info.revealed && !editing
+  useEffect(() => {
+    if (!waiting) return
+    const t = setInterval(() => void load(), 20000)
+    return () => clearInterval(t)
+  }, [waiting, load])
 
-      if (new Date(data.expires_at) < new Date()) {
-        setInvalidToken(true)
-        setLoadingExchange(false)
-        return
-      }
-
-      setExchange(data)
-
-      if (user) {
-        const { data: existingAnswers } = await supabase
-          .from('exchange_answers')
-          .select('id')
-          .eq('exchange_id', data.id)
-          .eq('user_id', user.id)
-          .limit(1)
-        if (existingAnswers && existingAnswers.length > 0) {
-          setAlreadyAnswered(true)
-        }
-      }
-
-      setLoadingExchange(false)
+  async function submit() {
+    if (!info) return
+    const missing = info.questions.filter((q) => !answers[q.id]?.trim()).length
+    if (missing) { setError(`answer ${missing === 1 ? 'the last question' : `${missing} more questions`} first ✎`); return }
+    setBusy(true); setError('')
+    const { data, error: e } = await createClient().rpc('answer_exchange', { p_token: token, p_answers: answers })
+    setBusy(false)
+    if (e) { setError(rpcMessage(e)); return }
+    setEditing(false)
+    const ex = data as ExchangeInfo
+    setInfo(ex)
+    if (ex.revealed) {
+      const r = await createClient().rpc('reveal_exchange', { p_token: token })
+      setPeople((r.data as RevealPerson[]) ?? [])
     }
-    loadExchange()
-  }, [token, user])
-
-  async function handleSubmit() {
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
-    if (!exchange) return
-
-    const template = TEMPLATES.find((t) => t.id === exchange.template_id)
-    if (!template) return
-
-    const unanswered = template.questions.filter((q) => !answers[q.id]?.trim())
-    if (unanswered.length > 0) {
-      setError('Please answer all questions before submitting.')
-      return
-    }
-
-    setSubmitting(true)
-    setError('')
-    const supabase = createClient()
-
-    await supabase
-      .from('exchange_participants')
-      .upsert({ exchange_id: exchange.id, user_id: user.id }, { onConflict: 'exchange_id,user_id' })
-
-    const answerRows = template.questions.map((q) => ({
-      exchange_id: exchange.id,
-      user_id: user.id,
-      question_id: q.id,
-      question_text: q.question_text,
-      answer_text: answers[q.id] ?? '',
-    }))
-
-    const { error: insertError } = await supabase.from('exchange_answers').insert(answerRows)
-
-    if (insertError) {
-      setError('Could not save answers. Please try again.')
-      setSubmitting(false)
-      return
-    }
-
-    await supabase.from('exchanges').update({ status: 'active' }).eq('id', exchange.id)
-
-    setSubmitted(true)
-    setSubmitting(false)
   }
 
-  const template = exchange ? TEMPLATES.find((t) => t.id === exchange.template_id) : null
+  const link = typeof window === 'undefined' ? '' : `${window.location.origin}/exchange/join/${token}`
+  const copy = () => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+  const from = personName(info?.creator)
 
-  if (loadingExchange || loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="font-caveat text-[#888] text-xl" style={{ fontFamily: 'Caveat, cursive' }}>
-          loading exchange...
+  let body: ReactNode
+  if (info === undefined || loading) {
+    body = <p className="xch-muted xch-center">opening the notebook…</p>
+  } else if (!info) {
+    body = (
+      <Message title="notebook not found" sticker="cute-kitten">
+        <p>{error || 'This link doesn’t lead to a notebook. It may have been typed wrong.'}</p>
+        <Link href="/exchange" className="y2kh-btn y2kh-btn--pink">start a new notebook</Link>
+      </Message>
+    )
+  } else if (!info.questions.length) {
+    body = (
+      <Message title="this is an old exchange" sticker="y2k-computer">
+        <p>Exchanges were rebuilt as notebooks with your own questions. Start a fresh one ♡</p>
+        <Link href="/exchange" className="y2kh-btn y2kh-btn--pink">start a new notebook</Link>
+      </Message>
+    )
+  } else if (info.full) {
+    body = (
+      <Message title="this notebook is taken" sticker="charm-bow">
+        <p>Two people are already writing in {from}&apos;s notebook. You can make your own and pass it to someone ♡</p>
+        <Link href="/exchange" className="y2kh-btn y2kh-btn--pink">start my own notebook</Link>
+      </Message>
+    )
+  } else if (info.expired && !info.is_member) {
+    body = (
+      <Message title="this notebook expired" sticker="cute-kitten">
+        <p>Invites last 30 days. Ask {from} to send a new one, or start your own.</p>
+        <Link href="/exchange" className="y2kh-btn y2kh-btn--pink">start a new notebook</Link>
+      </Message>
+    )
+  } else if (info.revealed && info.is_member) {
+    body = <Reveal info={info} people={people} opened={opened} onOpen={() => setOpened(true)} />
+  } else if (!user) {
+    body = (
+      <div className="xch-two">
+        <div className="xch-preview">
+          <NotebookCover cover={info.cover} title={info.title} sub={`from ${from}`} sticker="gem-heart" size="lg" />
         </div>
+        <NotebookPage tape="pink" corner="charm-bow">
+          <h1 className="xch-page-h">{from} passed you a notebook! ✉</h1>
+          <p>There are <b>{info.questions.length} questions</b> inside. Answer them, and once you&apos;re done you&apos;ll both see each other&apos;s pages.</p>
+          <ol className="xch-peek">
+            {info.questions.slice(0, 3).map((q) => <li key={q.id}>{q.text}</li>)}
+            {info.questions.length > 3 && <li className="xch-muted">…and {info.questions.length - 3} more</li>}
+          </ol>
+          <div className="xch-nav">
+            <Link href={`/auth/login?next=/exchange/join/${token}`} className="y2kh-btn y2kh-btn--pink y2kh-btn--big">log in to answer ✎</Link>
+            <Link href={`/auth/signup?next=/exchange/join/${token}`} className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">join free</Link>
+          </div>
+        </NotebookPage>
       </div>
     )
-  }
-
-  if (invalidToken) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center">
-          <div className="font-pixel text-5xl text-[#FFB6D9] mb-4">✗</div>
-          <h2
-            className="font-pacifico text-2xl text-[#3A0030] mb-2"
-            style={{ fontFamily: 'Pacifico, cursive' }}
-          >
-            invalid or expired link
-          </h2>
-          <p className="font-caveat text-lg text-[#888] mb-6" style={{ fontFamily: 'Caveat, cursive' }}>
-            this exchange link is no longer valid ✦
-          </p>
-          <Link href="/exchange" className="btn-y2k">
-            start a new exchange
-          </Link>
+  } else if (info.i_answered && !editing) {
+    body = (
+      <div className="xch-two">
+        <div className="xch-preview">
+          <NotebookCover cover={info.cover} title={info.title} sub={info.is_creator ? 'sealed ♡' : `from ${from}`} sticker="charm-padlock" size="lg" />
         </div>
-      </div>
-    )
-  }
-
-  if (submitted || alreadyAnswered) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1 py-10 px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="font-pixel text-5xl text-[#FF4FA3] mb-4">✦</div>
-            <h2
-              className="font-pacifico text-3xl text-[#3A0030] mb-2"
-              style={{ fontFamily: 'Pacifico, cursive' }}
-            >
-              {alreadyAnswered && !submitted ? 'already answered!' : 'answers submitted!'}
-            </h2>
-            <p className="font-caveat text-xl text-[#888] mb-8" style={{ fontFamily: 'Caveat, cursive' }}>
-              {alreadyAnswered && !submitted
-                ? "you've already submitted your answers for this exchange ✦"
-                : 'your answers are in! waiting for the other person to complete theirs ✦'}
-            </p>
-            <div className="flex gap-3 justify-center">
-              <Link href="/exchange" className="btn-y2k">
-                start another exchange
-              </Link>
-              <Link href="/my-space" className="btn-outline-y2k">
-                my space
-              </Link>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 py-10 px-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8">
-            <div
-              className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest"
-              style={{ fontSize: '12px' }}
-            >
-              ✉ EXCHANGE INVITATION
-            </div>
-            <h1
-              className="font-pacifico text-4xl text-[#3A0030]"
-              style={{ fontFamily: 'Pacifico, cursive' }}
-            >
-              answer these questions
-            </h1>
-            <p
-              className="font-caveat text-xl text-[#888] mt-2"
-              style={{ fontFamily: 'Caveat, cursive' }}
-            >
-              {template?.name ?? 'exchange questions'} ✦
-            </p>
-          </div>
-
-          {!user && (
-            <div className="bg-[#FFB6D9]/20 border-2 border-[#FFB6D9] rounded-xl px-4 py-3 mb-6 text-center">
-              <div className="font-caveat text-[#3A0030]" style={{ fontFamily: 'Caveat, cursive' }}>
-                you need to{' '}
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="text-[#FF4FA3] font-bold hover:underline"
-                >
-                  log in
-                </button>{' '}
-                to submit your answers ✦
+        <NotebookPage tape="blue" corner="cute-star">
+          <h1 className="xch-page-h">your page is sealed 🔒</h1>
+          {info.is_creator ? (
+            <>
+              <p>{info.other_answered ? 'Your friend is done, just a sec…' : 'Now pass the notebook on! Send this link to one friend. When they finish their page, it opens for both of you.'}</p>
+              <div className="xch-link">{link}</div>
+              <div className="xch-nav">
+                <button className="y2kh-btn y2kh-btn--pink" onClick={copy}>{copied ? '✓ copied!' : 'copy link'}</button>
+                <button className="y2kh-btn y2kh-btn--chrome" onClick={() => (navigator.share ? navigator.share({ title: `${info.title} on Scrappy`, text: 'fill in my slam book ♡', url: link }).catch(() => {}) : copy())}>share ✦</button>
               </div>
-            </div>
+            </>
+          ) : (
+            <p>Waiting for {from} to finish their page. This page checks again every few seconds.</p>
           )}
-
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-2 mb-4 font-nunito text-sm">
-              {error}
+          <div className="xch-nav">
+            <button className="y2kh-btn y2kh-btn--chrome" onClick={() => { setEditing(true); setError('') }}>✎ change my answers</button>
+            <Link href="/exchange" className="y2kh-btn y2kh-btn--chrome">my notebooks</Link>
+          </div>
+        </NotebookPage>
+      </div>
+    )
+  } else {
+    body = (
+      <NotebookPage tape="yellow" corner="gem-heart" className="xch-wide">
+        <p className="xch-kicker">✉ {info.title}</p>
+        <h1 className="xch-page-h">{editing ? 'change your answers' : info.is_creator ? 'your page' : `${from}'s notebook`}</h1>
+        {!editing && !info.is_creator && (
+          <p className="xch-muted">{info.other_answered ? `${from} already wrote their page. It stays sealed 🔒 until you finish yours.` : 'Answer every question, then seal your page.'}</p>
+        )}
+        {editing && <p className="xch-muted">Write your answers again. They replace the old ones until the notebook is revealed.</p>}
+        {error && <p className="xch-error" role="alert">{error}</p>}
+        <div className="xch-answers">
+          {info.questions.map((q, i) => (
+            <div key={q.id} className="xch-qa">
+              <label htmlFor={`a-${q.id}`} className="xch-q"><span>{i + 1}.</span> {q.text}</label>
+              <textarea id={`a-${q.id}`} className="xch-pen" rows={2} maxLength={MAX_ANSWER_LEN} value={answers[q.id] ?? ''} placeholder="write here…" onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))} />
             </div>
-          )}
-
-          {template && (
-            <div className="space-y-4">
-              {template.questions.map((q, i) => (
-                <div
-                  key={q.id}
-                  className="bg-white rounded-xl border-2 border-[#FFB6D9]/50 p-5"
-                >
-                  <div
-                    className="font-pixel text-xs text-[#888] mb-1"
-                    style={{ fontSize: '12px' }}
-                  >
-                    QUESTION {i + 1} OF {template.questions.length}
-                  </div>
-                  <label
-                    className="font-caveat text-xl text-[#3A0030] block mb-2"
-                    style={{ fontFamily: 'Caveat, cursive', fontSize: '20px' }}
-                  >
-                    {q.question_text}
-                  </label>
-                  <textarea
-                    value={answers[q.id] ?? ''}
-                    onChange={(e) =>
-                      setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
-                    }
-                    placeholder={q.placeholder ?? 'write your answer...'}
-                    className="input-y2k resize-none font-caveat w-full"
-                    rows={2}
-                    style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}
-                    onClick={() => !user && setShowAuthModal(true)}
-                    readOnly={!user}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="btn-y2k w-full py-4 text-base mt-6"
-          >
-            {submitting ? 'submitting...' : 'submit my answers ✦'}
-          </button>
+          ))}
         </div>
-      </main>
-      <Footer />
+        <div className="xch-nav">
+          {editing && <button className="y2kh-btn y2kh-btn--chrome" onClick={() => setEditing(false)}>cancel</button>}
+          <button className="y2kh-btn y2kh-btn--pink y2kh-btn--big" onClick={submit} disabled={busy}>{busy ? 'sealing…' : 'seal my page ✉'}</button>
+        </div>
+      </NotebookPage>
+    )
+  }
 
-      {showAuthModal && (
-        <AuthModal reason="save" onClose={() => setShowAuthModal(false)} />
+  return <div className="xch">{body}</div>
+}
+
+function Message({ title, sticker, children }: { title: string; sticker: string; children: ReactNode }) {
+  return (
+    <NotebookPage tape="pink" corner={sticker} className="xch-msg">
+      <h1 className="xch-page-h">{title}</h1>
+      <div className="xch-msg-body">{children}</div>
+    </NotebookPage>
+  )
+}
+
+function Reveal({ info, people, opened, onOpen }: { info: ExchangeInfo; people: RevealPerson[] | null; opened: boolean; onOpen: () => void }) {
+  const me = people?.find((p) => p.is_me)
+  const them = people?.find((p) => !p.is_me)
+  if (!opened) {
+    return (
+      <div className="xch-reveal-cover">
+        <p className="xch-kicker">both pages are in ✦</p>
+        <button className="xch-open" onClick={onOpen} aria-label="open the notebook">
+          <NotebookCover cover={info.cover} title={info.title} sub="tap to open ♡" sticker="gem-heart" size="lg" />
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="xch-spread-wrap">
+      <header className="xch-spread-head">
+        <p className="xch-kicker">✉ {info.title}</p>
+        <h1 className="xch-page-h">{personName(me)} ♡ {personName(them)}</h1>
+      </header>
+      {!people ? <p className="xch-muted xch-center">turning the pages…</p> : (
+        <ol className="xch-spread">
+          {info.questions.map((q, i) => (
+            <li key={q.id} className="xch-row" style={{ animationDelay: `${Math.min(i, 8) * 0.12}s` }}>
+              <p className="xch-row-q"><span>{i + 1}.</span> {q.text}</p>
+              <div className="xch-row-a">
+                <div className="xch-slip xch-slip--me">
+                  <span className="xch-slip-who">{personName(me)}</span>
+                  <p>{me?.answers?.[q.id] ?? '—'}</p>
+                </div>
+                <div className="xch-slip xch-slip--them">
+                  <span className="xch-slip-who">{personName(them)}</span>
+                  <p>{them?.answers?.[q.id] ?? '—'}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
       )}
+      <div className="xch-nav xch-nav--center">
+        <Link href="/exchange" className="y2kh-btn y2kh-btn--pink">start another notebook ✎</Link>
+        {them?.username && <Link href={`/profile/${them.username}`} className="y2kh-btn y2kh-btn--chrome">visit {personName(them)}&apos;s page</Link>}
+      </div>
     </div>
   )
 }
