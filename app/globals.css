@@ -2289,12 +2289,16 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .hbn:hover { rotate: 0deg !important; translate: 0 -3px; }
 .hbn--pink { background-color: #FFD6EA; } .hbn--lilac { background-color: #E6DBFF; } .hbn--blue { background-color: #D6EEFF; } .hbn--yellow { background-color: #FFF3B0; } .hbn--mint { background-color: #D9F7E6; }
 .hbn--cancelled { border-left: 6px solid #D7263D; } .hbn--change { border-left: 6px solid #7C4DDB; }
-.hbn--photo { background-color: #fff; padding-top: 22px; display: flex; flex-direction: row; align-items: flex-start; gap: 16px; }
+.hbn--photo { background-color: #fff; padding-top: 14px; }
 .hbn-pin { position: absolute; top: -9px; left: 50%; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; border: 2px solid #3A0030;
   background: radial-gradient(circle at 35% 32%, #fff 0 18%, var(--pin) 50%); box-shadow: 1px 3px 0 rgba(0, 0, 0, .3); z-index: 2; }
 .hbn-pinned { position: absolute; top: -13px; left: 50%; translate: -50% 0; z-index: 2; padding: 2px 10px; background: #FFE14D; border: 2px solid #3A0030; box-shadow: 2px 2px 0 #3A0030; font: 12px 'Silkscreen', monospace; color: #3A0030; }
-.hbn-photo { position: relative; display: block; flex: 0 0 150px; margin: 0; padding: 8px 8px 22px; background: #fff; border: 2px solid #3A0030; box-shadow: 2px 3px 0 rgba(58, 0, 48, .35); rotate: -1.5deg; }
-.hbn-photo img { display: block; width: 100%; max-height: 200px; object-fit: contain; background: #F3EEF8; }
+.hbn-photo { position: relative; display: block; margin: 0 0 12px; padding: 8px 8px 22px; background: #fff; border: 2px solid #3A0030; box-shadow: 2px 3px 0 rgba(58, 0, 48, .35); rotate: -1.5deg; }
+.hbn-photo img { display: block; width: 100%; object-fit: contain; background: #F3EEF8; }
+/* horizontal layout only in the homepage compact board */
+.hangout-board__notes-compact .hbn--photo { display: flex; flex-direction: row; align-items: flex-start; gap: 16px; padding-top: 22px; }
+.hangout-board__notes-compact .hbn--photo .hbn-photo { flex: 0 0 150px; margin: 0; }
+.hangout-board__notes-compact .hbn--photo .hbn-photo img { max-height: 200px; }
 .hbn-content { flex: 1; min-width: 0; }
 .hbn-tape { position: absolute; top: -10px; left: 50%; width: 76px; height: 20px; margin-left: -38px; rotate: 3deg; background: repeating-linear-gradient(90deg, rgba(255, 140, 200, .85) 0 7px, rgba(255, 190, 225, .85) 7px 14px); border: 1px solid rgba(58, 0, 48, .2); }
 .hbn--photo .hbn-pin, .hbn--photo .hbn-pinned { top: -12px; }
