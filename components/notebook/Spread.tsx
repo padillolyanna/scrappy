@@ -145,9 +145,7 @@ export default function StaticSpread({ left, right, spiral }: { left?: NbPage; r
 
 // ─── Front cover (closed notebook) ────────────────────────────────────────
 
-const COIL_GAP = 44
-
-/** A single closed notebook cover with a plastic coil on the left edge.
+/** A single closed notebook cover with ring binding on the left edge.
  *  Children are placed in a PAGE_W × PAGE_H layer, like a spread page. */
 export function CoverFrame({
   page,
@@ -158,7 +156,7 @@ export function CoverFrame({
   children?: React.ReactNode
   onPageBgPointerDown?: (e: React.PointerEvent) => void
 }) {
-  const coils = Math.floor((PAGE_H - 40) / COIL_GAP)
+  const rings = Math.floor((PAGE_H - 40) / RING_GAP)
   return (
     <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H }}>
       <StickerDefs />
@@ -180,26 +178,21 @@ export function CoverFrame({
         {/* laminated gloss */}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 62%, rgba(255,255,255,.18) 70%, rgba(255,255,255,0) 78%)', pointerEvents: 'none' }} />
         {/* punched holes */}
-        {Array.from({ length: coils }).map((_, r) => (
-          <div key={r} style={{ position: 'absolute', top: 29 + r * COIL_GAP, left: 14, width: 13, height: 13, borderRadius: '50%', background: '#fff', boxShadow: 'inset 1px 2px 3px rgba(0,0,0,.45), 0 0 0 1.5px rgba(43,10,46,.35)' }} />
+        {Array.from({ length: rings }).map((_, r) => (
+          <div key={r} style={{ position: 'absolute', top: 28 + r * RING_GAP, left: 14, width: 9, height: 9, borderRadius: '50%', background: '#6b5a66', boxShadow: 'inset 1px 1px 2px rgba(0,0,0,.5)' }} />
         ))}
       </div>
       {children && <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>{children}</div>}
-      {/* plastic coil: back half behind the board, front half wrapping over the edge */}
-      <svg width={52} height={PAGE_H} style={{ position: 'absolute', left: -24, top: 0, pointerEvents: 'none', overflow: 'visible' }} aria-hidden>
+      {/* ring binding: same D-ring style as the spread interior, centred on the left edge */}
+      <svg width={48} height={PAGE_H} style={{ position: 'absolute', left: -24, top: 0, pointerEvents: 'none', overflow: 'visible' }} aria-hidden>
         <CoilDefs id="nb-coil" color={page.spiral ?? DEFAULT_SPIRAL} />
-        {Array.from({ length: coils }).map((_, r) => {
-          const y = 36 + r * COIL_GAP
+        {Array.from({ length: rings }).map((_, r) => {
+          const y = 32 + r * RING_GAP
           return (
             <g key={r} filter="url(#nb-coil-shadow)">
-              {/* back strand (darker, comes out of the hole) */}
-              <path d={`M44 ${y + 1} C 30 ${y + 14}, 6 ${y + 12}, 6 ${y + 2}`} fill="none" stroke="url(#nb-coil-back)" strokeWidth={6} strokeLinecap="round" opacity={0.9} />
-              {/* front strand */}
-              <path d={`M6 ${y + 2} C 4 ${y - 16}, 30 ${y - 20}, 44 ${y - 1}`} fill="none" stroke="url(#nb-coil-front)" strokeWidth={8} strokeLinecap="round" />
-              {/* specular highlight */}
-              <path d={`M10 ${y - 6} C 14 ${y - 14}, 26 ${y - 15}, 34 ${y - 9}`} fill="none" stroke="rgba(255,255,255,.85)" strokeWidth={2} strokeLinecap="round" />
-              {/* end cap where the wire enters the hole */}
-              <circle cx={44} cy={y} r={3.6} fill={mix(page.spiral ?? DEFAULT_SPIRAL, '#000000', 0.5)} />
+              <path d={`M6 ${y + 1} C 6 ${y + 8}, 42 ${y + 8}, 42 ${y + 1}`} fill="none" stroke="url(#nb-coil-back)" strokeWidth={4} strokeLinecap="round" opacity={0.85} />
+              <path d={`M6 ${y} C 6 ${y - 13}, 42 ${y - 13}, 42 ${y}`} fill="none" stroke="url(#nb-coil-front)" strokeWidth={5.5} strokeLinecap="round" />
+              <path d={`M11 ${y - 5} C 15 ${y - 10}, 24 ${y - 11}, 30 ${y - 9}`} fill="none" stroke="rgba(255,255,255,.8)" strokeWidth={1.4} strokeLinecap="round" />
             </g>
           )
         })}
