@@ -33,8 +33,8 @@ export default function Mascot() {
 
   function clamp(x: number, y: number) {
     return {
-      x: Math.max(0, Math.min(x, window.innerWidth - 110)),
-      y: Math.max(0, Math.min(y, window.innerHeight - 130)),
+      x: Math.max(0, Math.min(x, document.documentElement.scrollWidth - 110)),
+      y: Math.max(0, Math.min(y, document.documentElement.scrollHeight - 130)),
     }
   }
 
@@ -45,16 +45,17 @@ export default function Mascot() {
   }
 
   useEffect(() => {
-    const saved = localStorage.getItem('mascot-pos-v2')
+    // v3 key uses document (absolute) coords; v2 used viewport (fixed) coords
+    const saved = localStorage.getItem('mascot-pos-v3')
     if (saved) {
       try {
         const p = JSON.parse(saved) as { x: number; y: number }
         moveTo(p.x, p.y)
       } catch {
-        moveTo(window.innerWidth - 90, window.innerHeight - 160)
+        moveTo(window.scrollX + window.innerWidth - 90, window.scrollY + window.innerHeight - 160)
       }
     } else {
-      moveTo(window.innerWidth - 90, window.innerHeight - 160)
+      moveTo(window.scrollX + window.innerWidth - 90, window.scrollY + window.innerHeight - 160)
     }
 
     if (!localStorage.getItem('mascot-hint')) {
@@ -83,8 +84,8 @@ export default function Mascot() {
     e.preventDefault()
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     dragOffset.current = {
-      x: e.clientX - posRef.current.x,
-      y: e.clientY - posRef.current.y,
+      x: e.clientX + window.scrollX - posRef.current.x,
+      y: e.clientY + window.scrollY - posRef.current.y,
     }
     didDrag.current = false
     draggingRef.current = true
@@ -95,7 +96,7 @@ export default function Mascot() {
     if (!draggingRef.current) return
     e.preventDefault()
     didDrag.current = true
-    moveTo(e.clientX - dragOffset.current.x, e.clientY - dragOffset.current.y)
+    moveTo(e.clientX + window.scrollX - dragOffset.current.x, e.clientY + window.scrollY - dragOffset.current.y)
   }
 
   function handlePointerUp(e: React.PointerEvent) {
@@ -103,7 +104,7 @@ export default function Mascot() {
     ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
     draggingRef.current = false
     setDragging(false)
-    if (posRef.current) localStorage.setItem('mascot-pos-v2', JSON.stringify(posRef.current))
+    if (posRef.current) localStorage.setItem('mascot-pos-v3', JSON.stringify(posRef.current))
   }
 
   function handleClick() {
@@ -125,7 +126,7 @@ export default function Mascot() {
   return createPortal(
     <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         left: pos.x,
         top: pos.y,
         zIndex: 9999,
