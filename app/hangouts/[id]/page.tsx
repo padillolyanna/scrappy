@@ -2,7 +2,6 @@ export const instant = false
 
 import { createClient } from '@/lib/supabase-server'
 import Footer from '@/components/layout/Footer'
-import RSVPButton from './RSVPButton'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getLiveAnnouncements } from '@/lib/announcements'
@@ -81,30 +80,9 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
     profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
   }
 
-  // Get RSVP count
-  const { count: confirmedCount } = await supabase
-    .from('hangout_rsvps')
-    .select('id', { count: 'exact', head: true })
-    .eq('hangout_id', id)
-    .eq('status', 'confirmed')
-
-  // Check if current user is confirmed (to show meeting_url)
-  const { data: { user } } = await supabase.auth.getUser()
-  let isConfirmed = false
-  if (user) {
-    const { data: rsvp } = await supabase
-      .from('hangout_rsvps')
-      .select('status')
-      .eq('hangout_id', id)
-      .eq('user_id', user.id)
-      .maybeSingle()
-    isConfirmed = rsvp?.status === 'confirmed'
-  }
-
   const hangoutAnnouncements = await getLiveAnnouncements({ hangoutId: id, limit: 10 })
 
   const catLabel = CATEGORY_LABELS[hangout.category] ?? hangout.category
-  const rsvpCount = confirmedCount ?? 0
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -194,36 +172,14 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ color: '#FF4FA3', fontSize: 16 }}>✦</span>
-                <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 13, color: '#3A0030' }}>
-                  {rsvpCount} of {hangout.max_participants} spots filled
-                </div>
-              </div>
-
-              {hangout.registration_deadline && (
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <span style={{ color: '#FF6B00', fontSize: 16 }}>⏰</span>
-                  <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 13, color: '#3A0030' }}>
-                    RSVP by {formatDatePHT(hangout.registration_deadline)}
-                  </div>
-                </div>
-              )}
-
-              {/* Meeting URL — only show to confirmed participants */}
-              {hangout.event_type !== 'in-person' && (
+              {/* Meeting link, when the host has added one */}
+              {hangout.event_type !== 'in-person' && hangout.meeting_url && (
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   <span style={{ color: '#7C4DDB', fontSize: 16 }}>🔗</span>
                   <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 13, color: '#3A0030' }}>
-                    {isConfirmed && hangout.meeting_url ? (
-                      <a href={hangout.meeting_url} target="_blank" rel="noopener noreferrer" style={{ color: '#FF4FA3', textDecoration: 'underline' }}>
-                        {hangout.meeting_url}
-                      </a>
-                    ) : (
-                      <span style={{ color: '#888' }}>
-                        Meeting link shared with confirmed participants
-                      </span>
-                    )}
+                    <a href={hangout.meeting_url} target="_blank" rel="noopener noreferrer" style={{ color: '#C2006B', textDecoration: 'underline' }}>
+                      {hangout.meeting_url}
+                    </a>
                   </div>
                 </div>
               )}
@@ -250,16 +206,6 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
               </div>
             )}
 
-            {/* RSVP */}
-            <div>
-              <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '12px' }}>RESERVE YOUR SPOT</div>
-              <RSVPButton
-                hangoutId={hangout.id}
-                maxParticipants={hangout.max_participants}
-                confirmedCount={rsvpCount}
-                status={hangout.status}
-              />
-            </div>
           </div>
         </div>
       </main>

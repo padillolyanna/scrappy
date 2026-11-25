@@ -2349,3 +2349,4 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .hgd-photo img { display: block; width: 100%; max-height: 420px; object-fit: cover; }
 .y2k-app:not(:has([data-y2k-off])) h1.hgd-title, .hgd-title { margin: 0 0 12px; font: 400 clamp(28px, 5vw, 40px)/1.1 'Cherry Bomb One', 'Arial Black', sans-serif !important; color: #3A0030 !important; -webkit-text-fill-color: #3A0030 !important; text-shadow: 2px 2px 0 #FFB6D9 !important; }
 .hbn { break-inside: avoid; page-break-inside: avoid; display: block; width: 100%; margin-bottom: 26px; }
+.hgc-more { margin-left: auto; font: bold 14px Verdana, sans-serif; color: #C2006B; }

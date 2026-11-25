@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Journal Hangouts — Scrappy',
-  description: 'Community journal events where people write, share prompts and scrapbook together. Browse upcoming hangouts and RSVP.',
+  description: 'Community journal events where people write, share prompts and scrapbook together. See what is coming up on the hangout board.',
 }
 
 import { createClient } from '@/lib/supabase-server'
@@ -24,7 +24,6 @@ interface Hangout {
   max_participants: number
   status: string
   profiles: { username: string } | null
-  rsvp_count: number
   cover_url: string | null
 }
 
@@ -73,8 +72,6 @@ function dateParts(dateStr: string) {
 function HangoutCard({ hangout, featured = false }: { hangout: Hangout; featured?: boolean }) {
   const catColor = CATEGORY_COLORS[hangout.category] ?? '#FFB6D9'
   const catLabel = CATEGORY_LABELS[hangout.category] ?? hangout.category
-  const spotsFull = hangout.rsvp_count >= hangout.max_participants
-  const spotsLeft = hangout.max_participants - hangout.rsvp_count
   const dp = dateParts(hangout.start_at)
   const where = hangout.event_type === 'online' ? 'online' : hangout.event_type === 'in-person' ? 'in person' : 'online + in person'
 
@@ -92,7 +89,6 @@ function HangoutCard({ hangout, featured = false }: { hangout: Hangout; featured
       <div className="hgc-body">
         <div className="hgc-tags">
           <span className="hgc-cat" style={{ ['--cat' as string]: catColor }}>{catLabel}</span>
-          <span className={`hgc-spots ${spotsFull ? 'is-full' : ''}`}>{spotsFull ? 'FULL' : `${spotsLeft} spots left`}</span>
         </div>
         <h3 className="hgc-title">{hangout.title}</h3>
         {hangout.description && <p className="hgc-desc">{hangout.description}</p>}
@@ -102,8 +98,7 @@ function HangoutCard({ hangout, featured = false }: { hangout: Hangout; featured
           {hangout.profiles?.username && <li><b>Host</b> @{hangout.profiles.username}</li>}
         </ul>
         <div className="hgc-foot">
-          <span className="hgc-going">{hangout.rsvp_count}/{hangout.max_participants} going</span>
-          <span className="y2kh-btn y2kh-btn--pink">{spotsFull ? 'join waitlist' : 'RSVP ✦'}</span>
+          <span className="hgc-more">see details ♡</span>
         </div>
       </div>
     </Link>
@@ -129,20 +124,6 @@ export default async function HangoutsPage() {
     max_participants: number; status: string; cover_url: string | null; profiles: { username: string } | { username: string }[] | null
   }
 
-  // Get RSVP counts
-  const hangoutIds = (hangoutsRaw ?? []).map((h) => h.id)
-  const rsvpCounts: Record<string, number> = {}
-  if (hangoutIds.length > 0) {
-    const { data: rsvps } = await supabase
-      .from('hangout_rsvps')
-      .select('hangout_id')
-      .in('hangout_id', hangoutIds)
-      .eq('status', 'confirmed')
-    for (const r of rsvps ?? []) {
-      rsvpCounts[r.hangout_id] = (rsvpCounts[r.hangout_id] ?? 0) + 1
-    }
-  }
-
   const hangouts: Hangout[] = (hangoutsRaw ?? []).map((h) => {
     const row = h as unknown as HangoutRow
     return {
@@ -157,7 +138,6 @@ export default async function HangoutsPage() {
       max_participants: row.max_participants,
       status: row.status,
       profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
-      rsvp_count: rsvpCounts[row.id] ?? 0,
       cover_url: row.cover_url ?? null,
     }
   })
