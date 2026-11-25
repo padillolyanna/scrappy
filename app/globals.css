@@ -2258,3 +2258,15 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .xnb-cover--sm .xnb-label b { overflow-wrap: normal; word-break: normal; hyphens: auto; font-size: 13px; }
 .xch-spread-head .xch-page-h { display: inline-block; padding: 6px 16px !important; background: #fff; border: 3px solid #3A0030; box-shadow: 3px 3px 0 #3A0030; }
 .xch-spread-head .xch-kicker { display: table; margin: 0 auto 8px; padding: 2px 10px; background: #fff; border: 2px solid #3A0030; }
+
+
+/* ── Admin panel nav ── */
+.adm-nav-link {
+  padding: 4px 10px;
+  color: #d1d5db;
+  border-radius: 4px;
+  text-decoration: none;
+  font-family: monospace;
+  font-size: 12px;
+}
+.adm-nav-link:hover { background: #374151; color: #fff; }
