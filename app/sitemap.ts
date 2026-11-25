@@ -1,5 +1,5 @@
 import { MetadataRoute } from 'next'
-import { createClient } from '@/lib/supabase-server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { SITE_URL } from '@/lib/site'
 import { JOURNAL_ARTICLES } from '@/lib/journal'
 
@@ -35,10 +35,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: new Date(article.publishedAt),
   }))
 
+  const supabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   // Dynamic: public scrapbooks
   let scrapbookPages: MetadataRoute.Sitemap = []
   try {
-    const supabase = await createClient()
     const { data: scrapbooks } = await supabase
       .from('scrapbooks')
       .select('id, updated_at')
@@ -59,7 +63,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamic: public profiles
   let profilePages: MetadataRoute.Sitemap = []
   try {
-    const supabase = await createClient()
     const { data: profiles } = await supabase
       .from('profiles')
       .select('username, created_at')
