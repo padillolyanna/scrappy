@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Journal Hangouts — Scrappy',
-  description: 'Community journal events where people write, share prompts and scrapbook together. Browse upcoming hangouts and RSVP.',
+  description: 'Community journal events where people write, share prompts and scrapbook together. See what is coming up on the hangout board.',
 }
 
 import { createClient } from '@/lib/supabase-server'
@@ -23,7 +23,7 @@ interface Hangout {
   max_participants: number
   status: string
   profiles: { username: string } | null
-  rsvp_count: number
+  cover_url: string | null
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -62,102 +62,42 @@ function formatDatePHT(dateStr: string) {
   }) + ' PHT'
 }
 
+function dateParts(dateStr: string) {
+  const d = new Date(dateStr)
+  const f = (o: Intl.DateTimeFormatOptions) => d.toLocaleString('en-PH', { timeZone: 'Asia/Manila', ...o })
+  return { mon: f({ month: 'short' }).toUpperCase(), day: f({ day: 'numeric' }), dow: f({ weekday: 'short' }), time: f({ hour: 'numeric', minute: '2-digit', hour12: true }) }
+}
+
 function HangoutCard({ hangout, featured = false }: { hangout: Hangout; featured?: boolean }) {
   const catColor = CATEGORY_COLORS[hangout.category] ?? '#FFB6D9'
   const catLabel = CATEGORY_LABELS[hangout.category] ?? hangout.category
-  const spotsFull = hangout.rsvp_count >= hangout.max_participants
-  const spotsLeft = hangout.max_participants - hangout.rsvp_count
+  const dp = dateParts(hangout.start_at)
+  const where = hangout.event_type === 'online' ? 'online' : hangout.event_type === 'in-person' ? 'in person' : 'online + in person'
 
   return (
-    <Link href={`/hangouts/${hangout.id}`} style={{ display: 'block', textDecoration: 'none' }}>
-      <div
-        style={{
-          background: '#fff',
-          border: '2px solid #FFB6D9',
-          borderRadius: 8,
-          padding: featured ? 24 : 16,
-          boxShadow: '3px 3px 0 #2B0A2E',
-          cursor: 'pointer',
-          transition: 'transform 0.1s, box-shadow 0.1s',
-          height: '100%',
-        }}
-        className="hover:scale-[1.01]"
-      >
-        {/* Category badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <span style={{
-            background: catColor,
-            color: '#fff',
-            fontFamily: "'Silkscreen', monospace",
-            fontSize: 10,
-            padding: '2px 8px',
-            borderRadius: 4,
-            border: '1.5px solid #2B0A2E',
-            letterSpacing: '0.05em',
-          }}>
-            {catLabel}
-          </span>
-          <span style={{
-            fontFamily: "'Silkscreen', monospace",
-            fontSize: 10,
-            color: spotsFull ? '#FF4FA3' : '#28C840',
-            padding: '2px 6px',
-            border: `1px solid ${spotsFull ? '#FF4FA3' : '#28C840'}`,
-            borderRadius: 4,
-          }}>
-            {spotsFull ? 'FULL' : `${spotsLeft} spots`}
-          </span>
-        </div>
-
-        <h3 style={{
-          fontFamily: 'Pacifico, cursive',
-          fontSize: featured ? 26 : 18,
-          color: '#3A0030',
-          marginBottom: 6,
-          lineHeight: 1.3,
-        }}>
-          {hangout.title}
-        </h3>
-
-        {hangout.description && (
-          <p style={{
-            fontFamily: 'Verdana, sans-serif',
-            fontSize: 12,
-            color: '#666',
-            marginBottom: 10,
-            lineHeight: 1.6,
-            display: '-webkit-box',
-            WebkitLineClamp: featured ? 3 : 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}>
-            {hangout.description}
-          </p>
+    <Link href={`/hangouts/${hangout.id}`} className={`hgc ${featured ? 'hgc--featured' : ''}`}>
+      <div className="hgc-photo">
+        {hangout.cover_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={hangout.cover_url} alt="" loading="lazy" />
+        ) : (
+          <div className="hgc-photo-empty" style={{ ['--cat' as string]: catColor }} aria-hidden="true"><span>✎ ♡ ✦</span></div>
         )}
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
-          <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#3A0030' }}>
-            <span style={{ color: '#FF4FA3', fontWeight: 'bold' }}>📅 </span>
-            {formatDatePHT(hangout.start_at)}
-          </div>
-          {hangout.profiles?.username && (
-            <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888' }}>
-              <span style={{ color: '#FF4FA3' }}>♡ </span>hosted by @{hangout.profiles.username}
-            </div>
-          )}
-          <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, color: '#888' }}>
-            <span style={{ color: '#7C4DDB' }}>✦ </span>
-            {hangout.event_type === 'online' ? 'online event' : hangout.event_type === 'in-person' ? 'in-person event' : 'hybrid event'}
-          </div>
+        <div className="hgc-cal" aria-hidden="true"><b>{dp.mon}</b><span>{dp.day}</span><i>{dp.dow}</i></div>
+      </div>
+      <div className="hgc-body">
+        <div className="hgc-tags">
+          <span className="hgc-cat" style={{ ['--cat' as string]: catColor }}>{catLabel}</span>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontFamily: "'Silkscreen', monospace", fontSize: 11, color: '#888' }}>
-            {hangout.rsvp_count}/{hangout.max_participants} going
-          </div>
-          <span className="btn-y2k" style={{ fontSize: 11, padding: '4px 12px' }}>
-            {spotsFull ? 'join waitlist' : 'RSVP ✦'}
-          </span>
+        <h3 className="hgc-title">{hangout.title}</h3>
+        {hangout.description && <p className="hgc-desc">{hangout.description}</p>}
+        <ul className="hgc-meta">
+          <li><b>When</b> {formatDatePHT(hangout.start_at)}</li>
+          <li><b>Where</b> {where}</li>
+          {hangout.profiles?.username && <li><b>Host</b> @{hangout.profiles.username}</li>}
+        </ul>
+        <div className="hgc-foot">
+          <span className="hgc-more">see details ♡</span>
         </div>
       </div>
     </Link>
@@ -171,7 +111,7 @@ export default async function HangoutsPage() {
 
   const { data: hangoutsRaw } = await supabase
     .from('hangouts')
-    .select('id, title, description, category, host_id, start_at, end_at, event_type, max_participants, status, profiles(username)')
+    .select('id, title, description, cover_url, category, host_id, start_at, end_at, event_type, max_participants, status, profiles(username)')
     .in('status', ['upcoming', 'registration_open'])
     .gt('start_at', new Date().toISOString())
     .order('start_at', { ascending: true })
@@ -180,21 +120,7 @@ export default async function HangoutsPage() {
   type HangoutRow = {
     id: string; title: string; description: string | null; category: string;
     host_id: string | null; start_at: string; end_at: string | null; event_type: string;
-    max_participants: number; status: string; profiles: { username: string } | { username: string }[] | null
-  }
-
-  // Get RSVP counts
-  const hangoutIds = (hangoutsRaw ?? []).map((h) => h.id)
-  let rsvpCounts: Record<string, number> = {}
-  if (hangoutIds.length > 0) {
-    const { data: rsvps } = await supabase
-      .from('hangout_rsvps')
-      .select('hangout_id')
-      .in('hangout_id', hangoutIds)
-      .eq('status', 'confirmed')
-    for (const r of rsvps ?? []) {
-      rsvpCounts[r.hangout_id] = (rsvpCounts[r.hangout_id] ?? 0) + 1
-    }
+    max_participants: number; status: string; cover_url: string | null; profiles: { username: string } | { username: string }[] | null
   }
 
   const hangouts: Hangout[] = (hangoutsRaw ?? []).map((h) => {
@@ -211,7 +137,7 @@ export default async function HangoutsPage() {
       max_participants: row.max_participants,
       status: row.status,
       profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles,
-      rsvp_count: rsvpCounts[row.id] ?? 0,
+      cover_url: row.cover_url ?? null,
     }
   })
 
@@ -219,49 +145,35 @@ export default async function HangoutsPage() {
   const rest = hangouts.slice(1)
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-10">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="font-pixel text-xs text-[#FF4FA3] mb-2 tracking-widest" style={{ fontSize: '12px' }}>
-            ✦ COMMUNITY EVENTS ✦
-          </div>
-          <h1 className="font-pacifico text-5xl text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive', fontSize: 'clamp(28px, 6vw, 48px)' }}>
-            journal hangouts
-          </h1>
-          <p className="font-caveat text-xl text-[#888] mt-2" style={{ fontFamily: 'Caveat, cursive' }}>
-            gather &amp; create together ♡
-          </p>
-        </div>
+    <div className="hgp">
+      <header className="hgp-head">
+        <p className="hgp-kicker">✦ community events ✦</p>
+        <h1 className="hgp-title">Journal Hangouts</h1>
+        <p className="hgp-sub">Meet other journalers, swap stickers and make pages together ♡</p>
+      </header>
 
-        <AnnouncementBoard announcements={announcements} variant="full" />
+      <AnnouncementBoard announcements={announcements} variant="full" />
 
-        {hangouts.length > 0 && (
-          <div className="space-y-8">
-            {featured && (
-              <div>
-                <div className="panel-header mb-0">next up ✦</div>
-                <div className="widget-box p-4">
-                  <HangoutCard hangout={featured} featured />
-                </div>
+      {hangouts.length > 0 ? (
+        <>
+          {featured && (
+            <section className="hgp-sec" aria-labelledby="hgp-next">
+              <h2 id="hgp-next" className="hgp-h2">next up ✦</h2>
+              <HangoutCard hangout={featured} featured />
+            </section>
+          )}
+          {rest.length > 0 && (
+            <section className="hgp-sec" aria-labelledby="hgp-soon">
+              <h2 id="hgp-soon" className="hgp-h2">coming up</h2>
+              <div className="hgp-grid">
+                {rest.map((h) => <HangoutCard key={h.id} hangout={h} />)}
               </div>
-            )}
-
-            {rest.length > 0 && (
-              <div>
-                <div className="panel-header mb-0">coming up ✦</div>
-                <div className="widget-box p-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {rest.map((h) => (
-                      <HangoutCard key={h.id} hangout={h} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+            </section>
+          )}
+        </>
+      ) : (
+        <p className="hgp-empty">No hangouts on the calendar right now. Check the board above for news ♡</p>
+      )}
       <Footer />
     </div>
   )

@@ -27,27 +27,11 @@ export default function AnnouncementBoard({ announcements, variant, rsvpHangoutI
   return (
     <section aria-labelledby="hb-heading" id="board" className="mb-8">
       <h2 id="hb-heading" className="sr-only">Hangout announcements</h2>
-      <div className="window-chrome overflow-hidden rounded-lg shadow-xl">
-        <div className="window-title-bar">
-          <span>announcements.exe — hangout board</span>
-          <div className="flex gap-1" aria-hidden="true">
-            <span className="window-btn">_</span>
-            <span className="window-btn">□</span>
-            <span className="window-btn">x</span>
-          </div>
+      <div className="hb-frame">
+        <div className="hb-frame-head">
+          <span className="hb-frame-title">✦ the hangout board</span>
+          <span className="hb-frame-sub">announcements, reminders &amp; photos ♡</span>
         </div>
-        <p
-          className="font-caveat"
-          style={{
-            fontFamily: 'Caveat, cursive',
-            fontSize: 17,
-            color: '#888',
-            padding: '8px 16px 4px',
-            margin: 0,
-          }}
-        >
-          announcements, reminders and recaps ♡
-        </p>
         <div className="hangout-board__cork">
           {variant === 'full' ? (
             isEmpty ? (
