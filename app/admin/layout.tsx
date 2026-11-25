@@ -2,28 +2,29 @@ import Link from 'next/link'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50" data-y2k-off>
-      <nav className="bg-gray-900 text-white px-5 py-2.5 flex items-center gap-1 text-xs font-mono">
-        <span className="text-gray-500 tracking-widest mr-4">SCRAPPY/ADMIN</span>
-        <Link href="/admin" className="px-3 py-1 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors">
-          Dashboard
-        </Link>
-        <Link href="/admin/confessions" className="px-3 py-1 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors">
-          Confessions
-        </Link>
-        <Link href="/admin/hangouts" className="px-3 py-1 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors">
-          Hangouts
-        </Link>
-        <Link href="/admin/hangouts/announcements" className="px-3 py-1 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors">
-          Announcements
-        </Link>
-        <div className="ml-auto">
-          <Link href="/" className="px-3 py-1 text-gray-500 hover:text-gray-300 rounded transition-colors">
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: '#f9fafb', overflowY: 'auto',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      <nav style={{
+        background: '#111827', color: '#fff',
+        padding: '0 20px', height: '40px',
+        display: 'flex', alignItems: 'center', gap: '4px',
+        fontSize: '12px', fontFamily: 'monospace', flexShrink: 0,
+      }}>
+        <span style={{ color: '#6b7280', letterSpacing: '0.1em', marginRight: '16px' }}>SCRAPPY/ADMIN</span>
+        <Link href="/admin" className="adm-nav-link">Dashboard</Link>
+        <Link href="/admin/confessions" className="adm-nav-link">Confessions</Link>
+        <Link href="/admin/hangouts" className="adm-nav-link">Hangouts</Link>
+        <Link href="/admin/hangouts/announcements" className="adm-nav-link">Announcements</Link>
+        <div style={{ marginLeft: 'auto' }}>
+          <Link href="/" style={{ padding: '4px 10px', color: '#6b7280', textDecoration: 'none', borderRadius: '4px' }}>
             View site ↗
           </Link>
         </div>
       </nav>
-      {children}
+      <div style={{ flex: 1 }}>{children}</div>
     </div>
   )
 }

@@ -1,4 +1,3 @@
-export const instant = false
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -10,6 +9,7 @@ import Footer from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import PromptAnswerForm from '@/components/prompts/PromptAnswerForm'
+import PromptAnswerLikeButton from '@/components/prompts/PromptAnswerLikeButton'
 
 export default async function PromptsPage() {
   const supabase = await createClient()
@@ -51,6 +51,16 @@ export default async function PromptsPage() {
       hasAnswered = !!existing
       userAnswer = existing?.answer_text ?? ''
     }
+  }
+
+  const likedAnswerIds = new Set<string>()
+  if (user && todayAnswers.length > 0) {
+    const { data: likedData } = await supabase
+      .from('prompt_answer_likes')
+      .select('answer_id')
+      .eq('user_id', user.id)
+      .in('answer_id', todayAnswers.map((a) => a.id))
+    likedData?.forEach((l: { answer_id: string }) => likedAnswerIds.add(l.answer_id))
   }
 
   const { data: upcomingPrompts } = await supabase
@@ -145,7 +155,14 @@ export default async function PromptsPage() {
                       >
                         {a.answer_text}
                       </p>
-                      <div className="font-nunito text-xs text-[#888] mt-2">♡ {a.like_count || 0}</div>
+                      <div className="mt-2">
+                        <PromptAnswerLikeButton
+                          answerId={a.id}
+                          initialCount={a.like_count || 0}
+                          initialLiked={likedAnswerIds.has(a.id)}
+                          loggedIn={!!user}
+                        />
+                      </div>
                     </div>
                   )
                 })}

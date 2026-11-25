@@ -1,4 +1,3 @@
-export const instant = false
 
 import { requireAdmin } from '@/lib/admin'
 import { connection } from 'next/server'

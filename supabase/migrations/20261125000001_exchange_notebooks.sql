@@ -15,6 +15,11 @@ alter table public.exchanges add column if not exists cover text default 'pink';
 alter table public.exchanges add column if not exists questions jsonb;
 alter table public.exchange_participants add column if not exists submitted_at timestamptz;
 
+-- extend the status check constraint to include the v2 values
+alter table public.exchanges drop constraint if exists exchanges_status_check;
+alter table public.exchanges add constraint exchanges_status_check
+  check (status in ('pending', 'active', 'completed', 'waiting', 'revealed'));
+
 -- old rows: snapshot nothing; the app falls back to the template's questions when null
 
 -- ── policies: own rows only, no direct writes ──

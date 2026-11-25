@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useState, useTransition, type ReactNode } from 'react'
 import Link from 'next/link'
 import { assetThumb } from '@/lib/assetLibrary'
 import DashboardScrapbooks, { type DashScrapbook } from '@/components/landing/DashboardScrapbooks'
 import type { TodayPrompt } from '@/components/landing/TodayOnScrappy'
+import type { NbPage } from '@/lib/notebook'
 import CoverThumb from './CoverThumb'
 import { Panel } from './Y2KPanel'
+import { toggleProfileVisibility } from '@/app/actions/toggleProfileVisibility'
+import PetAvatar from '@/components/pet/PetAvatar'
+import { usePet } from '@/lib/pet/usePet'
 
 /* Logged-in homepage content in the same lo-fi Y2K windows as the logged-out page. */
 
@@ -17,7 +21,27 @@ const SHORTCUTS = [
   { href: '/confessions', label: 'Confessions', icon: 'charm-padlock' },
   { href: '/exchange', label: 'Note exchange', icon: 'y2k-flip' },
   { href: '/hangouts', label: 'Hangouts', icon: 'mat-pushpin' },
+  { href: '/pet', label: 'My Little Pet ♡', icon: 'y2k-pet' },
 ]
+
+function PetPanel() {
+  const { pet, loading } = usePet({ claim: 'session' })
+  return (
+    <Panel title="my little pet ♡" tone="pink" id="y2kd-pet">
+      <div className="y2kh-pad y2kd-pet-wrap">
+        {loading ? (
+          <div className="y2kd-pet-loading">loading…</div>
+        ) : (
+          <PetAvatar equipped={pet?.equipped ?? {}} size={110} mood="idle" />
+        )}
+        <div className="y2kd-pet-info">
+          <p className="y2kh-small" style={{ marginBottom: 8 }}>your scrappy companion ✦</p>
+          <Link href="/pet" className="y2kh-btn y2kh-btn--pink">dress up →</Link>
+        </div>
+      </div>
+    </Panel>
+  )
+}
 
 function CopyLink({ url }: { url: string }) {
   const [copied, setCopied] = useState(false)
@@ -32,14 +56,28 @@ function CopyLink({ url }: { url: string }) {
   )
 }
 
-export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks, announcementsSlot }: {
+export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks, firstPages, isPublic: initialIsPublic = true, announcementsSlot }: {
   user: { username: string; id: string }
   prompt?: TodayPrompt | null
   latestScrapbook?: { id: string; title: string; cover_id: string } | null
   scrapbooks: DashScrapbook[]
+  firstPages?: Record<string, NbPage>
+  isPublic?: boolean
   announcementsSlot?: ReactNode
 }) {
   const profileUrl = `https://scrappy.fun/profile/${user.username}`
+  const [isPublic, setIsPublic] = useState(initialIsPublic)
+  const [visibilityPending, startVisibilityTransition] = useTransition()
+
+  const handleToggleVisibility = () => {
+    const next = !isPublic
+    setIsPublic(next)
+    startVisibilityTransition(async () => {
+      const result = await toggleProfileVisibility(next)
+      if (result.error) setIsPublic(!next)
+    })
+  }
+
   return (
     <>
       <div className="y2kh-grid y2kh-grid--hero">
@@ -47,7 +85,14 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
           <div className="y2kd-addr">
             <span className="y2kd-addr-label">Address</span>
             <span className="y2kd-addr-url">scrappy.fun/profile/{user.username}</span>
-            <span className="y2kd-public">PUBLIC</span>
+            <button
+              onClick={handleToggleVisibility}
+              disabled={visibilityPending}
+              className={`y2kd-public y2kd-public--btn${isPublic ? '' : ' y2kd-public--private'}`}
+              title={isPublic ? 'Click to make profile private' : 'Click to make profile public'}
+            >
+              {isPublic ? 'PUBLIC' : 'PRIVATE'}
+            </button>
           </div>
           <div className="y2kh-pad y2kd-me">
             <div className="y2kd-avatar" aria-hidden="true">{user.username[0]?.toUpperCase()}</div>
@@ -58,7 +103,7 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
           </div>
           <div className="y2kh-pad y2kh-ctas" style={{ paddingTop: 0 }}>
             <Link href={`/profile/${user.username}`} target="_blank" className="y2kh-btn y2kh-btn--pink">open my page</Link>
-            <Link href="/my-space" className="y2kh-btn y2kh-btn--purple">customize</Link>
+            <Link href={`/profile/${user.username}/edit`} className="y2kh-btn y2kh-btn--purple">customize</Link>
             <CopyLink url={profileUrl} />
           </div>
         </Panel>
@@ -95,6 +140,8 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
         </nav>
       </Panel>
 
+      <PetPanel />
+
       {prompt && (
         <Panel title="♥ Scrappy asks:" tone="lime" id="y2kd-prompt">
           <div className="y2kh-pad y2kd-prompt">
@@ -115,7 +162,7 @@ export default function Y2KDashboard({ user, prompt, latestScrapbook, scrapbooks
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10 }}>
             <Link href="/scrapbook/create" className="y2kh-btn y2kh-btn--pink">+ new scrapbook</Link>
           </div>
-          <DashboardScrapbooks scrapbooks={scrapbooks} />
+          <DashboardScrapbooks scrapbooks={scrapbooks} firstPages={firstPages} />
         </div>
       </Panel>
     </>

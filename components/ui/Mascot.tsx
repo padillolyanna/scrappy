@@ -1,6 +1,9 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
+import PetAvatar from '@/components/pet/PetAvatar'
+import { usePet } from '@/lib/pet/usePet'
 
 const TIPS = [
   'decorate your page! ✦',
@@ -15,26 +18,36 @@ export default function Mascot() {
   const [waving, setWaving] = useState(false)
   const [showHint, setShowHint] = useState(false)
 
-  const posRef = useRef<{ x: number; y: number } | null>(null)
   const dragOffset = useRef({ x: 0, y: 0 })
   const didDrag = useRef(false)
+  const posRef = useRef<{ x: number; y: number } | null>(null)
 
-  function syncPos(p: { x: number; y: number }) {
+  const { pet } = usePet({ claim: 'session' })
+
+  function clamp(x: number, y: number) {
+    return {
+      x: Math.max(0, Math.min(x, window.innerWidth - 110)),
+      y: Math.max(0, Math.min(y, window.innerHeight - 130)),
+    }
+  }
+
+  function moveTo(x: number, y: number) {
+    const p = clamp(x, y)
     posRef.current = p
     setPos(p)
   }
 
   useEffect(() => {
-    const saved = localStorage.getItem('mascot-pos')
+    const saved = localStorage.getItem('mascot-pos-v2')
     if (saved) {
       try {
         const p = JSON.parse(saved) as { x: number; y: number }
-        syncPos({ x: Math.max(0, p.x), y: Math.max(0, p.y) })
+        moveTo(p.x, p.y)
       } catch {
-        syncPos({ x: window.innerWidth - 90, y: 80 })
+        moveTo(window.innerWidth - 90, window.innerHeight - 160)
       }
     } else {
-      syncPos({ x: window.innerWidth - 90, y: 80 })
+      moveTo(window.innerWidth - 90, window.innerHeight - 160)
     }
 
     if (!localStorage.getItem('mascot-hint')) {
@@ -45,68 +58,33 @@ export default function Mascot() {
       }, 4500)
       return () => { clearTimeout(t1); clearTimeout(t2) }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // pageX/pageY = clientX + scrollX, so drag position is document-relative
-  const onMouseMove = useCallback((e: MouseEvent) => {
-    didDrag.current = true
-    const newPos = {
-      x: Math.max(0, e.pageX - dragOffset.current.x),
-      y: Math.max(0, e.pageY - dragOffset.current.y),
-    }
-    syncPos(newPos)
-  }, [])
-
-  const onMouseUp = useCallback(() => {
-    setDragging(false)
-    if (posRef.current) localStorage.setItem('mascot-pos', JSON.stringify(posRef.current))
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-  }, [onMouseMove])
-
-  function handleMouseDown(e: React.MouseEvent) {
+  function handlePointerDown(e: React.PointerEvent) {
     if (!posRef.current) return
     e.preventDefault()
-    // pageX = clientX + scrollX — gives document coordinate
+    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
     dragOffset.current = {
-      x: e.pageX - posRef.current.x,
-      y: e.pageY - posRef.current.y,
+      x: e.clientX - posRef.current.x,
+      y: e.clientY - posRef.current.y,
     }
     didDrag.current = false
     setDragging(true)
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
   }
 
-  const onTouchMove = useCallback((e: TouchEvent) => {
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!dragging) return
     e.preventDefault()
     didDrag.current = true
-    const t = e.touches[0]
-    const newPos = {
-      x: Math.max(0, t.pageX - dragOffset.current.x),
-      y: Math.max(0, t.pageY - dragOffset.current.y),
-    }
-    syncPos(newPos)
-  }, [])
+    moveTo(e.clientX - dragOffset.current.x, e.clientY - dragOffset.current.y)
+  }
 
-  const onTouchEnd = useCallback(() => {
+  function handlePointerUp(e: React.PointerEvent) {
+    if (!dragging) return
+    ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
     setDragging(false)
-    if (posRef.current) localStorage.setItem('mascot-pos', JSON.stringify(posRef.current))
-    window.removeEventListener('touchmove', onTouchMove)
-    window.removeEventListener('touchend', onTouchEnd)
-  }, [onTouchMove])
-
-  function handleTouchStart(e: React.TouchEvent) {
-    if (!posRef.current) return
-    const t = e.touches[0]
-    dragOffset.current = {
-      x: t.pageX - posRef.current.x,
-      y: t.pageY - posRef.current.y,
-    }
-    didDrag.current = false
-    setDragging(true)
-    window.addEventListener('touchmove', onTouchMove, { passive: false })
-    window.addEventListener('touchend', onTouchEnd)
+    if (posRef.current) localStorage.setItem('mascot-pos-v2', JSON.stringify(posRef.current))
   }
 
   function handleClick() {
@@ -123,19 +101,20 @@ export default function Mascot() {
 
   const activeBubble = bubble ?? (showHint ? 'sama mo ako! ✦' : null)
 
-  return (
+  return createPortal(
     <div
       style={{
-        // absolute = document coordinates, stays put when page scrolls
-        position: 'absolute',
+        position: 'fixed',
         left: pos.x,
         top: pos.y,
         zIndex: 9999,
         userSelect: 'none',
         touchAction: 'none',
+        cursor: dragging ? 'grabbing' : 'grab',
       }}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       onClick={handleClick}
     >
       {activeBubble && (
@@ -180,34 +159,16 @@ export default function Mascot() {
         </div>
       )}
 
-      <div
-        className="animate-mascot-idle"
-        style={{ width: 54, position: 'relative', cursor: dragging ? 'grabbing' : 'grab' }}
-      >
-        {/* Head */}
-        <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #FFB6D9, #FF9ECF)', border: '2px solid #2B0A2E', margin: '0 auto', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', gap: 7, marginTop: 2 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2B0A2E' }} />
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2B0A2E' }} />
-          </div>
-          <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', lineHeight: 1 }}>
-            <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
-              <ellipse cx="4.5" cy="6" rx="4" ry="2.5" fill="#FF4FA3" stroke="#2B0A2E" strokeWidth="1" transform="rotate(-15,4.5,6)"/>
-              <ellipse cx="13.5" cy="6" rx="4" ry="2.5" fill="#FF4FA3" stroke="#2B0A2E" strokeWidth="1" transform="rotate(15,13.5,6)"/>
-              <circle cx="9" cy="6" r="2" fill="#FF9ECF" stroke="#2B0A2E" strokeWidth="1"/>
-            </svg>
-          </div>
-        </div>
-        {/* Body */}
-        <div style={{ width: 30, height: 32, margin: '2px auto 0', background: 'linear-gradient(180deg, #C9A2FF, #FF4FA3)', border: '2px solid #2B0A2E', borderRadius: '4px 4px 10px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ color: 'white', fontSize: 12, opacity: 0.8 }}>✦</span>
-        </div>
-        {/* Wand arm */}
-        <div style={{ position: 'absolute', bottom: 10, right: -4, transform: waving ? 'rotate(-25deg)' : 'rotate(-5deg)', transition: 'transform 0.3s ease', transformOrigin: 'bottom left' }}>
-          <div style={{ width: 4, height: 20, background: '#C9A2FF', border: '1px solid #2B0A2E', borderRadius: 2, margin: '0 auto' }} />
-          <div style={{ textAlign: 'center', fontSize: 12, marginTop: -2, lineHeight: 1 }}>✦</div>
-        </div>
+      <div className="animate-mascot-idle" style={{ pointerEvents: 'none' }}>
+        <PetAvatar
+          equipped={pet?.equipped ?? {}}
+          size={90}
+          mood={waving ? 'excited' : 'idle'}
+          animated={false}
+          title=""
+        />
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

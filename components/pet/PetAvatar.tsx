@@ -124,6 +124,9 @@ const HEAD: Record<string, Art & { hideAntenna?: boolean }> = {
   }),
 }
 HEAD.crown.hideAntenna = true
+HEAD['bow-pink'].hideAntenna = true
+HEAD['clip-heart'].hideAntenna = true
+HEAD['clip-butterfly'].hideAntenna = true
 
 /* ───────── eyes ───────── */
 function Eyes({ kind }: { kind?: string }) {

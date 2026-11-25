@@ -1,4 +1,3 @@
-export const instant = false
 
 import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'

@@ -92,7 +92,6 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel:
                   <Link href="/scrapbook/create" className="y2kh-btn y2kh-btn--pink y2kh-btn--big">Make my scrapbook →</Link>
                   <Link href="/explore" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">Explore</Link>
                 </div>
-                <p className="y2kh-small">free · no download · works on your phone</p>
               </div>
             </section>
           </div>

@@ -24,7 +24,6 @@ export default function Y2KHeader({ user, dateLabel, hideAuth = false }: { user?
             {!user && <Link href="/about" className="y2kh-bubble">click for <b>INFO</b><br />about Scrappy!</Link>}
             {hideAuth ? null : user ? (
               <div className="y2kh-auth">
-                <Link href="/" className="y2kh-btn y2kh-btn--chrome">my space</Link>
                 <Link href={`/profile/${user.username}`} className="y2kh-btn y2kh-btn--pink">my page ✦</Link>
               </div>
             ) : (

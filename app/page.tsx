@@ -1,4 +1,3 @@
-export const instant = false
 
 import TopMarquee from '@/components/landing/TopMarquee'
 import { type FreshScrapbook } from '@/components/landing/FreshScrapbooks'
@@ -8,6 +7,7 @@ import type { DashScrapbook } from '@/components/landing/DashboardScrapbooks'
 import { createClient } from '@/lib/supabase-server'
 import { getLiveAnnouncements } from '@/lib/announcements'
 import AnnouncementBoard from '@/components/hangouts/AnnouncementBoard'
+import { decodePaper, rowToElement, type NbPage } from '@/lib/notebook'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -36,19 +36,22 @@ export default async function Home() {
   // Current user
   const { data: { user: authUser } } = await supabase.auth.getUser()
   let currentUser: { username: string; id: string } | null = null
+  let isProfilePublic = true
   if (authUser) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username')
+      .select('username, is_public')
       .eq('id', authUser.id)
       .single()
     currentUser = profile ? { username: profile.username, id: authUser.id } : null
+    isProfilePublic = profile?.is_public ?? true
   }
 
   // Logged-in: fetch user's scrapbooks + latest
   let latestScrapbook: { id: string; title: string; cover_id: string } | null = null
   let userScrapbooks: DashScrapbook[] = []
   let rsvpHangoutIds: string[] = []
+  const firstPageMap: Record<string, NbPage> = {}
 
   if (currentUser && authUser) {
     const [sbResult, rsvpResult] = await Promise.all([
@@ -71,6 +74,43 @@ export default async function Home() {
       latestScrapbook = { id: first.id, title: first.title, cover_id: first.cover_id }
     }
     rsvpHangoutIds = (rsvpResult.data ?? []).map((r: { hangout_id: string }) => r.hangout_id)
+
+    // Fetch actual cover page data for thumbnails
+    const sbIds = userScrapbooks.map((s) => s.id)
+    if (sbIds.length) {
+      const { data: pageRows } = await supabase
+        .from('scrapbook_pages')
+        .select('id, scrapbook_id, page_number, bg_color, bg_texture')
+        .in('scrapbook_id', sbIds)
+        .order('page_number', { ascending: true })
+
+      const firstPages: Record<string, { id: string; scrapbook_id: string; bg_color: string | null; bg_texture: string | null }> = {}
+      for (const p of (pageRows ?? [])) {
+        if (!firstPages[p.scrapbook_id]) firstPages[p.scrapbook_id] = p
+      }
+
+      const pageIds = Object.values(firstPages).map((p) => p.id)
+      if (pageIds.length) {
+        const { data: elRows } = await supabase
+          .from('scrapbook_elements')
+          .select('id, page_id, type, content, x, y, width, height, rotation, z_index, props')
+          .in('page_id', pageIds)
+
+        for (const [sbId, p] of Object.entries(firstPages)) {
+          const elements = (elRows ?? [])
+            .filter((r) => r.page_id === p.id)
+            .map(rowToElement)
+            .filter((e): e is NonNullable<typeof e> => !!e)
+            .sort((a, b) => a.z - b.z)
+          firstPageMap[sbId] = {
+            id: p.id,
+            ...decodePaper(p.bg_texture ?? null),
+            color: p.bg_color || '#FFF8ED',
+            elements,
+          }
+        }
+      }
+    }
   }
 
   // Marketing page: fresh public scrapbooks
@@ -104,6 +144,8 @@ export default async function Home() {
             prompt={promptResult.data ?? null}
             latestScrapbook={latestScrapbook}
             scrapbooks={userScrapbooks}
+            firstPages={firstPageMap}
+            isPublic={isProfilePublic}
             announcementsSlot={announcementsSlot}
           />
         </Y2KShell>

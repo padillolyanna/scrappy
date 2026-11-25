@@ -1,4 +1,3 @@
-export const instant = false
 
 import { createClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
@@ -26,11 +25,14 @@ export default async function PhotoboothGalleryPage() {
     )
   }
 
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
   const { data: sessions } = await supabase
     .from('photobooth_sessions')
     .select('id, layout_id, strip_url, photo_count, filter_id, frame_id, created_at')
     .eq('user_id', user.id)
     .eq('status', 'completed')
+    .gt('created_at', sevenDaysAgo)
     .order('created_at', { ascending: false })
     .limit(48)
 
@@ -55,6 +57,7 @@ export default async function PhotoboothGalleryPage() {
             <p className="font-caveat text-lg text-[#888] mt-1" style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}>
               {sessions?.length ?? 0} photo strips saved ✦
             </p>
+            <p className="font-nunito text-xs text-[#aaa] mt-1">strips are kept for 7 days after saving</p>
           </div>
 
           {!sessions || sessions.length === 0 ? (

@@ -1,4 +1,3 @@
-export const instant = false
 
 import { createClient } from '@/lib/supabase-server'
 import Footer from '@/components/layout/Footer'
