@@ -29,8 +29,8 @@ export default function Mascot() {
 
   // Only authenticated users who have the companion enabled can drag/see the pet.
   const canDrag = !loading && !guest
-  // Show if logged-in with companion on, or while still loading (avoid flash).
-  const isVisible = loading || (!guest && pet?.show_companion !== false)
+  // Guests see a default view-only pet. Logged-in users see it unless they disabled it.
+  const isVisible = loading || guest || pet?.show_companion !== false
 
   function clamp(x: number, y: number) {
     return {
