@@ -2296,7 +2296,7 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .hbn-photo { position: relative; display: block; margin: 0 0 12px; padding: 8px 8px 22px; background: #fff; border: 2px solid #3A0030; box-shadow: 2px 3px 0 rgba(58, 0, 48, .35); rotate: -1.5deg; }
 .hbn-photo img { display: block; width: 100%; object-fit: contain; background: #F3EEF8; }
 /* horizontal layout only in the homepage compact board */
-.hangout-board__notes-compact .hbn--photo { display: flex; flex-direction: row; align-items: flex-start; gap: 16px; padding-top: 22px; }
+.hangout-board__notes-compact .hbn--photo { display: flex; flex-direction: row; align-items: flex-start; gap: 16px; padding-top: 22px; grid-column: 1 / -1; }
 .hangout-board__notes-compact .hbn--photo .hbn-photo { flex: 0 0 150px; margin: 0; }
 .hangout-board__notes-compact .hbn--photo .hbn-photo img { max-height: 200px; }
 .hbn-content { flex: 1; min-width: 0; }
