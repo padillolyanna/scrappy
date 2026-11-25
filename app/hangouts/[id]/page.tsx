@@ -56,7 +56,7 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
 
   const { data: hangoutRaw } = await supabase
     .from('hangouts')
-    .select('id, title, description, category, host_id, start_at, end_at, event_type, meeting_url, location, max_participants, registration_deadline, status, profiles(username)')
+    .select('id, title, description, cover_url, category, host_id, start_at, end_at, event_type, meeting_url, location, max_participants, registration_deadline, status, profiles(username)')
     .eq('id', id)
     .maybeSingle()
 
@@ -152,9 +152,13 @@ export default async function HangoutDetailPage({ params }: { params: Promise<{ 
               </span>
             </div>
 
-            <h1 className="font-pacifico text-4xl text-[#3A0030] mb-3" style={{ fontFamily: 'Pacifico, cursive', fontSize: 'clamp(24px, 5vw, 36px)' }}>
-              {hangout.title}
-            </h1>
+            {(row as unknown as { cover_url?: string | null }).cover_url && (
+              <a href={(row as unknown as { cover_url: string }).cover_url} target="_blank" rel="noopener noreferrer" className="hgd-photo">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={(row as unknown as { cover_url: string }).cover_url} alt={`picture for ${hangout.title}`} />
+              </a>
+            )}
+            <h1 className="hgd-title">{hangout.title}</h1>
 
             {hangout.description && (
               <p style={{ fontFamily: 'Verdana, sans-serif', fontSize: 14, color: '#444', lineHeight: 1.7, marginBottom: 20 }}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { uploadBoardImage } from '@/lib/boardImage'
 import { createClient } from '@/lib/supabase-client'
 import { useRouter } from 'next/navigation'
 
@@ -35,6 +36,8 @@ export default function AdminHangoutForm() {
   const [location, setLocation] = useState('')
   const [maxParticipants, setMaxParticipants] = useState(20)
   const [pinNote, setPinNote] = useState(true)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -50,9 +53,12 @@ export default function AdminHangoutForm() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
+      const coverUrl = coverFile ? await uploadBoardImage(coverFile, 'hangouts') : null
+
       const { data: insertData, error: insertErr } = await supabase.from('hangouts').insert({
         title,
         description: description || null,
+        cover_url: coverUrl,
         category,
         host_id: user.id,
         start_at: new Date(startAt).toISOString(),
@@ -80,6 +86,7 @@ export default function AdminHangoutForm() {
           hangout_id: insertData?.id ?? null,
           note_color: 'pink',
           is_pinned: false,
+          image_url: coverUrl,
           created_by: user.id,
         })
       }
@@ -120,6 +127,25 @@ export default function AdminHangoutForm() {
           className={inputCls}
           placeholder="e.g. Scrapbook Night with the girls"
         />
+      </div>
+
+      <div>
+        <label className={labelCls}>Cover picture (optional)</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const f = e.target.files?.[0] ?? null
+            setCoverFile(f)
+            setCoverPreview(f ? URL.createObjectURL(f) : null)
+          }}
+          className="text-sm text-gray-700"
+        />
+        <p className="text-xs text-gray-400 mt-1">A flyer or a photo of the venue. Shown on the hangout card, its page and the board note. Max 5 MB.</p>
+        {coverPreview && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={coverPreview} alt="" className="mt-2 max-h-32 rounded border border-gray-200 block" />
+        )}
       </div>
 
       <div>

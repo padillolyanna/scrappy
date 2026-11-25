@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { createClient } from '@/lib/supabase-client'
-import { createAnnouncement, deleteAnnouncement, togglePin } from './actions'
+import { uploadBoardImage } from '@/lib/boardImage'
+import { createAnnouncement, deleteAnnouncement, togglePin, updateAnnouncement } from './actions'
 
 const NOTE_BG: Record<string, string> = {
   pink: '#FFD6EA',
@@ -41,6 +42,7 @@ type AnnouncementRow = {
   expires_at: string | null
   scheduled: boolean
   expired: boolean
+  image_url?: string | null
   hangout: { id: string; title: string } | null
 }
 
@@ -136,6 +138,19 @@ export default function AnnouncementsAdminForm({
   const [isPending, startTransition] = useTransition()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [pictureId, setPictureId] = useState<string | null>(null)
+
+  async function handlePicture(id: string, file: File | null) {
+    setPictureId(id)
+    try {
+      const url = file ? await uploadBoardImage(file, 'notes') : null
+      await updateAnnouncement(id, { image_url: url })
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Picture upload failed.')
+    } finally {
+      setPictureId(null)
+    }
+  }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] ?? null
@@ -436,7 +451,13 @@ export default function AnnouncementsAdminForm({
                 {announcements.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 max-w-[220px]">
-                      <div className="font-medium text-gray-900 truncate">{a.title}</div>
+                      <div className="flex items-center gap-2">
+                        {a.image_url && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={a.image_url} alt="" className="w-9 h-9 object-cover rounded border border-gray-200 flex-none" />
+                        )}
+                        <div className="font-medium text-gray-900 truncate">{a.title}</div>
+                      </div>
                       {a.hangout && <div className="text-xs text-gray-400 mt-0.5">@ {a.hangout.title}</div>}
                     </td>
                     <td className="px-4 py-3 text-xs text-gray-500">{a.kind}</td>
@@ -474,6 +495,15 @@ export default function AnnouncementsAdminForm({
                         >
                           {a.is_pinned ? 'Unpin' : 'Pin'}
                         </button>
+                        <label className={`text-xs px-2.5 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 cursor-pointer ${pictureId === a.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                          {pictureId === a.id ? 'Uploading…' : a.image_url ? 'Change picture' : 'Add picture'}
+                          <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void handlePicture(a.id, f) }} />
+                        </label>
+                        {a.image_url && (
+                          <button onClick={() => void handlePicture(a.id, null)} disabled={pictureId === a.id} className="text-xs px-2.5 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-100">
+                            Remove picture
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(a.id)}
                           disabled={deletingId === a.id}

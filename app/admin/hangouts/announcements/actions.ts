@@ -45,6 +45,7 @@ export async function updateAnnouncement(id: string, data: {
   is_pinned?: boolean
   publish_at?: string
   expires_at?: string | null
+  image_url?: string | null
 }) {
   const supabase = await createClient()
 
@@ -61,6 +62,7 @@ export async function updateAnnouncement(id: string, data: {
 
   revalidatePath('/hangouts')
   revalidatePath('/')
+  revalidatePath('/admin/hangouts/announcements')
 }
 
 export async function deleteAnnouncement(id: string) {
