@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     // current content without a manual refresh.
     staleTimes: {
       dynamic: 0,
-      static: 180,
+      static: 30,
     },
   },
   turbopack: {
