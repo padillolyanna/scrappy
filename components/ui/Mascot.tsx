@@ -18,11 +18,19 @@ export default function Mascot() {
   const [waving, setWaving] = useState(false)
   const [showHint, setShowHint] = useState(false)
 
+  // Ref tracks drag state synchronously — avoids stale-closure bug where
+  // handlePointerMove reads an outdated `dragging = false` before re-render.
+  const draggingRef = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
   const didDrag = useRef(false)
   const posRef = useRef<{ x: number; y: number } | null>(null)
 
-  const { pet } = usePet({ claim: 'session' })
+  const { pet, guest, loading } = usePet({ claim: 'session' })
+
+  // Only authenticated users who have the companion enabled can drag/see the pet.
+  const canDrag = !loading && !guest
+  // Show if logged-in with companion on, or while still loading (avoid flash).
+  const isVisible = loading || (!guest && pet?.show_companion !== false)
 
   function clamp(x: number, y: number) {
     return {
@@ -62,27 +70,31 @@ export default function Mascot() {
   }, [])
 
   function handlePointerDown(e: React.PointerEvent) {
-    if (!posRef.current) return
+    if (!canDrag || !posRef.current) return
     e.preventDefault()
-    ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    // Capture on currentTarget (the outer div) so move/up events route correctly.
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
     dragOffset.current = {
       x: e.clientX - posRef.current.x,
       y: e.clientY - posRef.current.y,
     }
     didDrag.current = false
+    // Update ref first (synchronous) so handlePointerMove sees it immediately.
+    draggingRef.current = true
     setDragging(true)
   }
 
   function handlePointerMove(e: React.PointerEvent) {
-    if (!dragging) return
+    if (!draggingRef.current) return
     e.preventDefault()
     didDrag.current = true
     moveTo(e.clientX - dragOffset.current.x, e.clientY - dragOffset.current.y)
   }
 
   function handlePointerUp(e: React.PointerEvent) {
-    if (!dragging) return
-    ;(e.target as HTMLElement).releasePointerCapture(e.pointerId)
+    if (!draggingRef.current) return
+    ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    draggingRef.current = false
     setDragging(false)
     if (posRef.current) localStorage.setItem('mascot-pos-v2', JSON.stringify(posRef.current))
   }
@@ -97,9 +109,9 @@ export default function Mascot() {
     setTimeout(() => setWaving(false), 800)
   }
 
-  if (!pos) return null
+  if (!pos || !isVisible) return null
 
-  const activeBubble = bubble ?? (showHint ? 'sama mo ako! ✦' : null)
+  const activeBubble = bubble ?? (showHint && canDrag ? 'sama mo ako! ✦' : null)
 
   return createPortal(
     <div
@@ -110,11 +122,11 @@ export default function Mascot() {
         zIndex: 9999,
         userSelect: 'none',
         touchAction: 'none',
-        cursor: dragging ? 'grabbing' : 'grab',
+        cursor: canDrag ? (dragging ? 'grabbing' : 'grab') : 'default',
       }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
+      onPointerDown={canDrag ? handlePointerDown : undefined}
+      onPointerMove={canDrag ? handlePointerMove : undefined}
+      onPointerUp={canDrag ? handlePointerUp : undefined}
       onClick={handleClick}
     >
       {activeBubble && (
@@ -141,7 +153,7 @@ export default function Mascot() {
         </div>
       )}
 
-      {showHint && (
+      {showHint && canDrag && (
         <div style={{
           position: 'absolute',
           top: '110%',
