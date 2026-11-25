@@ -55,9 +55,6 @@ export default function HomepageHero() {
               Explore
             </Link>
           </div>
-          <p className="font-nunito" style={{ fontSize: 15, color: 'var(--c-text)', opacity: 0.65, marginTop: 18 }}>
-            free · no download · works on your phone ✦
-          </p>
         </motion.div>
 
         {/* Right: floating notebook cluster */}

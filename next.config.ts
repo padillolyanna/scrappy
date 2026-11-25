@@ -1,11 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
   experimental: {
-    // Router Cache: re-fetch dynamic pages on every soft navigation so users
-    // always see their latest data without a hard reload.
+    // Re-fetch dynamic pages on every soft navigation so users always see
+    // current content without a manual refresh.
     staleTimes: {
       dynamic: 0,
       static: 180,

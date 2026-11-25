@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { createClient } from '@/lib/supabase-client'
 import Footer from '@/components/layout/Footer'
@@ -183,12 +184,15 @@ export default function PhotoboothPage() {
   const [newTextFont, setNewTextFont] = useState('Caveat')
   const [newTextSize, setNewTextSize] = useState(22)
 
+  const router = useRouter()
+
   // ── Export / Save ──
   const [exportedUrl, setExportedUrl] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [autoSaveMsg, setAutoSaveMsg] = useState('')
 
   // ── Camera lifecycle ──
   const startCamera = useCallback(async () => {
@@ -473,13 +477,16 @@ export default function PhotoboothPage() {
     a.click()
   }
 
-  async function saveToPhotobooth() {
+  const EXPIRES_MS = 7 * 24 * 60 * 60 * 1000
+
+  async function saveToPhotobooth(opts?: { dataUrl: string; layout: LayoutId; filter: string; frame: string; bg: string; count: number }) {
     if (!user) return
+    const url = opts?.dataUrl ?? exportedUrl
+    if (!url) return
     setSaving(true)
     setSaveError('')
     try {
-      // Upload PNG to Supabase storage
-      const blob = await (await fetch(exportedUrl!)).blob()
+      const blob = await (await fetch(url)).blob()
       const fileName = `${user.id}/${Date.now()}.png`
       const { error: uploadErr } = await supabase.storage
         .from('photobooth')
@@ -489,23 +496,51 @@ export default function PhotoboothPage() {
 
       const { data: { publicUrl } } = supabase.storage.from('photobooth').getPublicUrl(fileName)
 
+      const expiresAt = new Date(Date.now() + EXPIRES_MS).toISOString()
       const { error: dbErr } = await supabase.from('photobooth_sessions').insert({
         user_id: user.id,
-        layout_id: selectedLayout,
-        filter_id: selectedFilter,
-        frame_id: selectedFrame,
-        bg_color: bgId,
-        photo_count: capturedPhotos.length,
+        layout_id: opts?.layout ?? selectedLayout,
+        filter_id: opts?.filter ?? selectedFilter,
+        frame_id: opts?.frame ?? selectedFrame,
+        bg_color: opts?.bg ?? bgId,
+        photo_count: opts?.count ?? capturedPhotos.length,
         strip_url: publicUrl,
         status: 'completed',
+        expires_at: expiresAt,
       })
 
       if (dbErr) throw dbErr
       setSaved(true)
-    } catch (e: unknown) {
-      setSaveError('Could not save. Make sure the photobooth bucket exists in Supabase Storage.')
+    } catch {
+      setSaveError('Could not save. Try again or check your storage settings.')
     }
     setSaving(false)
+  }
+
+  // Auto-save a strip that was queued before the user signed up
+  useEffect(() => {
+    if (!user) return
+    const pendingUrl = sessionStorage.getItem('pb-pending-url')
+    if (!pendingUrl) return
+    const meta = JSON.parse(sessionStorage.getItem('pb-pending-meta') || '{}')
+    sessionStorage.removeItem('pb-pending-url')
+    sessionStorage.removeItem('pb-pending-meta')
+    setAutoSaveMsg('saving your strip…')
+    saveToPhotobooth({ dataUrl: pendingUrl, layout: meta.layout ?? 'classic', filter: meta.filter ?? 'none', frame: meta.frame ?? 'rhinestone', bg: meta.bg ?? 'glitter-pink', count: meta.count ?? 1 })
+      .then(() => setAutoSaveMsg('✓ your strip was saved to your gallery!'))
+      .catch(() => setAutoSaveMsg(''))
+  // only run when user first becomes available
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  function handleSignUpToSave() {
+    if (exportedUrl) {
+      sessionStorage.setItem('pb-pending-url', exportedUrl)
+      sessionStorage.setItem('pb-pending-meta', JSON.stringify({
+        layout: selectedLayout, filter: selectedFilter, frame: selectedFrame, bg: bgId, count: capturedPhotos.length,
+      }))
+    }
+    router.push('/auth/signup')
   }
 
   function resetAll() {
@@ -1258,13 +1293,19 @@ export default function PhotoboothPage() {
                 </div>
               )}
 
+              {autoSaveMsg && (
+                <div className="bg-green-50 border border-green-200 text-green-700 rounded-lg px-4 py-2 mt-4 font-nunito text-sm">
+                  {autoSaveMsg}
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
                 <button onClick={downloadStrip} className="btn-y2k px-8 py-3">
                   DOWNLOAD ✦
                 </button>
                 {user ? (
                   <button
-                    onClick={saveToPhotobooth}
+                    onClick={() => saveToPhotobooth()}
                     disabled={saving || saved}
                     className="btn-outline-y2k px-8 py-3"
                     style={{ fontSize: '13px' }}
@@ -1272,11 +1313,19 @@ export default function PhotoboothPage() {
                     {saving ? 'saving...' : saved ? '✓ saved!' : 'SAVE TO MY PHOTOBOOTH'}
                   </button>
                 ) : (
-                  <Link href="/auth/signup" className="btn-outline-y2k px-8 py-3 text-sm" style={{ fontSize: '13px' }}>
+                  <button
+                    onClick={handleSignUpToSave}
+                    className="btn-outline-y2k px-8 py-3"
+                    style={{ fontSize: '13px' }}
+                    type="button"
+                  >
                     SIGN UP TO SAVE ✦
-                  </Link>
+                  </button>
                 )}
               </div>
+              {!user && (
+                <p className="mt-2 font-nunito text-xs text-[#888]">strips are saved for 7 days ✦</p>
+              )}
 
               {saved && (
                 <Link href="/photobooth/gallery" className="inline-block mt-3 font-nunito text-sm text-[#FF4FA3] hover:underline">

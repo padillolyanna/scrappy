@@ -199,7 +199,7 @@ export default function Y2KTv() {
         <span className="y2kh-tv-label">SCRAPPY TV</span>
         <span className="y2kh-tv-ch" aria-live="polite">CH {ch} · {cur.name}</span>
       </div>
-      <Link href={cur.href} className={`y2kh-tv-screen ${reduced ? 'tv-still' : ''}`} aria-label={cur.label}>
+      <Link href={cur.href} className={`y2kh-tv-screen ${(reduced || userPaused) ? 'tv-still' : ''}`} aria-label={cur.label}>
         <div key={`${cur.id}-${flip}`} className="tv-channel" aria-hidden="true">
           {cur.id === 'intro' && <Intro />}
           {cur.id === 'desktop' && <Desktop />}

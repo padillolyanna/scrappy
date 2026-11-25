@@ -1,4 +1,3 @@
-export const instant = false
 
 import ExchangeJoinClient from './ExchangeJoinClient'
 

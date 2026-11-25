@@ -186,17 +186,19 @@ function DotMenu({ id, onDeleted }: { id: string; onDeleted: () => void }) {
   )
 }
 
-export default function DashboardScrapbooks({ scrapbooks: initial }: { scrapbooks: DashScrapbook[] }) {
+export default function DashboardScrapbooks({ scrapbooks: initial, firstPages }: { scrapbooks: DashScrapbook[]; firstPages?: Record<string, NbPage> }) {
   const [scrapbooks, setScrapbooks] = useState(initial)
-  const [covers, setCovers] = useState<Record<string, NbPage> | null>(null)
+  const [fallbacks, setFallbacks] = useState<Record<string, NbPage>>({})
 
   useEffect(() => { setScrapbooks(initial) }, [initial])
 
   useEffect(() => {
-    const c: Record<string, NbPage> = {}
-    scrapbooks.forEach((s) => { c[s.id] = starterCover(s.cover_id, s.title || 'my scrapbook') })
-    setCovers(c)
-  }, [scrapbooks])
+    const fb: Record<string, NbPage> = {}
+    scrapbooks.forEach((s) => {
+      if (!firstPages?.[s.id]) fb[s.id] = starterCover(s.cover_id, s.title || 'my scrapbook')
+    })
+    setFallbacks(fb)
+  }, [scrapbooks, firstPages])
 
   if (!scrapbooks.length) {
     return (
@@ -217,7 +219,7 @@ export default function DashboardScrapbooks({ scrapbooks: initial }: { scrapbook
             href={`/scrapbook/${sb.id}/edit`}
             style={{ display: 'block', width: '100%', borderRadius: 6, boxShadow: '3px 3px 0 rgba(43,10,46,.35)', overflow: 'hidden', flexShrink: 0 }}
           >
-            <ScrapbookCoverFill page={covers?.[sb.id]} />
+            <ScrapbookCoverFill page={firstPages?.[sb.id] ?? fallbacks[sb.id]} />
           </Link>
 
           {/* Info + actions below the cover, no background */}
