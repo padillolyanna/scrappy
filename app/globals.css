@@ -2294,7 +2294,7 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
   background: radial-gradient(circle at 35% 32%, #fff 0 18%, var(--pin) 50%); box-shadow: 1px 3px 0 rgba(0, 0, 0, .3); z-index: 2; }
 .hbn-pinned { position: absolute; top: -13px; left: 50%; translate: -50% 0; z-index: 2; padding: 2px 10px; background: #FFE14D; border: 2px solid #3A0030; box-shadow: 2px 2px 0 #3A0030; font: 12px 'Silkscreen', monospace; color: #3A0030; }
 .hbn-photo { position: relative; display: block; margin: 0 0 12px; padding: 8px 8px 22px; background: #fff; border: 2px solid #3A0030; box-shadow: 2px 3px 0 rgba(58, 0, 48, .35); rotate: -1.5deg; }
-.hbn-photo img { display: block; width: 100%; max-height: 300px; object-fit: cover; background: #F3EEF8; }
+.hbn-photo img { display: block; width: 100%; object-fit: contain; background: #F3EEF8; }
 .hbn-tape { position: absolute; top: -10px; left: 50%; width: 76px; height: 20px; margin-left: -38px; rotate: 3deg; background: repeating-linear-gradient(90deg, rgba(255, 140, 200, .85) 0 7px, rgba(255, 190, 225, .85) 7px 14px); border: 1px solid rgba(58, 0, 48, .2); }
 .hbn--photo .hbn-pin, .hbn--photo .hbn-pinned { top: -12px; }
 .hbn-kind { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 6px; }
