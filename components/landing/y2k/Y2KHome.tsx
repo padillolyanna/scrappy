@@ -24,12 +24,6 @@ const FEATURES = [
   { title: 'Note exchange', href: '/exchange', text: "Pass notes like it's 2004: answer the same questions as a friend and reveal them together." },
 ]
 
-const NEW_STUFF = [
-  { text: '45 new stickers on the object shelf', href: '/scrapbook/create' },
-  { text: 'pick your spiral colour', href: '/scrapbook/create' },
-  { text: 'journal hangouts board', href: '/hangouts' },
-]
-
 const STEPS = ['pick a frame', 'snap 4 poses', 'decorate + save']
 
 const TEMPLATES = [
@@ -93,6 +87,9 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                   <Link href="/scrapbook/create" className="y2kh-btn y2kh-btn--pink y2kh-btn--big">Make my scrapbook →</Link>
                   <Link href="/explore" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">Explore</Link>
                 </div>
+                {userCount != null && userCount > 0 && (
+                  <p className="y2kh-small" style={{ marginTop: 10 }}>✦ {userCount.toLocaleString()} members and counting</p>
+                )}
               </div>
             </section>
           </div>
@@ -111,29 +108,11 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                 </ul>
               </Panel>
 
-              <Panel title={<>what&apos;s new <Gif anim="new-blinkie.gif" still="new-still.gif" w={34} h={14} /></>} tone="lime" id="y2kh-new">
-                <ul className="y2kh-list y2kh-list--star">
-                  {NEW_STUFF.map((n) => (
-                    <li key={n.text}><Link href={n.href}>{n.text}</Link></li>
-                  ))}
-                </ul>
-              </Panel>
-
               {prompt && (
-                <Panel title="♥ today's prompt" tone="lime" id="y2kh-prompt">
+                <Panel title={<>today&apos;s prompt <Gif anim="new-blinkie.gif" still="new-still.gif" w={34} h={14} /></>} tone="lime" id="y2kh-prompt">
                   <div className="y2kh-pad">
-                    <p className="y2kh-note" style={{ marginBottom: 10 }}>{prompt.question_text}</p>
+                    <p className="y2kh-note" style={{ marginBottom: 10 }}><b>&ldquo;{prompt.question_text}&rdquo;</b></p>
                     <Link href="/prompts" className="y2kh-btn y2kh-btn--purple">answer it →</Link>
-                  </div>
-                </Panel>
-              )}
-
-              {userCount != null && userCount > 0 && (
-                <Panel title="✦ the club" tone="pink" id="y2kh-club">
-                  <div className="y2kh-pad" style={{ textAlign: 'center' }}>
-                    <p className="y2kh-h3" style={{ fontSize: '1.5rem', marginBottom: 4 }}>{userCount.toLocaleString()}</p>
-                    <p className="y2kh-small">members and counting ✦</p>
-                    <Link href="/auth/signup" className="y2kh-btn y2kh-btn--pink" style={{ marginTop: 10, display: 'inline-block' }}>join us →</Link>
                   </div>
                 </Panel>
               )}
