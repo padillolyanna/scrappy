@@ -2387,3 +2387,4 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .y2kh-prompt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; }
 .y2kh-prompt-q { flex: 1 1 280px; margin: 0; font: bold clamp(18px, 2.2vw, 22px)/1.4 Verdana, Tahoma, sans-serif; color: #3A0030; }
 .y2kh-prompt-q span { color: #FF4FA3; font-size: 1.3em; }
+.y2kh-prompt-side .y2kh-prompt-q { font-size: 16px; margin: 0 0 12px; }

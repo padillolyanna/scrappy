@@ -24,12 +24,6 @@ const FEATURES = [
   { title: 'Note exchange', href: '/exchange', text: "Pass notes like it's 2004: answer the same questions as a friend and reveal them together." },
 ]
 
-const NEW_STUFF = [
-  { text: '45 new stickers on the object shelf', href: '/scrapbook/create' },
-  { text: 'pick your spiral colour', href: '/scrapbook/create' },
-  { text: 'journal hangouts board', href: '/hangouts' },
-]
-
 const STEPS = ['pick a frame', 'snap 4 poses', 'decorate + save']
 
 const TEMPLATES = [
@@ -120,13 +114,14 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                 </ul>
               </Panel>
 
-              <Panel title={<>what&apos;s new <Gif anim="new-blinkie.gif" still="new-still.gif" w={34} h={14} /></>} tone="lime" id="y2kh-new">
-                <ul className="y2kh-list y2kh-list--star">
-                  {NEW_STUFF.map((n) => (
-                    <li key={n.text}><Link href={n.href}>{n.text}</Link></li>
-                  ))}
-                </ul>
-              </Panel>
+              {prompt && (
+                <Panel title={<>♥ today&apos;s prompt <Gif anim="new-blinkie.gif" still="new-still.gif" w={34} h={14} /></>} tone="lime" id="y2kh-prompt">
+                  <div className="y2kh-pad y2kh-prompt-side">
+                    <p className="y2kh-prompt-q"><span aria-hidden="true">“</span>{prompt.question_text}<span aria-hidden="true">”</span></p>
+                    <Link href="/prompts" className="y2kh-btn y2kh-btn--purple">answer it →</Link>
+                  </div>
+                </Panel>
+              )}
 
               <div className="y2kh-badges" aria-label="Web badges">
                 <Px src="badge-scrappy.gif" w={88} h={31} alt="Scrappy, est. 2026" />
@@ -169,15 +164,6 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                   </div>
                 </div>
               </Panel>
-
-              {prompt && (
-                <Panel title="♥ today's prompt" tone="lime" id="y2kh-prompt">
-                  <div className="y2kh-pad y2kh-prompt">
-                    <p className="y2kh-prompt-q"><span aria-hidden="true">“</span>{prompt.question_text}<span aria-hidden="true">”</span></p>
-                    <Link href="/prompts" className="y2kh-btn y2kh-btn--purple y2kh-btn--big">answer it →</Link>
-                  </div>
-                </Panel>
-              )}
 
               {fresh.length > 0 && (
                 <Panel title="fresh from the club" tone="orange" id="y2kh-fresh">
