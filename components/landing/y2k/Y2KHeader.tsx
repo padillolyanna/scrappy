@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Gif, Px } from './Y2KPanel'
+import NotificationBell from '@/components/layout/NotificationBell'
 
 /** Pink star header with the chunky logo, date line, INFO bubble and account buttons.
     Used on the homepage and (compact) as the site-wide top bar. */
@@ -24,6 +25,8 @@ export default function Y2KHeader({ user, dateLabel, hideAuth = false }: { user?
             {!user && <Link href="/about" className="y2kh-bubble">click for <b>INFO</b><br />about Scrappy!</Link>}
             {hideAuth ? null : user ? (
               <div className="y2kh-auth">
+                <NotificationBell />
+                <Link href="/notifications" className="y2kh-btn y2kh-btn--chrome" style={{ position: 'relative' }}>notifs</Link>
                 <Link href={`/profile/${user.username}`} className="y2kh-btn y2kh-btn--pink">my page ✦</Link>
               </div>
             ) : (
