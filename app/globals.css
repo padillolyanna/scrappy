@@ -2374,3 +2374,16 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
   font-size: 12px;
 }
 .adm-nav-link:hover { background: #374151; color: #fff; }
+
+/* ═══════════ homepage: hit counter in the hero + landscape prompt ═══════════ */
+.y2kh-counter { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 18px; padding: 8px 10px; text-decoration: none;
+  background: linear-gradient(#E9E2F2, #CFC4DE); border: 2px solid #3A0030; box-shadow: 3px 3px 0 #3A0030; color: #3A0030; }
+.y2kh-counter:hover { background: linear-gradient(#FFF3B0, #FFE14D); }
+.y2kh-counter-label { font: 12px 'Silkscreen', monospace; letter-spacing: .04em; text-transform: uppercase; }
+.y2kh-counter-digits { display: inline-flex; gap: 2px; padding: 3px; background: #1A0B18; border: 2px inset #7A6A80; }
+.y2kh-counter-digits b { display: grid; place-items: center; width: 20px; height: 28px; font: 400 22px/1 'Silkscreen', 'Courier New', monospace; color: #7CFF6B;
+  background: linear-gradient(#0D1A0D 0 48%, #000 52%); text-shadow: 0 0 6px rgba(124, 255, 107, .8); }
+.y2kh-counter-join { font: bold 13px Verdana, sans-serif; color: #C2006B; }
+.y2kh-prompt { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 20px; }
+.y2kh-prompt-q { flex: 1 1 280px; margin: 0; font: bold clamp(18px, 2.2vw, 22px)/1.4 Verdana, Tahoma, sans-serif; color: #3A0030; }
+.y2kh-prompt-q span { color: #FF4FA3; font-size: 1.3em; }
