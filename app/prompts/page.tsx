@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Daily Prompt — Scrappy',
   description: 'A new question every day. Answer it, read what others said, and discover what your community thinks. Free to join.',
+  alternates: { canonical: 'https://www.scrappy.fun/prompts' },
 }
 
 import Footer from '@/components/layout/Footer'

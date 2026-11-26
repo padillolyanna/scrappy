@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Journal Hangouts — Scrappy',
   description: 'Community journal events where people write, share prompts and scrapbook together. See what is coming up on the hangout board.',
+  alternates: { canonical: 'https://www.scrappy.fun/hangouts' },
 }
 
 import { createClient } from '@/lib/supabase-server'

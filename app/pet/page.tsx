@@ -4,6 +4,7 @@ import PetStudio from '@/components/pet/PetStudio'
 export const metadata: Metadata = {
   title: 'My Little Pet ♡ | Scrappy',
   description: 'Dress up your own Scrappy virtual pet with bows, glasses, outfits and sparkly effects, and collect new accessories as you make scrapbooks.',
+  alternates: { canonical: 'https://www.scrappy.fun/pet' },
 }
 
 export default function PetPage() {

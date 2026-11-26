@@ -40,6 +40,8 @@ export default function robots(): MetadataRoute.Robots {
           '/auth/',
           '/api/',
           '/exchange/join/',
+          '/terms',
+          '/privacy-policy',
         ],
       },
     ],

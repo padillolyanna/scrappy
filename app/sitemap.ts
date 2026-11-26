@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/community-guidelines`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/copyright`, changeFrequency: 'monthly', priority: 0.4 },
     { url: `${base}/cookie-policy`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/pet`, changeFrequency: 'monthly', priority: 0.5 },
   ]
 
   // Journal articles
