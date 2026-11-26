@@ -19,6 +19,7 @@ export default async function Home() {
     exchangeTotalResult,
     exchangeTodayResult,
     announcements,
+    userCountResult,
   ] = await Promise.all([
     supabase
       .from('scrapbooks')
@@ -31,6 +32,7 @@ export default async function Home() {
     supabase.from('exchanges').select('id', { count: 'exact', head: true }),
     supabase.from('exchanges').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00.000Z`),
     getLiveAnnouncements({ limit: 3 }),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).not('username', 'in', '("testuser","test","demo","admin_test","scrappy_admin")'),
   ])
 
   // Current user
@@ -155,6 +157,8 @@ export default async function Home() {
           dateLabel={dateLabel}
           fresh={freshScrapbooks}
           hangoutBoard={announcements.length > 0 ? <AnnouncementBoard announcements={announcements} variant="compact" /> : null}
+          prompt={promptResult.data ?? null}
+          userCount={userCountResult.count ?? 0}
         />
       )}
     </div>

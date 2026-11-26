@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { SCRAPBOOK_COVERS } from '@/lib/types'
 import { BoothIllustration } from '@/components/landing/PhotoboothSection'
 import type { FreshScrapbook } from '@/components/landing/FreshScrapbooks'
+import type { TodayPrompt } from '@/components/landing/TodayOnScrappy'
 import CoverThumb from './CoverThumb'
 import Y2KTabs from './Y2KTabs'
 import Y2KHeader from './Y2KHeader'
@@ -71,7 +72,7 @@ export function Y2KShell({ dateLabel, user, children }: { dateLabel: string; use
   )
 }
 
-export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel: string; fresh: FreshScrapbook[]; hangoutBoard: ReactNode }) {
+export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCount }: { dateLabel: string; fresh: FreshScrapbook[]; hangoutBoard: ReactNode; prompt?: TodayPrompt | null; userCount?: number }) {
   return (
     <Y2KShell dateLabel={dateLabel}>
           {/* ───────────── hero: TV + welcome window ───────────── */}
@@ -117,6 +118,25 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard }: { dateLabel:
                   ))}
                 </ul>
               </Panel>
+
+              {prompt && (
+                <Panel title="♥ today's prompt" tone="lime" id="y2kh-prompt">
+                  <div className="y2kh-pad">
+                    <p className="y2kh-note" style={{ marginBottom: 10 }}>{prompt.question_text}</p>
+                    <Link href="/prompts" className="y2kh-btn y2kh-btn--purple">answer it →</Link>
+                  </div>
+                </Panel>
+              )}
+
+              {userCount != null && userCount > 0 && (
+                <Panel title="✦ the club" tone="pink" id="y2kh-club">
+                  <div className="y2kh-pad" style={{ textAlign: 'center' }}>
+                    <p className="y2kh-h3" style={{ fontSize: '1.5rem', marginBottom: 4 }}>{userCount.toLocaleString()}</p>
+                    <p className="y2kh-small">members and counting ✦</p>
+                    <Link href="/auth/signup" className="y2kh-btn y2kh-btn--pink" style={{ marginTop: 10, display: 'inline-block' }}>join us →</Link>
+                  </div>
+                </Panel>
+              )}
 
               <div className="y2kh-badges" aria-label="Web badges">
                 <Px src="badge-scrappy.gif" w={88} h={31} alt="Scrappy, est. 2026" />
