@@ -192,6 +192,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [uploads, setUploads] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [showStickerTips, setShowStickerTips] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const clipboard = useRef<NbElement | null>(null)
 
@@ -345,6 +346,12 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   function removeSelected() {
     if (!sel) return
     commit(pagesRef.current.map((p, i) => (i === sel.page ? { ...p, elements: p.elements.filter((e) => e.id !== sel.id) } : p)))
+    setSel(null)
+    setEditing(null)
+  }
+
+  function clearActivePage() {
+    commit(pagesRef.current.map((p, i) => (i === activePage ? { ...p, elements: [] } : p)))
     setSel(null)
     setEditing(null)
   }
@@ -703,6 +710,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
         />
         <ToolBtn onClick={undo} disabled={!hist.past} title="undo (ctrl+z)" tone="chrome">↶</ToolBtn>
         <ToolBtn onClick={redo} disabled={!hist.future} title="redo (ctrl+shift+z)" tone="chrome">↷</ToolBtn>
+        <ToolBtn onClick={() => { if (window.confirm('Clear all elements from this page?')) clearActivePage() }} title="clear all elements from this page" danger>clear all</ToolBtn>
         <div className="flex items-center gap-0.5 bg-black/20 rounded-lg px-1 py-0.5">
           <ToolBtn onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))} title="zoom out" tone="chrome">−</ToolBtn>
           <button onClick={() => setZoom(1)} className="font-silkscreen text-[12px] w-11 text-center" title="fit to screen">{Math.round(zoom * 100)}%</button>
@@ -777,45 +785,62 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
             </div>
             <div className="p-3">
               {panel === 'library' && (
-                <div className="space-y-2">
-                  <div className="font-silkscreen text-[12px] text-[#D4006E]">OBJECTS</div>
-                  <CatChips value={libCat} onChange={(v) => setLibCat(v as StickerCategory | 'all')} cats={STICKER_CATEGORIES} />
-                  {STICKER_ASSETS.length === 0 ? (
-                    <EmptyShelf />
-                  ) : (
-                    <div className="grid grid-cols-5 md:grid-cols-3 gap-2">
-                      {STICKER_ASSETS.filter((a) => libCat === 'all' || a.category === libCat).map((a) => (
-                        <button
-                          key={a.id}
-                          onClick={() => add({ ...makeSticker(`img:${a.id}`), w: Math.round(110 * Math.min(1, a.aspect)), h: Math.round(110 / Math.max(1, a.aspect)), props: { shadow: true } })}
-                          title={a.label}
-                          className="aspect-square p-1 bg-white border-2 border-[#3A0030] shadow-[2px_2px_0_#3A0030] hover:bg-[#FFE9F4] active:translate-y-px active:shadow-none"
-                          style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0 7px, rgba(124,77,219,.06) 7px 8px), repeating-linear-gradient(90deg, transparent 0 7px, rgba(124,77,219,.06) 7px 8px)' }}
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={assetThumb(a.id)} alt={a.label} loading="lazy" decoding="async" className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} />
-                        </button>
-                      ))}
+                <div className="space-y-3">
+                  {/* Upload at top */}
+                  <div>
+                    <input ref={stickerFileRef} type="file" accept="image/png,image/webp,image/gif,image/jpeg" multiple hidden onChange={(e) => { handleStickerFiles(e.target.files); e.target.value = '' }} />
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => stickerFileRef.current?.click()} className="btn-bevel flex-1 text-sm" disabled={busy}>
+                        {busy ? 'uploading…' : '↑ upload your own sticker'}
+                      </button>
+                      <button
+                        onClick={() => setShowStickerTips((v) => !v)}
+                        title="how to upload stickers"
+                        aria-label="sticker upload tips"
+                        className="shrink-0 w-7 h-7 rounded-full border-2 border-[#3A0030] font-extrabold text-sm flex items-center justify-center transition-colors"
+                        style={{ background: showStickerTips ? 'linear-gradient(180deg,#FF9ECF,#FF2E93)' : 'linear-gradient(180deg,#E8D5FF,#C9A2FF)', color: showStickerTips ? '#fff' : '#3A0030' }}
+                      >
+                        i
+                      </button>
                     </div>
-                  )}
-                </div>
-              )}
-
-              {panel === 'library' && (
-                <div className="space-y-3 mt-4 pt-3 border-t-2 border-dashed border-[#E5D5FF]">
-                  <input ref={stickerFileRef} type="file" accept="image/png,image/webp,image/gif,image/jpeg" multiple hidden onChange={(e) => { handleStickerFiles(e.target.files); e.target.value = '' }} />
-                  <button onClick={() => stickerFileRef.current?.click()} className="btn-bevel w-full text-sm" disabled={busy}>
-                    {busy ? 'uploading…' : '↑ upload your own sticker'}
-                  </button>
-                  <div className="rounded-lg border-2 border-dashed border-[#F59E0B]/60 bg-[#FFF8E6] px-2.5 py-2 font-nunito text-[13px] leading-snug text-[#5A3A10]">
-                    <b>sticker tips ✦</b>
-                    <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
-                      <li><b>PNG with a transparent background</b> (no background) looks best. JPGs show as a rectangle.</li>
-                      <li>Up to <b>{MAX_STICKER_MB} MB</b> each, up to 8 at a time.</li>
-                      <li>At least <b>300×300 px</b> so it stays sharp. Big images are shrunk to 800 px.</li>
-                      <li>PNG, WebP, GIF (first frame) or JPG.</li>
-                    </ul>
+                    {showStickerTips && (
+                      <div className="rounded-lg border-2 border-dashed border-[#F59E0B]/60 bg-[#FFF8E6] px-2.5 py-2 font-nunito text-[13px] leading-snug text-[#5A3A10] mt-2">
+                        <b>sticker tips ✦</b>
+                        <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                          <li><b>PNG with a transparent background</b> (no background) looks best. JPGs show as a rectangle.</li>
+                          <li>Up to <b>{MAX_STICKER_MB} MB</b> each, up to 8 at a time.</li>
+                          <li>At least <b>300×300 px</b> so it stays sharp. Big images are shrunk to 800 px.</li>
+                          <li>PNG, WebP, GIF (first frame) or JPG.</li>
+                        </ul>
+                      </div>
+                    )}
                   </div>
+
+                  {/* Objects grid */}
+                  <div className="space-y-2">
+                    <div className="font-silkscreen text-[12px] text-[#D4006E]">OBJECTS</div>
+                    <CatChips value={libCat} onChange={(v) => setLibCat(v as StickerCategory | 'all')} cats={STICKER_CATEGORIES} />
+                    {STICKER_ASSETS.length === 0 ? (
+                      <EmptyShelf />
+                    ) : (
+                      <div className="grid grid-cols-5 md:grid-cols-3 gap-2">
+                        {STICKER_ASSETS.filter((a) => libCat === 'all' || a.category === libCat).map((a) => (
+                          <button
+                            key={a.id}
+                            onClick={() => add({ ...makeSticker(`img:${a.id}`), w: Math.round(110 * Math.min(1, a.aspect)), h: Math.round(110 / Math.max(1, a.aspect)), props: { shadow: true } })}
+                            title={a.label}
+                            className="aspect-square p-1 bg-white border-2 border-[#3A0030] shadow-[2px_2px_0_#3A0030] hover:bg-[#FFE9F4] active:translate-y-px active:shadow-none"
+                            style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent 0 7px, rgba(124,77,219,.06) 7px 8px), repeating-linear-gradient(90deg, transparent 0 7px, rgba(124,77,219,.06) 7px 8px)' }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={assetThumb(a.id)} alt={a.label} loading="lazy" decoding="async" className="w-full h-full object-contain" style={{ imageRendering: 'pixelated' }} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t-2 border-dashed border-[#E5D5FF] space-y-3">
                   {myStickers.length > 0 && (
                     <>
                       <div className="font-silkscreen text-[12px] text-[#D4006E]">YOUR STICKERS</div>
@@ -851,6 +876,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
                         <Sticker content={`txt:${s}`} />
                       </button>
                     ))}
+                  </div>
                   </div>
                 </div>
               )}
