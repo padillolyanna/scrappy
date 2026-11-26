@@ -88,7 +88,11 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                   <Link href="/explore" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">Explore</Link>
                 </div>
                 {userCount != null && userCount > 0 && (
-                  <p className="y2kh-small" style={{ marginTop: 10 }}>✦ {userCount.toLocaleString()} members and counting</p>
+                  <div className="y2kh-counter">
+                    <span className="y2kh-counter-label">MEMBERS IN THE CLUB</span>
+                    <span className="y2kh-counter-lcd">{String(userCount).padStart(6, '0')}</span>
+                    <Link href="/auth/signup" className="y2kh-counter-join">join +</Link>
+                  </div>
                 )}
               </div>
             </section>
