@@ -26,7 +26,6 @@ export default function Y2KHeader({ user, dateLabel, hideAuth = false }: { user?
             {hideAuth ? null : user ? (
               <div className="y2kh-auth">
                 <NotificationBell />
-                <Link href="/notifications" className="y2kh-btn y2kh-btn--chrome" style={{ position: 'relative' }}>notifs</Link>
                 <Link href={`/profile/${user.username}`} className="y2kh-btn y2kh-btn--pink">my page ✦</Link>
               </div>
             ) : (
