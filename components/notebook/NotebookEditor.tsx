@@ -194,6 +194,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
   const [notice, setNotice] = useState<string | null>(null)
   const [showStickerTips, setShowStickerTips] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmClear, setConfirmClear] = useState(false)
   const clipboard = useRef<NbElement | null>(null)
 
   const hasCover = !!pages[0]?.cover
@@ -710,7 +711,7 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
         />
         <ToolBtn onClick={undo} disabled={!hist.past} title="undo (ctrl+z)" tone="chrome">↶</ToolBtn>
         <ToolBtn onClick={redo} disabled={!hist.future} title="redo (ctrl+shift+z)" tone="chrome">↷</ToolBtn>
-        <ToolBtn onClick={() => { if (window.confirm('Clear all elements from this page?')) clearActivePage() }} title="clear all elements from this page" danger>clear all</ToolBtn>
+        <ToolBtn onClick={() => setConfirmClear(true)} title="clear all elements from this page" danger>clear all</ToolBtn>
         <div className="flex items-center gap-0.5 bg-black/20 rounded-lg px-1 py-0.5">
           <ToolBtn onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))} title="zoom out" tone="chrome">−</ToolBtn>
           <button onClick={() => setZoom(1)} className="font-silkscreen text-[12px] w-11 text-center" title="fit to screen">{Math.round(zoom * 100)}%</button>
@@ -1289,6 +1290,32 @@ export default function NotebookEditor({ pages, onChange, title, onTitleChange, 
       {notice && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[300] bg-[#FFF0A8] border-2 border-[#2B0A2E] rounded-lg px-4 py-2 font-pixel text-lg shadow-lg" role="status" onClick={() => setNotice(null)}>
           {notice}
+        </div>
+      )}
+
+      {confirmClear && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center bg-[#3A0030]/50 backdrop-blur-sm" onClick={() => setConfirmClear(false)}>
+          <div className="bg-white rounded-2xl border-2 border-[#FFB6D9] shadow-2xl p-6 max-w-xs w-full mx-4" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-4">
+              <div className="text-3xl mb-2">🗑</div>
+              <h2 className="font-pacifico text-lg text-[#3A0030]" style={{ fontFamily: 'Pacifico, cursive' }}>clear this page?</h2>
+              <p className="font-caveat text-[#888] mt-1" style={{ fontFamily: 'Caveat, cursive', fontSize: '17px' }}>
+                all elements on this page will be removed. you can undo with ctrl+z.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmClear(false)} className="btn-outline-y2k flex-1 py-2 text-sm" style={{ fontSize: '12px' }}>
+                cancel
+              </button>
+              <button
+                onClick={() => { setConfirmClear(false); clearActivePage() }}
+                className="btn-y2k flex-1 py-2 text-sm"
+                style={{ fontSize: '12px', background: '#D4006E' }}
+              >
+                clear all
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
