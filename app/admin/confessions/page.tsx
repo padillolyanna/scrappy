@@ -17,7 +17,7 @@ export default async function AdminConfessionsPage({
 
   let query = supabase
     .from('confessions')
-    .select('id, content, category, is_approved, is_anonymous, reaction_count, created_at')
+    .select('id, content, category, is_approved, is_anonymous, guest_name, reaction_count, created_at')
     .order('created_at', { ascending: false })
 
   if (filter === 'pending') query = query.eq('is_approved', false)
@@ -81,7 +81,11 @@ export default async function AdminConfessionsPage({
                     }`}>
                       {c.is_approved ? 'approved' : 'pending'}
                     </span>
-                    <span className="text-xs text-gray-400">{c.is_anonymous ? 'anonymous' : 'public'}</span>
+                    {c.guest_name ? (
+                      <span className="text-xs text-purple-600 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded">guest: {c.guest_name}</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">{c.is_anonymous ? 'anonymous member' : 'public'}</span>
+                    )}
                     <span className="text-xs text-gray-400">
                       {new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>

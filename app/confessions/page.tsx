@@ -2,7 +2,6 @@
 
 import Footer from '@/components/layout/Footer'
 import FloatingElements from '@/components/ui/FloatingElements'
-import AuthModal from '@/components/ui/AuthModal'
 import { motion } from 'framer-motion'
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/useAuth'
@@ -13,6 +12,7 @@ interface Confession {
   id: string
   content: string
   category: string
+  guest_name: string | null
   reaction_count: number
   created_at: string
 }
@@ -26,11 +26,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   Regrets: '#D6EDFF',
   Music: '#FFD6EC',
   Secrets: '#E8D6FF',
+  Others: '#D6FFE8',
 }
 
 const ROTATIONS = ['-2deg', '1.5deg', '-1deg', '2deg', '-1.5deg', '1deg', '-0.5deg', '1.8deg']
 
-const CATEGORIES = ['All', 'Love', 'Friendship', 'Life', 'Feelings', 'Random', 'Regrets', 'Music', 'Secrets']
+const CATEGORIES = ['All', 'Love', 'Friendship', 'Life', 'Feelings', 'Random', 'Regrets', 'Music', 'Secrets', 'Others']
+const POST_CATEGORIES = ['Love', 'Friendship', 'Life', 'Random', 'Secrets', 'Regrets', 'Feelings', 'Music', 'Others']
+
+const GUEST_NAME_SUGGESTIONS = ['anonymous stranger', 'night owl', 'midnight ghost', 'secret keeper', 'stardust', 'wandering soul']
 
 function Thumbtack({ color }: { color: string }) {
   return (
@@ -57,12 +61,12 @@ const TACK_COLORS = ['#FF4FA3', '#7C4DDB', '#FF6B00', '#00BADD']
 
 export default function ConfessionsPage() {
   const [confession, setConfession] = useState('')
+  const [guestName, setGuestName] = useState('')
   const [category, setCategory] = useState('Random')
   const [filterCategory, setFilterCategory] = useState('All')
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [contentError, setContentError] = useState('')
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const [confessions, setConfessions] = useState<Confession[]>([])
   const [loadingConfessions, setLoadingConfessions] = useState(true)
   const { user } = useAuth()
@@ -72,7 +76,7 @@ export default function ConfessionsPage() {
     const supabase = createClient()
     let query = supabase
       .from('confessions')
-      .select('id, content, category, reaction_count, created_at')
+      .select('id, content, category, guest_name, reaction_count, created_at')
       .eq('is_approved', true)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -92,10 +96,6 @@ export default function ConfessionsPage() {
 
   async function handleSubmit() {
     if (!confession.trim()) return
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
     setSubmitting(true)
     const supabase = createClient()
     const filtered = filterContent(confession.trim())
@@ -104,26 +104,33 @@ export default function ConfessionsPage() {
       setContentError(filtered.reason ?? 'Your confession contains content that isn\'t allowed.')
       return
     }
-    const { error } = await supabase.from('confessions').insert({
+
+    const payload: Record<string, unknown> = {
       content: confession.trim(),
       category,
       is_anonymous: true,
-      user_id: user.id,
       is_approved: false,
-    })
+    }
+
+    if (user) {
+      payload.user_id = user.id
+    } else {
+      const name = guestName.trim()
+      if (name) payload.guest_name = name.slice(0, 40)
+    }
+
+    const { error } = await supabase.from('confessions').insert(payload)
     setSubmitting(false)
     if (!error) {
       setSubmitted(true)
       setConfession('')
+      setGuestName('')
       fetchConfessions()
     }
   }
 
   async function handleReact(confessionId: string) {
-    if (!user) {
-      setShowAuthModal(true)
-      return
-    }
+    if (!user) return
     const supabase = createClient()
     const { data: newCount } = await supabase.rpc('toggle_confession_reaction', {
       p_confession_id: confessionId,
@@ -137,6 +144,8 @@ export default function ConfessionsPage() {
       )
     }
   }
+
+  const placeholder = GUEST_NAME_SUGGESTIONS[Math.floor(Math.random() * GUEST_NAME_SUGGESTIONS.length)]
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -194,30 +203,38 @@ export default function ConfessionsPage() {
             <div className="bg-white rounded-2xl border-2 border-[#FFB6D9]/50 p-6 mb-10 shadow-lg">
               <div className="font-pixel text-xs text-[#3A0030] mb-3" style={{ fontSize: '12px' }}>
                 SHARE YOUR CONFESSION (anonymously)
-                {!user && (
-                  <span className="text-[#888] ml-2">— members only</span>
-                )}
               </div>
+
+              {/* Guest name — only for logged-out users */}
+              {!user && (
+                <div className="mb-3">
+                  <label className="font-pixel text-[11px] text-[#C9A2FF] block mb-1" style={{ fontSize: '11px' }}>
+                    sign as (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={guestName}
+                    onChange={(e) => setGuestName(e.target.value)}
+                    placeholder={placeholder}
+                    maxLength={40}
+                    className="input-y2k w-full font-caveat"
+                    style={{ fontFamily: 'Caveat, cursive', fontSize: '16px' }}
+                  />
+                </div>
+              )}
+
               <textarea
                 value={confession}
                 onChange={(e) => { setConfession(e.target.value); setContentError('') }}
-                placeholder={
-                  user
-                    ? "write what's on your mind... no judgment here"
-                    : 'join scrappy to post anonymously ✦'
-                }
+                placeholder="write what's on your mind... no judgment here"
                 className="input-y2k resize-none font-caveat w-full mb-3"
                 rows={3}
                 style={{ fontFamily: 'Caveat, cursive', fontSize: '18px' }}
-                readOnly={!user}
-                onClick={() => !user && setShowAuthModal(true)}
                 maxLength={500}
               />
-              {user && (
-                <div className="font-nunito text-xs text-[#888] mb-3 text-right">
-                  {confession.length}/500
-                </div>
-              )}
+              <div className="font-nunito text-xs text-[#888] mb-3 text-right">
+                {confession.length}/500
+              </div>
               {contentError && (
                 <div className="font-nunito text-xs text-red-500 mb-3 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
                   {contentError}
@@ -225,22 +242,20 @@ export default function ConfessionsPage() {
               )}
               <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex gap-2 flex-wrap">
-                  {['Love', 'Friendship', 'Life', 'Random', 'Secrets', 'Regrets', 'Feelings', 'Music'].map(
-                    (cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => (user ? setCategory(cat) : setShowAuthModal(true))}
-                        className={`font-pixel text-xs px-3 py-1 rounded-full border transition-all ${
-                          category === cat && user
-                            ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white'
-                            : 'border-[#FFB6D9] text-[#3A0030]'
-                        }`}
-                        style={{ fontSize: '12px' }}
-                      >
-                        {cat}
-                      </button>
-                    )
-                  )}
+                  {POST_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setCategory(cat)}
+                      className={`font-pixel text-xs px-3 py-1 rounded-full border transition-all ${
+                        category === cat
+                          ? 'bg-[#FF4FA3] border-[#FF4FA3] text-white'
+                          : 'border-[#FFB6D9] text-[#3A0030]'
+                      }`}
+                      style={{ fontSize: '12px' }}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
                 <button
                   onClick={handleSubmit}
@@ -309,6 +324,14 @@ export default function ConfessionsPage() {
                   >
                     &ldquo;{c.content}&rdquo;
                   </div>
+                  {c.guest_name && (
+                    <div
+                      className="font-caveat text-[#888] mb-2 italic"
+                      style={{ fontFamily: 'Caveat, cursive', fontSize: '14px' }}
+                    >
+                      ~ {c.guest_name} ~
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span
                       className="font-pixel text-[#888]"
@@ -319,6 +342,7 @@ export default function ConfessionsPage() {
                     <button
                       onClick={() => handleReact(c.id)}
                       className="flex items-center gap-1 font-nunito text-xs text-[#888] hover:scale-125 transition-transform"
+                      title={user ? 'react' : 'log in to react'}
                     >
                       <span>♡</span>
                       <span>{c.reaction_count || 0}</span>
@@ -331,10 +355,6 @@ export default function ConfessionsPage() {
         </div>
       </main>
       <Footer />
-
-      {showAuthModal && (
-        <AuthModal reason="confession" onClose={() => setShowAuthModal(false)} />
-      )}
     </div>
   )
 }
