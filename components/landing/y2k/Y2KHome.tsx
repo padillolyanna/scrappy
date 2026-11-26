@@ -121,12 +121,6 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                 </Panel>
               )}
 
-              <div className="y2kh-badges" aria-label="Web badges">
-                <Px src="badge-scrappy.gif" w={88} h={31} alt="Scrappy, est. 2026" />
-                <Px src="badge-made-with-love.gif" w={88} h={31} alt="made with love and glitter" />
-                <Px src="badge-no-ads-pages.gif" w={88} h={31} alt="no ads in your pages" />
-                <Px src="badge-any-screen.gif" w={88} h={31} alt="best viewed on any screen" />
-              </div>
             </aside>
 
             <div className="y2kh-main">
