@@ -93,6 +93,15 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                   <Link href="/scrapbook/create" className="y2kh-btn y2kh-btn--pink y2kh-btn--big">Make my scrapbook →</Link>
                   <Link href="/explore" className="y2kh-btn y2kh-btn--chrome y2kh-btn--big">Explore</Link>
                 </div>
+                {userCount != null && userCount > 0 && (
+                  <Link href="/auth/signup" className="y2kh-counter" aria-label={`${userCount} members so far, join the club`}>
+                    <span className="y2kh-counter-label">members in the club</span>
+                    <span className="y2kh-counter-digits" aria-hidden="true">
+                      {String(userCount).padStart(6, '0').split('').map((d, i) => <b key={i}>{d}</b>)}
+                    </span>
+                    <span className="y2kh-counter-join">join ✦</span>
+                  </Link>
+                )}
               </div>
             </section>
           </div>
@@ -118,25 +127,6 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                   ))}
                 </ul>
               </Panel>
-
-              {prompt && (
-                <Panel title="♥ today's prompt" tone="lime" id="y2kh-prompt">
-                  <div className="y2kh-pad">
-                    <p className="y2kh-note" style={{ marginBottom: 10 }}>{prompt.question_text}</p>
-                    <Link href="/prompts" className="y2kh-btn y2kh-btn--purple">answer it →</Link>
-                  </div>
-                </Panel>
-              )}
-
-              {userCount != null && userCount > 0 && (
-                <Panel title="✦ the club" tone="pink" id="y2kh-club">
-                  <div className="y2kh-pad" style={{ textAlign: 'center' }}>
-                    <p className="y2kh-h3" style={{ fontSize: '1.5rem', marginBottom: 4 }}>{userCount.toLocaleString()}</p>
-                    <p className="y2kh-small">members and counting ✦</p>
-                    <Link href="/auth/signup" className="y2kh-btn y2kh-btn--pink" style={{ marginTop: 10, display: 'inline-block' }}>join us →</Link>
-                  </div>
-                </Panel>
-              )}
 
               <div className="y2kh-badges" aria-label="Web badges">
                 <Px src="badge-scrappy.gif" w={88} h={31} alt="Scrappy, est. 2026" />
@@ -179,6 +169,15 @@ export default function Y2KHome({ dateLabel, fresh, hangoutBoard, prompt, userCo
                   </div>
                 </div>
               </Panel>
+
+              {prompt && (
+                <Panel title="♥ today's prompt" tone="lime" id="y2kh-prompt">
+                  <div className="y2kh-pad y2kh-prompt">
+                    <p className="y2kh-prompt-q"><span aria-hidden="true">“</span>{prompt.question_text}<span aria-hidden="true">”</span></p>
+                    <Link href="/prompts" className="y2kh-btn y2kh-btn--purple y2kh-btn--big">answer it →</Link>
+                  </div>
+                </Panel>
+              )}
 
               {fresh.length > 0 && (
                 <Panel title="fresh from the club" tone="orange" id="y2kh-fresh">
