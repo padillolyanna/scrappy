@@ -17,6 +17,7 @@ export interface ProfileStyle {
   patternColor: string
   bgImage: string // https url or ''
   bgImageMode: 'tile' | 'cover'
+  bgDim: number // 0–70, % darkening over an uploaded photo so text stays readable
   panelBg: string
   panelText: string
   headerBg: string
@@ -170,6 +171,7 @@ export const DEFAULT_STYLE: ProfileStyle = {
   patternColor: '#FF4FA3',
   bgImage: '',
   bgImageMode: 'tile',
+  bgDim: 0,
   panelBg: '#FFFFFF',
   panelText: '#1A0A1E',
   headerBg: '#E35BD0',
@@ -291,6 +293,7 @@ export function sanitizeStyle(raw: unknown): ProfileStyle {
     patternColor: color(r.patternColor, d.patternColor),
     bgImage: safeUrl(r.bgImage),
     bgImageMode: oneOf(r.bgImageMode, ['tile', 'cover'] as const, d.bgImageMode),
+    bgDim: typeof r.bgDim === 'number' && Number.isFinite(r.bgDim) ? Math.round(Math.min(70, Math.max(0, r.bgDim))) : d.bgDim,
     panelBg: color(r.panelBg, d.panelBg),
     panelText: color(r.panelText, d.panelText),
     headerBg: color(r.headerBg, d.headerBg),
@@ -388,18 +391,27 @@ export function backgroundStyle(s: ProfileStyle): React.CSSProperties {
   const base: React.CSSProperties = { backgroundColor: s.bgColor }
   const layers: string[] = []
   const sizes: string[] = []
+  const positions: string[] = []
   if (image) {
     layers.push(image)
     sizes.push(size || 'auto')
+    positions.push('0 0')
   }
   if (s.bgImage) {
+    if (s.bgDim > 0) {
+      const a = (s.bgDim / 100).toFixed(2)
+      layers.push(`linear-gradient(rgba(0,0,0,${a}), rgba(0,0,0,${a}))`)
+      sizes.push('100% 100%')
+      positions.push('0 0')
+    }
     layers.push(`url("${s.bgImage}")`)
     sizes.push(s.bgImageMode === 'cover' ? 'cover' : 'auto')
+    positions.push(s.bgImageMode === 'cover' ? 'center' : '0 0')
   }
   if (layers.length) {
     base.backgroundImage = layers.join(', ')
     base.backgroundSize = sizes.join(', ')
-    if (s.bgImage && s.bgImageMode === 'cover') base.backgroundPosition = image ? '0 0, center' : 'center'
+    base.backgroundPosition = positions.join(', ')
   }
   return base
 }
