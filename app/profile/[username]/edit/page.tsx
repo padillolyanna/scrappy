@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase-client'
 import { revalidateProfile } from '@/app/actions/revalidateProfile'
 import Footer from '@/components/layout/Footer'
 import ProfileLayout, { type MiniProfile } from '@/components/profile/ProfileLayout'
+import BlocksEditor from '@/components/profile/BlocksEditor'
 import { STICKERS, Sticker, StickerDefs } from '@/components/notebook/Stickers'
 import { FONTS, compressImage } from '@/lib/notebook'
 import { uploadDataUrl } from '@/lib/notebookStore'
@@ -18,9 +19,10 @@ import {
   type ProfileExtras, type ProfileStyle,
 } from '@/lib/profileStyle'
 
-type Tab = 'info' | 'look' | 'boxes' | 'top8'
+type Tab = 'info' | 'look' | 'blocks' | 'boxes' | 'top8'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'look', label: '✦ look' },
+  { id: 'blocks', label: '▦ blocks' },
   { id: 'boxes', label: '♪ boxes' },
   { id: 'top8', label: '♡ top 8' },
   { id: 'info', label: '✎ info' },
@@ -231,8 +233,24 @@ function ProfileEditor() {
               ))}
             </div>
             <div className="p-3 space-y-4 lg:max-h-[78vh] lg:overflow-y-auto">
+              {tab === 'blocks' && (
+                <BlocksEditor
+                  blocks={extras.blocks}
+                  links={extras.links}
+                  accent={style.headerBg}
+                  onBlocks={(b) => patchExtras({ blocks: b })}
+                  onLinks={(l) => patchExtras({ links: l })}
+                  upload={(data) => uploadDataUrl(createClient(), user.id, data)}
+                />
+              )}
               {tab === 'look' && (
                 <>
+                  <Section title="PAGE STYLE">
+                    <Seg value={style.layout} options={[['stack', 'app style (one column)'], ['classic', 'classic myspace']]} onChange={(v) => patchStyle({ layout: v as ProfileStyle['layout'] })} />
+                    <div className="font-pixel text-base mt-2 mb-1">profile photo shape</div>
+                    <Seg value={style.avatarShape} options={[['square', 'square'], ['rounded', 'rounded'], ['circle', 'circle']]} onChange={(v) => patchStyle({ avatarShape: v as ProfileStyle['avatarShape'] })} />
+                  </Section>
+
                   <Section title="LAYOUTS">
                     <div className="grid grid-cols-2 gap-2">
                       {PRESETS.map((p) => {
