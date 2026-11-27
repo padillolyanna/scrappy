@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase-client'
 import { revalidateProfile } from '@/app/actions/revalidateProfile'
 import Footer from '@/components/layout/Footer'
 import ProfileLayout, { type MiniProfile } from '@/components/profile/ProfileLayout'
+import BlocksEditor from '@/components/profile/BlocksEditor'
 import { STICKERS, Sticker, StickerDefs } from '@/components/notebook/Stickers'
 import { FONTS, compressImage } from '@/lib/notebook'
 import { uploadDataUrl } from '@/lib/notebookStore'
@@ -18,9 +19,10 @@ import {
   type ProfileExtras, type ProfileStyle,
 } from '@/lib/profileStyle'
 
-type Tab = 'info' | 'look' | 'boxes' | 'top8'
+type Tab = 'info' | 'look' | 'blocks' | 'boxes' | 'top8'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'look', label: '✦ look' },
+  { id: 'blocks', label: '▦ blocks' },
   { id: 'boxes', label: '♪ boxes' },
   { id: 'top8', label: '♡ top 8' },
   { id: 'info', label: '✎ info' },
@@ -122,9 +124,10 @@ function ProfileEditor() {
     setBusy('uploading')
     setError('')
     try {
-      const data = await compressImage(file, 1600, 0.85)
+      const data = await compressImage(file, 1920, 0.85)
       const url = await uploadDataUrl(createClient(), user.id, data)
-      patchStyle({ bgImage: url })
+      // a photo reads best full-bleed with no pattern on top and a little darkening
+      patchStyle({ bgImage: url, bgImageMode: 'cover', bgPattern: 'none', bgDim: Math.max(style.bgDim, 25) })
     } catch {
       setError("Couldn't upload that background. Try a smaller image (and make sure the scrapbook-media bucket exists).")
     }
@@ -231,8 +234,24 @@ function ProfileEditor() {
               ))}
             </div>
             <div className="p-3 space-y-4 lg:max-h-[78vh] lg:overflow-y-auto">
+              {tab === 'blocks' && (
+                <BlocksEditor
+                  blocks={extras.blocks}
+                  links={extras.links}
+                  accent={style.headerBg}
+                  onBlocks={(b) => patchExtras({ blocks: b })}
+                  onLinks={(l) => patchExtras({ links: l })}
+                  upload={(data) => uploadDataUrl(createClient(), user.id, data)}
+                />
+              )}
               {tab === 'look' && (
                 <>
+                  <Section title="PAGE STYLE">
+                    <Seg value={style.layout} options={[['stack', 'app style (one column)'], ['classic', 'classic myspace']]} onChange={(v) => patchStyle({ layout: v as ProfileStyle['layout'] })} />
+                    <div className="font-pixel text-base mt-2 mb-1">profile photo shape</div>
+                    <Seg value={style.avatarShape} options={[['square', 'square'], ['rounded', 'rounded'], ['circle', 'circle']]} onChange={(v) => patchStyle({ avatarShape: v as ProfileStyle['avatarShape'] })} />
+                  </Section>
+
                   <Section title="LAYOUTS">
                     <div className="grid grid-cols-2 gap-2">
                       {PRESETS.map((p) => {
@@ -273,11 +292,16 @@ function ProfileEditor() {
                     {style.bgPattern !== 'none' && <ColorRow label="pattern colour" value={style.patternColor} onChange={(v) => patchStyle({ patternColor: v })} />}
                     <div className="mt-2 space-y-1.5">
                       <div className="flex gap-2 items-center">
-                        <button className="pf-btn" onClick={() => bgInputRef.current?.click()} disabled={busy === 'uploading'}>
-                          {busy === 'uploading' ? 'uploading…' : '↑ upload background image'}
+                        {style.bgImage && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={style.bgImage} alt="your background" className="w-14 h-14 object-cover rounded border-2 border-[#2B0A2E] flex-none" />
+                        )}
+                        <button className="btn-bevel text-sm !px-3 !py-1.5" onClick={() => bgInputRef.current?.click()} disabled={busy === 'uploading'}>
+                          {busy === 'uploading' ? 'uploading…' : style.bgImage ? '↑ change photo' : '↑ upload your own background'}
                         </button>
                         {style.bgImage && <button className="pf-btn" onClick={() => patchStyle({ bgImage: '' })}>remove</button>}
                       </div>
+                      <p className="font-nunito text-xs text-[#5E3A5A]">Any photo or wallpaper (jpg, png, gif). Big photos are shrunk automatically.</p>
                       <input
                         className="input-mini w-full"
                         placeholder="…or paste an https:// image link"
@@ -287,7 +311,14 @@ function ProfileEditor() {
                         aria-label="background image link"
                       />
                       {style.bgImage && (
-                        <Seg value={style.bgImageMode} options={[['tile', 'tile it'], ['cover', 'stretch to fill']]} onChange={(v) => patchStyle({ bgImageMode: v as ProfileStyle['bgImageMode'] })} />
+                        <>
+                          <Seg value={style.bgImageMode} options={[['cover', 'fill the page'], ['tile', 'tile it']]} onChange={(v) => patchStyle({ bgImageMode: v as ProfileStyle['bgImageMode'] })} />
+                          <label className="flex items-center gap-2 font-pixel text-base">
+                            darken
+                            <input type="range" min={0} max={70} step={5} value={style.bgDim} onChange={(e) => patchStyle({ bgDim: Number(e.target.value) })} className="flex-1 accent-[#FF4FA3]" aria-label="darken background photo" />
+                            <span className="w-9 text-right">{style.bgDim}%</span>
+                          </label>
+                        </>
                       )}
                       <input ref={bgInputRef} type="file" accept="image/*" hidden onChange={handleBgUpload} />
                     </div>

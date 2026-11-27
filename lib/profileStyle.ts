@@ -17,6 +17,7 @@ export interface ProfileStyle {
   patternColor: string
   bgImage: string // https url or ''
   bgImageMode: 'tile' | 'cover'
+  bgDim: number // 0–70, % darkening over an uploaded photo so text stays readable
   panelBg: string
   panelText: string
   headerBg: string
@@ -33,6 +34,8 @@ export interface ProfileStyle {
   footerQuote: string
   decor: string[] // sticker ids e.g. 'svg:star' / 'txt:✦'
   sidebar: 'left' | 'right'
+  layout: 'classic' | 'stack' // classic = MySpace two columns, stack = app-style hero + blocks
+  avatarShape: 'square' | 'rounded' | 'circle'
 }
 
 export interface ProfileExtras {
@@ -44,6 +47,91 @@ export interface ProfileExtras {
   interests: { general: string; music: string; movies: string; tv: string; books: string }
   top8: string[] // profile ids
   show: { music: boolean; meet: boolean; interests: boolean; scrapbooks: boolean; top8: boolean; comments: boolean }
+  links: ProfileLink[]
+  blocks: ProfileBlock[]
+}
+
+// ─── page blocks ("widgets" people stack on their page) ───────────────────
+export interface ProfileLink { label: string; url: string }
+export type BlockType = 'text' | 'photos' | 'list' | 'card' | 'music' | 'quote'
+export type BlockSkin = 'window' | 'glass' | 'paper' | 'plain' | 'cassette' | 'player'
+export interface ProfileBlock {
+  id: string
+  type: BlockType
+  skin: BlockSkin
+  color: string
+  title: string
+  body: string
+  items: string[]
+  photos: string[]
+  shape: 'square' | 'rounded' | 'circle'
+  artist: string
+  url: string
+}
+export const MAX_BLOCKS = 20
+export const BLOCK_TYPES: { id: BlockType; label: string; hint: string; skins: BlockSkin[] }[] = [
+  { id: 'text', label: 'text box', hint: 'about me, TMI, a little note', skins: ['window', 'glass', 'paper', 'plain'] },
+  { id: 'card', label: 'profile card', hint: 'a photo next to a few lines about you', skins: ['window', 'glass', 'paper'] },
+  { id: 'list', label: 'list', hint: 'fave artists, hobbies, DNI…', skins: ['window', 'glass', 'paper', 'plain'] },
+  { id: 'photos', label: 'photo grid', hint: 'up to 9 pictures', skins: ['window', 'glass', 'plain'] },
+  { id: 'music', label: 'music player', hint: 'a Spotify, YouTube or mp3 link', skins: ['player', 'cassette', 'window'] },
+  { id: 'quote', label: 'big quote', hint: 'a line in big letters', skins: ['plain', 'glass', 'paper'] },
+]
+export const SKIN_LABEL: Record<BlockSkin, string> = {
+  window: 'window.exe', glass: 'glass', paper: 'notebook paper', plain: 'no box', cassette: 'cassette', player: 'music player',
+}
+export function newBlock(type: BlockType, color = '#FF4FA3'): ProfileBlock {
+  const def = BLOCK_TYPES.find((b) => b.id === type) ?? BLOCK_TYPES[0]
+  const title = { text: 'a little bit about me!', card: 'yourname.zip', list: 'fave artists!', photos: 'my photos', music: '', quote: '' }[type]
+  return {
+    id: `b${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    type, skin: def.skins[0], color, title, body: type === 'quote' ? 'pretty girls make better friends ♡' : '',
+    items: type === 'list' ? ['', '', ''] : type === 'card' ? ['', '', ''] : [], photos: [], shape: 'rounded', artist: '', url: '',
+  }
+}
+export function sanitizeBlocks(raw: unknown): ProfileBlock[] {
+  if (!Array.isArray(raw)) return []
+  const out: ProfileBlock[] = []
+  for (const r0 of raw.slice(0, MAX_BLOCKS)) {
+    if (!r0 || typeof r0 !== 'object') continue
+    const r = r0 as Record<string, unknown>
+    const type = oneOf(r.type, BLOCK_TYPES.map((b) => b.id), 'text')
+    const def = BLOCK_TYPES.find((b) => b.id === type)!
+    out.push({
+      id: typeof r.id === 'string' && /^[a-z0-9]{3,24}$/i.test(r.id) ? r.id : `b${out.length}`,
+      type,
+      skin: oneOf(r.skin, def.skins, def.skins[0]),
+      color: color(r.color, '#FF4FA3'),
+      title: str(r.title, '', 60),
+      body: str(r.body, '', 1500),
+      items: Array.isArray(r.items) ? r.items.filter((x): x is string => typeof x === 'string').map((x) => x.slice(0, 120)).slice(0, 15) : [],
+      photos: Array.isArray(r.photos) ? r.photos.map(safeUrl).filter(Boolean).slice(0, 9) : [],
+      shape: oneOf(r.shape, ['square', 'rounded', 'circle'] as const, 'rounded'),
+      artist: str(r.artist, '', 80),
+      url: safeUrl(r.url),
+    })
+  }
+  return out
+}
+export function sanitizeLinks(raw: unknown): ProfileLink[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter((l): l is Record<string, unknown> => !!l && typeof l === 'object')
+    .map((l) => ({ label: str(l.label, '', 30).trim(), url: safeUrl(l.url) }))
+    .filter((l) => l.url)
+    .slice(0, 6)
+}
+/** small icon for a link chip, picked from the url */
+export function linkKind(url: string): string {
+  const u = url.toLowerCase()
+  if (u.includes('instagram.com')) return 'IG'
+  if (u.includes('tiktok.com')) return 'TT'
+  if (u.includes('discord')) return 'DC'
+  if (u.includes('spotify.com')) return 'SP'
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'YT'
+  if (u.includes('x.com') || u.includes('twitter.com')) return 'X'
+  if (u.includes('pinterest')) return 'PI'
+  return '♡'
 }
 
 export const BG_PATTERNS: { id: BgPattern; label: string }[] = [
@@ -83,6 +171,7 @@ export const DEFAULT_STYLE: ProfileStyle = {
   patternColor: '#FF4FA3',
   bgImage: '',
   bgImageMode: 'tile',
+  bgDim: 0,
   panelBg: '#FFFFFF',
   panelText: '#1A0A1E',
   headerBg: '#E35BD0',
@@ -99,6 +188,8 @@ export const DEFAULT_STYLE: ProfileStyle = {
   footerQuote: 'music makes everything better…',
   decor: ['svg:star', 'svg:heart', 'svg:sparkle', 'txt:✦'],
   sidebar: 'left',
+  layout: 'classic',
+  avatarShape: 'square',
 }
 
 export const DEFAULT_EXTRAS: ProfileExtras = {
@@ -110,6 +201,8 @@ export const DEFAULT_EXTRAS: ProfileExtras = {
   interests: { general: '', music: '', movies: '', tv: '', books: '' },
   top8: [],
   show: { music: true, meet: true, interests: true, scrapbooks: true, top8: true, comments: true },
+  links: [],
+  blocks: [],
 }
 
 type Preset = { id: string; label: string; style: Partial<ProfileStyle> }
@@ -200,6 +293,7 @@ export function sanitizeStyle(raw: unknown): ProfileStyle {
     patternColor: color(r.patternColor, d.patternColor),
     bgImage: safeUrl(r.bgImage),
     bgImageMode: oneOf(r.bgImageMode, ['tile', 'cover'] as const, d.bgImageMode),
+    bgDim: typeof r.bgDim === 'number' && Number.isFinite(r.bgDim) ? Math.round(Math.min(70, Math.max(0, r.bgDim))) : d.bgDim,
     panelBg: color(r.panelBg, d.panelBg),
     panelText: color(r.panelText, d.panelText),
     headerBg: color(r.headerBg, d.headerBg),
@@ -216,6 +310,8 @@ export function sanitizeStyle(raw: unknown): ProfileStyle {
     footerQuote: str(r.footerQuote, d.footerQuote, 60),
     decor: Array.isArray(r.decor) ? r.decor.filter((x): x is string => typeof x === 'string' && /^(svg|txt):.{1,24}$/.test(x)).slice(0, 8) : d.decor,
     sidebar: oneOf(r.sidebar, ['left', 'right'] as const, d.sidebar),
+    layout: oneOf(r.layout, ['classic', 'stack'] as const, d.layout),
+    avatarShape: oneOf(r.avatarShape, ['square', 'rounded', 'circle'] as const, d.avatarShape),
   }
 }
 
@@ -241,6 +337,8 @@ export function sanitizeExtras(raw: unknown): ProfileExtras {
       music: b(show.music, true), meet: b(show.meet, true), interests: b(show.interests, true),
       scrapbooks: b(show.scrapbooks, true), top8: b(show.top8, true), comments: b(show.comments, true),
     },
+    links: sanitizeLinks(r.links),
+    blocks: sanitizeBlocks(r.blocks),
   }
 }
 
@@ -293,18 +391,27 @@ export function backgroundStyle(s: ProfileStyle): React.CSSProperties {
   const base: React.CSSProperties = { backgroundColor: s.bgColor }
   const layers: string[] = []
   const sizes: string[] = []
+  const positions: string[] = []
   if (image) {
     layers.push(image)
     sizes.push(size || 'auto')
+    positions.push('0 0')
   }
   if (s.bgImage) {
+    if (s.bgDim > 0) {
+      const a = (s.bgDim / 100).toFixed(2)
+      layers.push(`linear-gradient(rgba(0,0,0,${a}), rgba(0,0,0,${a}))`)
+      sizes.push('100% 100%')
+      positions.push('0 0')
+    }
     layers.push(`url("${s.bgImage}")`)
     sizes.push(s.bgImageMode === 'cover' ? 'cover' : 'auto')
+    positions.push(s.bgImageMode === 'cover' ? 'center' : '0 0')
   }
   if (layers.length) {
     base.backgroundImage = layers.join(', ')
     base.backgroundSize = sizes.join(', ')
-    if (s.bgImage && s.bgImageMode === 'cover') base.backgroundPosition = image ? '0 0, center' : 'center'
+    base.backgroundPosition = positions.join(', ')
   }
   return base
 }

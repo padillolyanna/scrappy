@@ -10,6 +10,7 @@ import {
   type ProfileExtras, type ProfileStyle,
 } from '@/lib/profileStyle'
 import { Sticker, StickerDefs } from '@/components/notebook/Stickers'
+import { LinkChips, ProfileBlockView, ProfileBlocks } from '@/components/profile/ProfileBlocks'
 
 export interface ProfileData {
   id: string
@@ -126,7 +127,7 @@ export default function ProfileLayout({
       {/* photo + details */}
       <div style={{ display: 'flex', gap: 12, color: s.panelText }}>
         <div style={{ flexShrink: 0, width: 162 }}>
-          <div style={{ border: `3px solid ${s.borderColor}`, background: '#fff', padding: 3, boxShadow: '0 3px 12px rgba(0,0,0,.35)', width: 162, boxSizing: 'border-box' }}>
+          <div style={{ border: `3px solid ${s.borderColor}`, background: '#fff', padding: 3, boxShadow: '0 3px 12px rgba(0,0,0,.35)', width: 162, boxSizing: 'border-box', overflow: 'hidden', borderRadius: s.avatarShape === 'circle' ? '50%' : s.avatarShape === 'rounded' ? 22 : 0 }}>
             <Avatar p={profile} size={150} />
           </div>
           <div style={{ fontFamily: 'Verdana, sans-serif', fontSize: 12, textAlign: 'center', marginTop: 4, color: s.panelText, background: rgba(s.panelBg, s.panelOpacity), border: `1px solid ${s.borderColor}`, padding: '1px 4px' }}>
@@ -140,6 +141,7 @@ export default function ProfileLayout({
           }}
         >
           {x.headline && <div style={{ fontStyle: 'italic', marginBottom: 8 }}>&ldquo;{x.headline}&rdquo;</div>}
+          {x.links.length > 0 && <div style={{ marginBottom: 8 }}><LinkChips links={x.links} /></div>}
           {profile.mood && <div><b>Mood:</b> {profile.mood}</div>}
           {x.location && <div>{x.location}</div>}
           <div style={{ marginTop: 8 }}>
@@ -218,6 +220,8 @@ export default function ProfileLayout({
         {name} is in your extended network ✦
       </div>
 
+      <ProfileBlocks blocks={x.blocks} preview={preview} />
+
       {x.show.top8 && top8.length > 0 && (
         <Panel ctx={ctx} title={`${name}'s Top ${top8.length}`} right={<span>({top8.length} besties)</span>}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
@@ -261,6 +265,85 @@ export default function ProfileLayout({
     </div>
   )
 
+  const decorEls = (
+    <>
+      {/* decor stickers around the edges */}
+      {s.decor.map((d, i) => {
+        const spot = DECOR_SPOTS[i % DECOR_SPOTS.length]
+        return (
+          <div key={`${d}-${i}`} aria-hidden style={{ position: 'absolute', ...spot, pointerEvents: 'none', zIndex: 2, animationDelay: `${i * 0.35}s` }} className="animate-twinkle">
+            <Sticker content={d} />
+          </div>
+        )
+      })}
+    </>
+  )
+
+  if (s.layout === 'stack') {
+    const shapeR = s.avatarShape === 'circle' ? '50%' : s.avatarShape === 'rounded' ? 28 : 4
+    const songBlock = x.show.music && (x.song.title || x.song.url)
+      ? { id: 'song', type: 'music' as const, skin: 'player' as const, color: s.headerBg, title: x.song.title, body: '', items: [], photos: [], shape: 'rounded' as const, artist: x.song.artist, url: x.song.url }
+      : null
+    const about = x.aboutMe || profile.bio
+    return (
+      <div className="pf-wrap pfs" style={{ ...backgroundStyle(s), position: 'relative', padding: preview ? '20px 16px 30px' : '28px 18px 48px', minHeight: preview ? 0 : 600, ['--pfs-ink' as string]: s.nameColor }}>
+        <StickerDefs />
+        <div className="pfs-col">
+          <header className="pfs-hero">
+            <div className="pfs-id">
+              <h1 style={{ ...nameStyle(s, fontCss(s.nameFont)), fontSize: 40, margin: 0, lineHeight: 1.05 }}>{name}</h1>
+              <p className="pfs-handle">@{profile.username}{online && <span className="pfs-online"> · online now!</span>}</p>
+              {x.headline && <p className="pfs-bio">{x.headline}</p>}
+              {profile.mood && <p className="pfs-mood">mood: {profile.mood}</p>}
+              <LinkChips links={x.links} />
+            </div>
+            <div className="pfs-avatar" style={{ borderRadius: shapeR, borderColor: s.borderColor }}>
+              <Avatar p={profile} size="fill" />
+            </div>
+          </header>
+          {contactSlot && <div className="pfs-actions">{contactSlot}</div>}
+
+          {songBlock && <ProfileBlockView b={songBlock} preview={preview} />}
+          {x.blocks.length ? <ProfileBlocks blocks={x.blocks} preview={preview} /> : about ? (
+            <ProfileBlockView preview={preview} b={{ id: 'about', type: 'text', skin: 'window', color: s.headerBg, title: 'about me', body: about, items: [], photos: [], shape: 'rounded', artist: '', url: '' }} />
+          ) : null}
+
+          {x.show.top8 && top8.length > 0 && (
+            <Panel ctx={ctx} title={`${name}'s Top ${top8.length}`}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8 }}>
+                {top8.map((f) => (
+                  <Link key={f.id} href={`/profile/${f.username}`} style={{ textAlign: 'center', textDecoration: 'none' }}>
+                    <div style={{ border: `2px solid ${s.borderColor}`, background: '#fff', aspectRatio: '1', overflow: 'hidden', borderRadius: s.avatarShape === 'circle' ? '50%' : 0 }}>
+                      <Avatar p={f} size="fill" />
+                    </div>
+                    <div style={{ ...linkStyle, fontFamily: 'Verdana, sans-serif', fontSize: 12, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.display_name || f.username}</div>
+                  </Link>
+                ))}
+              </div>
+            </Panel>
+          )}
+          {x.show.scrapbooks && scrapbooks.length > 0 && (
+            <Panel ctx={ctx} id="scrapbooks" title={`${name}'s Scrapbooks`} right={<span>{scrapbooks.length} public</span>}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: 8 }}>
+                {scrapbooks.map((sb) => {
+                  const cover = SCRAPBOOK_COVERS.find((c) => c.id === sb.cover_id)
+                  return (
+                    <Link key={sb.id} href={`/scrapbook/${sb.id}`} style={{ textDecoration: 'none', color: s.panelText }}>
+                      <div className={`bg-gradient-to-br ${cover?.bg_gradient ?? 'from-pink-200 to-pink-100'}`} style={{ height: 72, border: `2px solid ${s.borderColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'rgba(58,0,48,.3)' }}>{cover?.preview_symbol ?? '✦'}</div>
+                      <div style={{ fontSize: 12, fontFamily: 'Verdana, sans-serif', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: s.linkColor, fontWeight: 700 }}>{sb.title || 'untitled'}</div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </Panel>
+          )}
+          {s.footerQuote && <p className="pfs-quote" style={{ color: s.nameColor }}>{s.footerQuote}</p>}
+        </div>
+        {decorEls}
+      </div>
+    )
+  }
+
   return (
     <div className="pf-wrap" style={{ ...backgroundStyle(s), position: 'relative', padding: preview ? '18px 22px 30px' : '22px 26px 40px', minHeight: preview ? 0 : 600 }}>
       <StickerDefs />
@@ -283,15 +366,7 @@ export default function ProfileLayout({
         </div>
       )}
 
-      {/* decor stickers around the edges */}
-      {s.decor.map((d, i) => {
-        const spot = DECOR_SPOTS[i % DECOR_SPOTS.length]
-        return (
-          <div key={`${d}-${i}`} aria-hidden style={{ position: 'absolute', ...spot, pointerEvents: 'none', zIndex: 2, animationDelay: `${i * 0.35}s` }} className="animate-twinkle">
-            <Sticker content={d} />
-          </div>
-        )
-      })}
+      {decorEls}
     </div>
   )
 }
