@@ -1924,10 +1924,12 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 @keyframes pbm-pulse { 50% { filter: brightness(1.12) drop-shadow(0 0 10px #FF8CC8); } }
 .pbm-gallery { font: bold 14px Verdana, sans-serif; color: #A0005A; text-decoration: underline; }
 .pbm-slot { position: relative; margin: 0 -18px; padding: 8px 0 0; border-top: 3px solid #3A0030; background: #D8CDE6; text-align: center; height: 74px; overflow: hidden; }
-.pbm-slot-label { font: bold 12px Verdana, sans-serif; color: #3A0030; }
-.pbm-slot::before { content: ''; position: absolute; left: 50%; top: 30px; width: 120px; height: 8px; margin-left: -60px; background: #2B0A2E; border-radius: 4px; }
+.pbm-slot-label { font: bold 12px Verdana, sans-serif; color: #3A0030; position: relative; z-index: 4; }
+.pbm-slot::before { content: ''; position: absolute; left: 50%; top: 30px; width: 120px; height: 8px; margin-left: -60px; background: #2B0A2E; border-radius: 4px; z-index: 3; }
+/* mask: covers area above the slot line so the strip can only emerge below it */
+.pbm-slot::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 38px; background: #D8CDE6; z-index: 2; pointer-events: none; }
 .pbm-slot-strip { position: absolute; left: 50%; top: 33px; width: 64px; margin-left: -32px; padding: 4px; display: grid; gap: 4px; background: #fff; border: 2px solid #3A0030;
-  animation: pbm-print 4s ease-in-out infinite; }
+  z-index: 1; animation: pbm-print 4s ease-in-out infinite; }
 .pbm-slot-strip i { height: 26px; background: linear-gradient(160deg, #FFC2E2, #C9A6FF); }
 @keyframes pbm-print { 0%, 20% { transform: translateY(-110px) } 60%, 100% { transform: translateY(0) } }
 
@@ -1982,9 +1984,11 @@ img[src*="/assets/scrappy/"] { image-rendering: pixelated; }
 .pbm-art--deco b { font-size: 30px; color: #FF4FA3; text-shadow: 2px 2px 0 #3A0030; animation: tvi-twinkle 1.6s ease-in-out infinite; display: inline-block; }
 .pbm-art--deco b:nth-child(2) { color: #E0007A; animation-delay: .4s; } .pbm-art--deco b:nth-child(3) { color: #B07CFF; animation-delay: .8s; }
 .pbm-art--print { position: relative; overflow: hidden; align-items: flex-start; }
-.pbm-art--print::before { content: ''; position: absolute; left: 50%; top: 6px; width: 70px; height: 6px; margin-left: -35px; background: #2B0A2E; border-radius: 3px; }
+.pbm-art--print::before { content: ''; position: absolute; left: 50%; top: 6px; width: 70px; height: 6px; margin-left: -35px; background: #2B0A2E; border-radius: 3px; z-index: 3; }
+/* mask: covers area above the slot line so the strip only appears below it */
+.pbm-art--print::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 14px; background: #fff; z-index: 2; pointer-events: none; }
 .pbm-art--print i { position: relative; margin-top: 9px; width: 30px; height: 70px; background: repeating-linear-gradient(#fff 0 3px, #FFC2E2 3px 19px, #fff 19px 22px); border: 2px solid #3A0030;
-  animation: pbm-print2 3s ease-in-out infinite; }
+  z-index: 1; animation: pbm-print2 3s ease-in-out infinite; }
 @keyframes pbm-print2 { 0%, 15% { transform: translateY(-70px) } 60%, 100% { transform: translateY(0) } }
 @media (prefers-reduced-motion: reduce) { .pbm *, .pbm *::before, .pbm *::after { animation: none !important; } }
 /* readability on themed pages: no extra-wide tracking, no washed-out pastel text */
